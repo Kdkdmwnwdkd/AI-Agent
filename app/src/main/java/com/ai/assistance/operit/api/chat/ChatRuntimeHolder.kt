@@ -45,6 +45,8 @@ class ChatRuntimeHolder private constructor(context: Context) {
                 selectionMode = when (slot) {
                     ChatRuntimeSlot.MAIN -> ChatSelectionMode.FOLLOW_GLOBAL
                     ChatRuntimeSlot.FLOATING -> ChatSelectionMode.LOCAL_ONLY
+                    ChatRuntimeSlot.CODE_MODE -> ChatSelectionMode.FOLLOW_GLOBAL
+                    ChatRuntimeSlot.ROLE_MODE -> ChatSelectionMode.FOLLOW_GLOBAL
                 }
             )
         }
