@@ -13,21 +13,21 @@ import kotlinx.coroutines.flow.Flow
 /** 聊天DAO接口，定义对聊天表的数据访问方法 */
 @Dao
 interface ChatDao {
-    /** 获取所有聊天，按显示顺序排列（v1.0.1g：添加mode参数，不提供默认值以强制隔离） */
+    /** 获取所有聊天，按显示顺序排列（v1.0.1g：mode 参数，默认 SINGLE 向后兼容） */
     @Query("SELECT * FROM chats WHERE mode = :mode ORDER BY pinned DESC, displayOrder ASC")
-    fun getAllChats(mode: String): Flow<List<ChatEntity>>
+    fun getAllChats(mode: String = "SINGLE"): Flow<List<ChatEntity>>
 
     /** 获取聊天总数（按模式） */
     @Query("SELECT COUNT(*) FROM chats WHERE mode = :mode")
-    suspend fun getTotalChatCount(mode: String): Int
+    suspend fun getTotalChatCount(mode: String = "SINGLE"): Int
 
     /** 获取所有聊天（挂起函数版本，按模式） */
     @Query("SELECT * FROM chats WHERE mode = :mode ORDER BY pinned DESC, displayOrder ASC")
-    suspend fun getAllChatsDirectly(mode: String): List<ChatEntity>
+    suspend fun getAllChatsDirectly(mode: String = "SINGLE"): List<ChatEntity>
 
-    /** 根据ID获取单个聊天（v1.0.1g：添加mode参数，防止跨模式访问） */
+    /** 根据ID获取单个聊天（v1.0.1g：mode 参数） */
     @Query("SELECT * FROM chats WHERE id = :chatId AND mode = :mode")
-    suspend fun getChatById(chatId: String, mode: String): ChatEntity?
+    suspend fun getChatById(chatId: String, mode: String = "SINGLE"): ChatEntity?
 
     /** 插入或更新聊天 */
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertChat(chat: ChatEntity)
