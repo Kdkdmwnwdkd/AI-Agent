@@ -37,7 +37,7 @@ class ModeManager private constructor(context: Context) {
 
     /** 用户是否开启了双模式（默认关闭，向后兼容） */
     val isDualModeEnabled: Boolean
-        get() = prefs.getBoolean("dual_mode_enabled", false)
+        get() = prefs.getBoolean("dual_mode_enabled", true)
 
     /** 当前活跃模式 */
     private val _currentMode = MutableStateFlow(OperitMode.SINGLE)
