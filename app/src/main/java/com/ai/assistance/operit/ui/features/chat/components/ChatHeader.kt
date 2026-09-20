@@ -11,19 +11,27 @@ import androidx.compose.material.icons.filled.PictureInPicture
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ai.assistance.operit.R
+import com.ai.assistance.operit.core.dualmode.ModeManager
+import com.ai.assistance.operit.ui.components.ModeSwitcher
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.ui.layout.ContentScale
 import coil.compose.rememberAsyncImagePainter
+import kotlinx.coroutines.launch
 
 private const val CHAT_HEADER_CHARACTER_NAME_MAX_LENGTH = 12
 
@@ -46,6 +54,12 @@ fun ChatHeader(
         onCharacterClick: () -> Unit
 ) {
         val displayCharacterName = activeCharacterName.toChatHeaderName()
+
+        // ★ v1.0.1g 双模式：观察并切换代码/角色模式
+        val context = LocalContext.current
+        val modeManager = remember { ModeManager.getInstance(context) }
+        val scope = rememberCoroutineScope()
+        val currentMode by modeManager.currentMode.collectAsState()
 
         Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -148,6 +162,18 @@ fun ChatHeader(
                                         modifier = Modifier.size(20.dp)
                                 )
                         }
+                }
+
+                // ★ v1.0.1g 双模式：代码/角色切换入口
+                if (modeManager.isDualModeEnabled) {
+                        ModeSwitcher(
+                                currentMode = currentMode,
+                                isDualModeEnabled = true,
+                                onModeChange = { mode ->
+                                        scope.launch { modeManager.switchTo(mode) }
+                                },
+                                modifier = Modifier.padding(end = 2.dp)
+                        )
                 }
 
                 // Character Switcher
