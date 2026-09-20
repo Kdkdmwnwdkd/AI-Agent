@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit
 import com.ai.assistance.operit.BuildConfig
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.core.chat.AIMessageManager
+import com.ai.assistance.operit.core.dualmode.ModeManager
 import com.ai.assistance.operit.api.chat.AIForegroundService
 import com.ai.assistance.operit.api.chat.library.MemoryAutoSaveScheduler
 import com.ai.assistance.operit.plugins.PluginRegistry
@@ -198,6 +199,14 @@ class OperitApplication : Application(), ImageLoaderFactory, WorkConfiguration.P
 
         // Initialize AIMessageManager
         AIMessageManager.initialize(this)
+
+        // ★ v1.0.1g 双模式：初始化模式管理器（默认开启双模式，聊天记录按模式隔离）
+        try {
+                ModeManager.getInstance(applicationContext)
+        } catch (error: Throwable) {
+                AppLogger.e(TAG, "双模式管理器初始化失败", error)
+        }
+
         PluginRegistry.initializeBuiltins()
         AppLifecycleHookPluginRegistry.dispatchAsync(
             event = AppLifecycleEvent.APPLICATION_CREATE,
