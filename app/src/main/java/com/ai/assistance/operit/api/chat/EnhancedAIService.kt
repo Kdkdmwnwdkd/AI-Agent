@@ -856,7 +856,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                     availableTools = serializePromptHookToolPrompts(availableTools),
                     metadata = buildPromptFinalizeMetadata(
                         chatId = chatId,
-                        roleCardId = roleCardId,
+                        roleCardId = effectiveRoleCardId,
                         workspacePath = workspacePath,
                         workspaceEnv = workspaceEnv,
                         enableThinking = enableThinking,
@@ -980,7 +980,17 @@ class EnhancedAIService private constructor(private val context: Context) {
         } else {
             memorySpaceIdOverride
         }
-        AppLogger.d(TAG, "双模式路由: mode=\$currentMode, effectiveFunctionType=\$effectiveFunctionType, effectiveMemorySpaceId=\$effectiveMemorySpaceId")
+        // ★ 双模式角色卡路由（v1.0.1g-fix）：根据当前模式覆盖 roleCardId，确保 system prompt 与模式一致
+        val effectiveRoleCardId = if (isDualMode) {
+            when (currentMode) {
+                OperitMode.CODE -> ModeManager.CODE_MODE_CHARACTER_ID
+                OperitMode.ROLE -> modeManager.getModeCharacterCardId(OperitMode.ROLE) ?: roleCardId
+                else -> roleCardId
+            }
+        } else {
+            roleCardId
+        }
+        AppLogger.d(TAG, "双模式路由: mode=$currentMode, effectiveFunctionType=$effectiveFunctionType, effectiveMemorySpaceId=$effectiveMemorySpaceId, effectiveRoleCardId=$effectiveRoleCardId")
         accumulatedInputTokenCount = 0L
         accumulatedOutputTokenCount = 0L
         accumulatedCachedInputTokenCount = 0L
@@ -1033,7 +1043,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                                     workspaceEnv,
                                     promptFunctionType,
                                     customSystemPromptTemplate,
-                                    roleCardId,
+                                    roleCardId = effectiveRoleCardId,
                                     enableGroupOrchestrationHint,
                                     groupParticipantNamesText,
                                     proxySenderName,
@@ -1077,7 +1087,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                         functionType = functionType,
                         chatId = chatId,
                         promptFunctionType = promptFunctionType,
-                        roleCardId = roleCardId,
+                        roleCardId = effectiveRoleCardId,
                         modelConfig = modelSnapshot.config
                     )
                     val tAfterGetTools = messageTimingNow()
@@ -1099,7 +1109,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                                 availableTools = serializePromptHookToolPrompts(availableTools),
                                 metadata = buildPromptFinalizeMetadata(
                                     chatId = chatId,
-                                    roleCardId = roleCardId,
+                        roleCardId = effectiveRoleCardId,
                                     workspacePath = workspacePath,
                                     workspaceEnv = workspaceEnv,
                                     enableThinking = enableThinking,
@@ -1846,7 +1856,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                         isSubTask = isSubTask,
                         characterName = characterName,
                         avatarUri = avatarUri,
-                        roleCardId = roleCardId,
+                        roleCardId = effectiveRoleCardId,
                         chatId = chatId,
                         onToolInvocation = onToolInvocation,
                         notifyReplyOverride = notifyReplyOverride,
@@ -1959,7 +1969,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                         isSubTask = isSubTask,
                         characterName = characterName,
                         avatarUri = avatarUri,
-                        roleCardId = roleCardId,
+                        roleCardId = effectiveRoleCardId,
                         chatId = chatId,
                         onToolInvocation = onToolInvocation,
                         notifyReplyOverride = notifyReplyOverride,
