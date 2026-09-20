@@ -19,12 +19,25 @@ import kotlinx.coroutines.sync.withLock
  * 2. 提供互斥切换（Mutex 串行化，防并发切换导致状态混乱）
  * 3. 管理"双模式开关"（用户是否启用了双模式）
  * 4. 保存/恢复各模式的现场上下文
+ * 5. ★ v1.0.1g 双模式角色卡隔离：代码模式固定绑定"代码编辑高手"
  */
 class ModeManager private constructor(context: Context) {
 
     companion object {
         @Volatile
         private var INSTANCE: ModeManager? = null
+
+        /** 代码模式默认角色卡ID */
+        const val CODE_MODE_CHARACTER_ID = "code_mode_character"
+        /** 代码模式默认角色名称 */
+        const val CODE_MODE_CHARACTER_NAME = "代码编辑高手"
+        /** 代码模式默认角色设定 */
+        const val CODE_MODE_CHARACTER_SETTING =
+            "You are an expert code editor and programming assistant. " +
+            "Your focus is writing clean, efficient, and well-documented code. " +
+            "You excel at debugging, refactoring, code review, and explaining complex programming concepts. " +
+            "Always provide practical, runnable code examples. " +
+            "When asked about code, think step by step and explain your reasoning."
 
         fun getInstance(context: Context): ModeManager =
             INSTANCE ?: synchronized(this) {
@@ -35,7 +48,7 @@ class ModeManager private constructor(context: Context) {
     private val prefs: SharedPreferences =
         context.getSharedPreferences("operit_mode", Context.MODE_PRIVATE)
 
-    /** 用户是否开启了双模式（默认关闭，向后兼容） */
+    /** 用户是否开启了双模式（默认开启） */
     val isDualModeEnabled: Boolean
         get() = prefs.getBoolean("dual_mode_enabled", true)
 
@@ -72,6 +85,28 @@ class ModeManager private constructor(context: Context) {
             // 关闭双模式后恢复 SINGLE
             _currentMode.value = OperitMode.SINGLE
         }
+    }
+
+    /**
+     * ★ v1.0.1g 获取指定模式绑定的角色卡ID。
+     * - CODE 模式：固定返回代码编辑高手
+     * - ROLE 模式：返回用户选择的角色卡（或 null 表示用全局设置）
+     * - SINGLE 模式：返回 null（兼容旧版行为）
+     */
+    fun getModeCharacterCardId(mode: OperitMode): String? = when (mode) {
+        OperitMode.CODE -> CODE_MODE_CHARACTER_ID
+        OperitMode.ROLE -> prefs.getString("role_mode_character_id", null)
+        OperitMode.SINGLE -> null
+    }
+
+    /**
+     * ★ v1.0.1g 设置角色模式绑定的角色卡ID（代码模式不可设置，固定绑定）
+     */
+    fun setRoleModeCharacterCardId(cardId: String?) {
+        prefs.edit().apply {
+            if (cardId == null) remove("role_mode_character_id")
+            else putString("role_mode_character_id", cardId)
+        }.apply()
     }
 
     /** 保存旧模式上下文（token 计数、记忆引用等） */
