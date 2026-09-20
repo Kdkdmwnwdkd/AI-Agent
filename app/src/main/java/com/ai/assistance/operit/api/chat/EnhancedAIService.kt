@@ -973,8 +973,8 @@ class EnhancedAIService private constructor(private val context: Context) {
         }
         val effectiveMemorySpaceId = if (isDualMode) {
             when (currentMode) {
-                OperitMode.CODE -> "code_\${memorySpaceIdOverride ?: chatId ?: "default"}"
-                OperitMode.ROLE -> "role_\${memorySpaceIdOverride ?: chatId ?: "default"}"
+                OperitMode.CODE -> "code_${memorySpaceIdOverride ?: chatId ?: "default"}"
+                OperitMode.ROLE -> "role_${memorySpaceIdOverride ?: chatId ?: "default"}"
                 else -> memorySpaceIdOverride
             }
         } else {
