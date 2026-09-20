@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.core.dualmode.ModeManager
+import com.ai.assistance.operit.core.dualmode.OperitMode
 import com.ai.assistance.operit.ui.components.ModeSwitcher
 import android.net.Uri
 import androidx.compose.foundation.Image
@@ -176,49 +177,52 @@ fun ChatHeader(
                         )
                 }
 
-                // Character Switcher
-                Row(
-                        modifier =
-                                Modifier
-                                        .widthIn(max = 176.dp)
-                                        .clip(CircleShape)
-                                        .clickable(onClick = onCharacterClick)
-                                        .padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                        // Placeholder for Avatar
-                        Box(
+                // ★ v1.0.1g 代码模式隐藏角色选择器，仅角色模式显示
+                if (currentMode != OperitMode.CODE) {
+                        // Character Switcher
+                        Row(
                                 modifier =
                                         Modifier
-                                                .size(24.dp)
+                                                .widthIn(max = 176.dp)
                                                 .clip(CircleShape)
-                                                .background(MaterialTheme.colorScheme.secondaryContainer),
-                                contentAlignment = Alignment.Center
+                                                .clickable(onClick = onCharacterClick)
+                                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                                // Use Coil or another image loader for activeCharacterAvatarUri
-                                if (activeCharacterAvatarUri != null) {
-                                    Image(
-                                        painter = rememberAsyncImagePainter(model = Uri.parse(activeCharacterAvatarUri)),
-                                        contentDescription = "Character Avatar",
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                } else {
-                                    Icon(
-                                        Icons.Rounded.Person,
-                                        contentDescription = "Character Avatar",
-                                        modifier = Modifier.padding(4.dp)
-                                    )
+                                // Placeholder for Avatar
+                                Box(
+                                        modifier =
+                                                Modifier
+                                                        .size(24.dp)
+                                                        .clip(CircleShape)
+                                                        .background(MaterialTheme.colorScheme.secondaryContainer),
+                                        contentAlignment = Alignment.Center
+                                ) {
+                                        // Use Coil or another image loader for activeCharacterAvatarUri
+                                        if (activeCharacterAvatarUri != null) {
+                                            Image(
+                                                painter = rememberAsyncImagePainter(model = Uri.parse(activeCharacterAvatarUri)),
+                                                contentDescription = "Character Avatar",
+                                                modifier = Modifier.fillMaxSize(),
+                                                contentScale = ContentScale.Crop
+                                            )
+                                        } else {
+                                            Icon(
+                                                Icons.Rounded.Person,
+                                                contentDescription = "Character Avatar",
+                                                modifier = Modifier.padding(4.dp)
+                                            )
+                                        }
                                 }
+                                Text(
+                                        text = displayCharacterName,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.widthIn(max = 116.dp)
+                                )
                         }
-                        Text(
-                                text = displayCharacterName,
-                                style = MaterialTheme.typography.bodyMedium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.widthIn(max = 116.dp)
-                        )
                 }
         }
 }
