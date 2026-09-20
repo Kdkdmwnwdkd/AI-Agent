@@ -89,6 +89,10 @@ import com.ai.assistance.operit.data.model.ToolPrompt
 import com.ai.assistance.operit.data.model.ToolParameterSchema
 import com.ai.assistance.operit.util.ChatUtils
 import com.ai.assistance.operit.util.LocaleUtils
+import com.ai.assistance.operit.core.dualmode.ModeManager
+import com.ai.assistance.operit.core.dualmode.OperitMode
+import com.ai.assistance.operit.core.dualmode.ModeAwareToolRegistry
+import com.ai.assistance.operit.core.dualmode.DualModeStorageManager
 
 /**
  * Enhanced AI service that provides advanced conversational capabilities by integrating various
@@ -953,6 +957,30 @@ class EnhancedAIService private constructor(private val context: Context) {
             }
 
         AppLogger.d(TAG, "sendMessage调用开始: 功能类型=$functionType, 提示词类型=$promptFunctionType")
+
+        // ★ 双模式路由（v1.0.1g）
+        val modeManager = ModeManager.getInstance(context)
+        val currentMode = modeManager.currentMode.value
+        val isDualMode = modeManager.isDualModeEnabled
+        val effectiveFunctionType = if (isDualMode) {
+            when (currentMode) {
+                OperitMode.CODE -> FunctionType.GREP
+                OperitMode.ROLE -> FunctionType.CHAT
+                else -> functionType
+            }
+        } else {
+            functionType
+        }
+        val effectiveMemorySpaceId = if (isDualMode) {
+            when (currentMode) {
+                OperitMode.CODE -> "code_\${memorySpaceIdOverride ?: chatId ?: "default"}"
+                OperitMode.ROLE -> "role_\${memorySpaceIdOverride ?: chatId ?: "default"}"
+                else -> memorySpaceIdOverride
+            }
+        } else {
+            memorySpaceIdOverride
+        }
+        AppLogger.d(TAG, "双模式路由: mode=\$currentMode, effectiveFunctionType=\$effectiveFunctionType, effectiveMemorySpaceId=\$effectiveMemorySpaceId")
         accumulatedInputTokenCount = 0L
         accumulatedOutputTokenCount = 0L
         accumulatedCachedInputTokenCount = 0L
