@@ -1,0 +1,86 @@
+package com.ai.assistance.operit.core.dualmode
+
+import android.content.Context
+import android.content.SharedPreferences
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+
+/**
+ * 模式管理器（§5.1）。
+ *
+ * 核心职责：
+ * 1. 持有当前活跃模式（StateFlow，UI 层可观察）
+ * 2. 提供互斥切换（Mutex 串行化，防并发切换导致状态混乱）
+ * 3. 管理"双模式开关"（用户是否启用了双模式）
+ * 4. 保存/恢复各模式的现场上下文
+ */
+class ModeManager private constructor(context: Context) {
+
+    companion object {
+        @Volatile
+        private var INSTANCE: ModeManager? = null
+
+        fun getInstance(context: Context): ModeManager =
+            INSTANCE ?: synchronized(this) {
+                INSTANCE ?: ModeManager(context.applicationContext).also { INSTANCE = it }
+            }
+    }
+
+    private val prefs: SharedPreferences =
+        context.getSharedPreferences("operit_mode", Context.MODE_PRIVATE)
+
+    /** 用户是否开启了双模式（默认关闭，向后兼容） */
+    val isDualModeEnabled: Boolean
+        get() = prefs.getBoolean("dual_mode_enabled", false)
+
+    /** 当前活跃模式 */
+    private val _currentMode = MutableStateFlow(OperitMode.SINGLE)
+    val currentMode: StateFlow<OperitMode> = _currentMode.asStateFlow()
+
+    /** 模式切换事件（供 UI 层订阅刷新） */
+    private val _modeChangedEvent = MutableSharedFlow<OperitMode>(replay = 1)
+    val modeChangedEvent: SharedFlow<OperitMode> = _modeChangedEvent.asSharedFlow()
+
+    /** §5.1 互斥锁：并发切换串行化 */
+    private val switchMutex = Mutex()
+
+    /** 切换模式（suspend，调用方需处于协程环境） */
+    suspend fun switchTo(mode: OperitMode) = switchMutex.withLock {
+        if (!isDualModeEnabled && mode != OperitMode.SINGLE) {
+            throw IllegalStateException("Dual mode not enabled")
+        }
+        val oldMode = _currentMode.value
+        if (oldMode == mode) return@withLock
+
+        // §5.1 顺序铁律：先保存旧模式现场，再切换
+        saveModeState(oldMode)
+        _currentMode.value = mode
+        loadModeState(mode)
+        _modeChangedEvent.emit(mode)
+    }
+
+    /** 开启/关闭双模式 */
+    fun setDualModeEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean("dual_mode_enabled", enabled).apply()
+        if (!enabled) {
+            // 关闭双模式后恢复 SINGLE
+            _currentMode.value = OperitMode.SINGLE
+        }
+    }
+
+    /** 保存旧模式上下文（token 计数、记忆引用等） */
+    private fun saveModeState(mode: OperitMode) {
+        // 由 DualModeStorageManager 实现具体落盘
+    }
+
+    /** 恢复目标模式上下文 */
+    private fun loadModeState(mode: OperitMode) {
+        // 由 DualModeStorageManager 实现具体读取
+    }
+}
