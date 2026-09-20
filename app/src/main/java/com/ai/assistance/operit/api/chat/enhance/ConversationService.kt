@@ -28,6 +28,8 @@ import com.ai.assistance.operit.data.preferences.DisplayPreferencesManager
 import com.ai.assistance.operit.data.preferences.WaifuPreferences
 import com.ai.assistance.operit.data.preferences.CharacterCardManager
 import com.ai.assistance.operit.data.preferences.ActivePromptManager
+import com.ai.assistance.operit.core.dualmode.ModeManager
+import com.ai.assistance.operit.core.dualmode.OperitMode
 import com.ai.assistance.operit.data.preferences.CharacterCardToolAccessResolver
 import com.ai.assistance.operit.data.model.PromptFunctionType
 import com.ai.assistance.operit.data.preferences.MemorySpaceProfileDocumentRepository
@@ -600,8 +602,21 @@ class ConversationService(
                     }
                 AppLogger.d("petRules", avatarMoodRulesText)
 
+                // ★ v1.0.1g 双模式：根据当前模式注入角色卡设定
+                val currentMode = ModeManager.getInstance(context).currentMode.value
+                val characterSetting = when (currentMode) {
+                    OperitMode.CODE -> ModeManager.CODE_MODE_CHARACTER_SETTING
+                    OperitMode.ROLE -> activeCard?.characterSetting?.takeIf { it.isNotBlank() } ?: ""
+                    else -> activeCard?.characterSetting?.takeIf { it.isNotBlank() } ?: ""
+                }
+
                 // 构建最终的系统提示词
                 val finalSystemPrompt = buildString {
+                    if (characterSetting.isNotBlank()) {
+                        append("<character_setting>\n")
+                        append(characterSetting)
+                        append("\n</character_setting>\n\n")
+                    }
                     append(avatarMoodRulesText)
                     append(systemPrompt)
                     if (proxyRolePrompt.isNotEmpty()) {
