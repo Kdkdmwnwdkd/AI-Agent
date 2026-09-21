@@ -856,7 +856,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                     availableTools = serializePromptHookToolPrompts(availableTools),
                     metadata = buildPromptFinalizeMetadata(
                         chatId = chatId,
-                        roleCardId = effectiveRoleCardId,
+                        roleCardId = roleCardId,
                         workspacePath = workspacePath,
                         workspaceEnv = workspaceEnv,
                         enableThinking = enableThinking,
@@ -1751,6 +1751,9 @@ class EnhancedAIService private constructor(private val context: Context) {
             context: MessageExecutionContext,
             functionType: FunctionType = FunctionType.CHAT,
             promptFunctionType: PromptFunctionType = PromptFunctionType.CHAT,
+            effectiveFunctionType: FunctionType? = null,
+            effectiveRoleCardId: String? = null,
+            effectiveMemorySpaceId: String? = null,
             collector: StreamCollector<String>,
             enableThinking: Boolean = false,
             enableMemoryAutoUpdate: Boolean = true,
@@ -1772,6 +1775,9 @@ class EnhancedAIService private constructor(private val context: Context) {
             enableGroupOrchestrationHint: Boolean = false,
             disableWarning: Boolean = false
     ) {
+        val useFunctionType = effectiveFunctionType ?: functionType
+        val useRoleCardId = effectiveRoleCardId ?: roleCardId
+        val useMemorySpaceId = effectiveMemorySpaceId ?: memorySpaceIdOverride
         try {
             val startTime = messageTimingNow()
             // If conversation is no longer active, return immediately
@@ -2134,6 +2140,9 @@ class EnhancedAIService private constructor(private val context: Context) {
         toolResultOverrideMessage: String? = null,
         disableWarning: Boolean = false
     ) {
+        val useFunctionType = effectiveFunctionType ?: functionType
+        val useRoleCardId = effectiveRoleCardId ?: roleCardId
+        val useMemorySpaceId = effectiveMemorySpaceId ?: memorySpaceIdOverride
         val startTime = messageTimingNow()
 
         toolInvocations.forEach { invocation ->
@@ -2232,6 +2241,9 @@ class EnhancedAIService private constructor(private val context: Context) {
             context: MessageExecutionContext,
             functionType: FunctionType = FunctionType.CHAT,
             promptFunctionType: PromptFunctionType = PromptFunctionType.CHAT,
+            effectiveFunctionType: FunctionType? = null,
+            effectiveRoleCardId: String? = null,
+            effectiveMemorySpaceId: String? = null,
             collector: StreamCollector<String>,
             enableThinking: Boolean = false,
             enableMemoryAutoUpdate: Boolean = true,
