@@ -48,6 +48,9 @@ class ModeManager private constructor(context: Context) {
     private val prefs: SharedPreferences =
         context.getSharedPreferences("operit_mode", Context.MODE_PRIVATE)
 
+    private val _currentMode = MutableStateFlow(OperitMode.SINGLE)
+    val currentMode: StateFlow<OperitMode> = _currentMode.asStateFlow()
+
     init {
         // Restore last saved mode from SharedPreferences
         val savedMode = prefs.getString("current_mode", null)
@@ -61,10 +64,6 @@ class ModeManager private constructor(context: Context) {
     /** 用户是否开启了双模式（默认开启） */
     val isDualModeEnabled: Boolean
         get() = prefs.getBoolean("dual_mode_enabled", true)
-
-    /** 当前活跃模式 */
-    private val _currentMode = MutableStateFlow(OperitMode.SINGLE)
-    val currentMode: StateFlow<OperitMode> = _currentMode.asStateFlow()
 
     /** 模式切换事件（供 UI 层订阅刷新） */
     private val _modeChangedEvent = MutableSharedFlow<OperitMode>(replay = 1)
@@ -120,9 +119,9 @@ class ModeManager private constructor(context: Context) {
         }.apply()
     }
 
-    /** 保存旧模式上下文（token 计数、记忆引用等） */
+    /** 保存旧模式上下文 */
     private fun saveModeState(mode: OperitMode) {
-        // 由 DualModeStorageManager 实现具体落盘
+        prefs.edit().putString("current_mode", mode.name).apply()
     }
 
     /** 恢复目标模式上下文 */
