@@ -120,6 +120,8 @@ class CharacterCardManager private constructor(private val context: Context) {
                 preferences[CHARACTER_CARD_LIST] = setOf(DEFAULT_CHARACTER_CARD_ID)
                 setupDefaultCharacterCard(context, preferences, DEFAULT_CHARACTER_CARD_ID)
             }
+            // ★ v1.0.1g-fix: ensure code mode character card exists
+            setupCodeModeCharacterCard(context, preferences)
 
             migrateLegacyOtherContentToChat(context, preferences)
 
@@ -201,6 +203,55 @@ class CharacterCardManager private constructor(private val context: Context) {
             preferences.remove(memoryProfileIdKey)
             preferences.remove(toolAccessConfigKey)
             preferences[isDefaultKey] = true
+            preferences[createdAtKey] = System.currentTimeMillis()
+            preferences[updatedAtKey] = System.currentTimeMillis()
+        }
+
+        /** ★ v1.0.1g-fix: 预置代码模式角色卡 */
+        internal fun setupCodeModeCharacterCard(
+            context: Context,
+            preferences: MutablePreferences,
+        ) {
+            val id = "code_mode_character"
+            val existingList = preferences[CHARACTER_CARD_LIST]?.toMutableSet() ?: mutableSetOf()
+            existingList.add(id)
+            preferences[CHARACTER_CARD_LIST] = existingList
+
+            val nameKey = stringPreferencesKey("character_card_${id}_name")
+            val descriptionKey = stringPreferencesKey("character_card_${id}_description")
+            val characterSettingKey = stringPreferencesKey("character_card_${id}_character_setting")
+            val openingStatementKey = stringPreferencesKey("character_card_${id}_opening_statement")
+            val otherContentChatKey = stringPreferencesKey("character_card_${id}_other_content_chat")
+            val otherContentVoiceKey = stringPreferencesKey("character_card_${id}_other_content_voice")
+            val attachedTagIdsKey = stringSetPreferencesKey("character_card_${id}_attached_tag_ids")
+            val advancedCustomPromptKey = stringPreferencesKey("character_card_${id}_advanced_custom_prompt")
+            val marksKey = stringPreferencesKey("character_card_${id}_marks")
+            val chatModelBindingModeKey = stringPreferencesKey("character_card_${id}_chat_model_binding_mode")
+            val chatModelConfigIdKey = stringPreferencesKey("character_card_${id}_chat_model_config_id")
+            val chatModelIndexKey = intPreferencesKey("character_card_${id}_chat_model_index")
+            val memoryProfileBindingModeKey = stringPreferencesKey("character_card_${id}_memory_profile_binding_mode")
+            val memoryProfileIdKey = stringPreferencesKey("character_card_${id}_memory_profile_id")
+            val toolAccessConfigKey = stringPreferencesKey("character_card_${id}_tool_access_config_json")
+            val isDefaultKey = booleanPreferencesKey("character_card_${id}_is_default")
+            val createdAtKey = longPreferencesKey("character_card_${id}_created_at")
+            val updatedAtKey = longPreferencesKey("character_card_${id}_updated_at")
+
+            preferences[nameKey] = ModeManager.CODE_MODE_CHARACTER_NAME
+            preferences[descriptionKey] = "Expert code editing assistant for dual-mode CODE context"
+            preferences[characterSettingKey] = ModeManager.CODE_MODE_CHARACTER_SETTING
+            preferences[openingStatementKey] = ""
+            preferences[otherContentChatKey] = ""
+            preferences[otherContentVoiceKey] = ""
+            preferences[attachedTagIdsKey] = setOf<String>()
+            preferences[advancedCustomPromptKey] = ""
+            preferences[marksKey] = ""
+            preferences[chatModelBindingModeKey] = CharacterCardChatModelBindingMode.FOLLOW_GLOBAL
+            preferences.remove(chatModelConfigIdKey)
+            preferences[chatModelIndexKey] = 0
+            preferences[memoryProfileBindingModeKey] = CharacterCardMemoryProfileBindingMode.FOLLOW_GLOBAL
+            preferences.remove(memoryProfileIdKey)
+            preferences.remove(toolAccessConfigKey)
+            preferences[isDefaultKey] = false
             preferences[createdAtKey] = System.currentTimeMillis()
             preferences[updatedAtKey] = System.currentTimeMillis()
         }
