@@ -48,6 +48,16 @@ class ModeManager private constructor(context: Context) {
     private val prefs: SharedPreferences =
         context.getSharedPreferences("operit_mode", Context.MODE_PRIVATE)
 
+    init {
+        // Restore last saved mode from SharedPreferences
+        val savedMode = prefs.getString("current_mode", null)
+        _currentMode.value = when (savedMode) {
+            OperitMode.CODE.name -> OperitMode.CODE
+            OperitMode.ROLE.name -> OperitMode.ROLE
+            else -> OperitMode.SINGLE
+        }
+    }
+
     /** 用户是否开启了双模式（默认开启） */
     val isDualModeEnabled: Boolean
         get() = prefs.getBoolean("dual_mode_enabled", true)
@@ -74,6 +84,7 @@ class ModeManager private constructor(context: Context) {
         // §5.1 顺序铁律：先保存旧模式现场，再切换
         saveModeState(oldMode)
         _currentMode.value = mode
+        prefs.edit().putString("current_mode", mode.name).apply()
         loadModeState(mode)
         _modeChangedEvent.emit(mode)
     }
