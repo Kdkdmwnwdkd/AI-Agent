@@ -1028,7 +1028,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                     val modelSnapshot =
                         getModelExecutionSnapshot(
                             execContext,
-                            functionType,
+                            effectiveFunctionType,
                             chatModelConfigIdOverride,
                             chatModelIndexOverride
                         )
@@ -1048,9 +1048,9 @@ class EnhancedAIService private constructor(private val context: Context) {
                                     groupParticipantNamesText,
                                     proxySenderName,
                                     isSubTask,
-                                    functionType,
+                                    effectiveFunctionType,
                                     modelSnapshot.config,
-                                    memorySpaceIdOverride
+                                    effectiveMemorySpaceId
                             )
                     val tAfterPrepareHistory = messageTimingNow()
                     AppLogger.d(TAG, "sendMessage本地耗时: prepareConversationHistory=${tAfterPrepareHistory - startTime}ms")
@@ -1084,7 +1084,7 @@ class EnhancedAIService private constructor(private val context: Context) {
 
                     // 获取工具列表（如果启用Tool Call）
                     val availableTools = getAvailableToolsForFunction(
-                        functionType = functionType,
+                        functionType = effectiveFunctionType,
                         chatId = chatId,
                         promptFunctionType = promptFunctionType,
                         roleCardId = effectiveRoleCardId,
@@ -1324,7 +1324,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                         withContext(Dispatchers.IO) {
                             processStreamCompletion(
                                 execContext,
-                                functionType,
+                                effectiveFunctionType,
                                 promptFunctionType,
                                 collector,
                                 enableThinking,
@@ -1336,13 +1336,13 @@ class EnhancedAIService private constructor(private val context: Context) {
                                 isSubTask,
                                 characterName,
                                 avatarUri,
-                                roleCardId,
+                                effectiveRoleCardId,
                                 chatId,
                                 onToolInvocation,
                                 notifyReplyOverride,
                                 chatModelConfigIdOverride,
                                 chatModelIndexOverride,
-                                memorySpaceIdOverride,
+                                effectiveMemorySpaceId,
                                 stream,
                                 enableGroupOrchestrationHint,
                                 disableWarning
@@ -1794,7 +1794,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                     isSubTask = isSubTask,
                     chatId = chatId,
                     notifyReplyOverride = notifyReplyOverride,
-                    memorySpaceIdOverride = memorySpaceIdOverride
+                    memorySpaceIdOverride = effectiveMemorySpaceId
                 )
                 return
             }
@@ -2020,18 +2020,18 @@ class EnhancedAIService private constructor(private val context: Context) {
                 return
             }
 
-            finalizeAssistantResponse(
-                context = context,
-                content = context.roundManager.getDisplayContent(),
-                enableMemoryAutoUpdate = enableMemoryAutoUpdate,
-                onNonFatalError = onNonFatalError,
-                isSubTask = isSubTask,
-                chatId = chatId,
-                characterName = characterName,
-                avatarUri = avatarUri,
-                notifyReplyOverride = notifyReplyOverride,
-                memorySpaceIdOverride = memorySpaceIdOverride
-            )
+                    finalizeAssistantResponse(
+                        context = context,
+                        content = context.roundManager.getDisplayContent(),
+                        enableMemoryAutoUpdate = enableMemoryAutoUpdate,
+                        onNonFatalError = onNonFatalError,
+                        isSubTask = isSubTask,
+                        chatId = chatId,
+                        characterName = characterName,
+                        avatarUri = avatarUri,
+                        notifyReplyOverride = notifyReplyOverride,
+                        memorySpaceIdOverride = effectiveMemorySpaceId
+                    )
             logMessageTiming(
                 stage = "enhanced.processStreamCompletion.complete",
                 startTimeMs = startTime
@@ -2495,7 +2495,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                 // 流处理完成，处理完成逻辑
                 processStreamCompletion(
                     context,
-                    functionType,
+                    effectiveFunctionType,
                     promptFunctionType,
                     collector,
                     enableThinking,
