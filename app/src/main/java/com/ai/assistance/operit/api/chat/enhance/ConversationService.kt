@@ -504,9 +504,9 @@ class ConversationService(
         val preparedHistory = mutableListOf<PromptTurn>()
         var resolvedUseEnglish: Boolean? = null
         conversationMutex.withLock {
-            // Add system prompt if not already present
-            if (!effectiveChatHistory.any { it.kind == PromptTurnKind.SYSTEM }) {
-                val effectiveMemorySpaceId =
+            // ★ 双模式修复：无论 chatHistory 中是否已有 system prompt，都重新构建
+            // 以确保模式切换后 characterSetting 正确注入
+            val effectiveMemorySpaceId =
                     memorySpaceIdOverride?.takeIf { it.isNotBlank() }
                         ?: userPreferencesManager.activeMemorySpaceIdFlow.first()
                 val userProfileMarkdown =
@@ -638,14 +638,13 @@ class ConversationService(
                     finalSystemPrompt,
                     aiName
                 )
-                preparedHistory.add(
-                    0,
-                    PromptTurn(
-                        kind = PromptTurnKind.SYSTEM,
-                        content = finalSystemPromptWithReplacements
-                    )
+            preparedHistory.add(
+                0,
+                PromptTurn(
+                    kind = PromptTurnKind.SYSTEM,
+                    content = finalSystemPromptWithReplacements
                 )
-            }
+            )
 
             // Process each message in chat history
             effectiveChatHistory.forEachIndexed { index, message ->
@@ -665,8 +664,10 @@ class ConversationService(
                 } else if (kind == PromptTurnKind.TOOL_RESULT) {
                     preparedHistory.add(message.copy(content = normalizeToolResultMarkupForModel(content)))
                 } else {
-                    // Add typed turns as is
-                    preparedHistory.add(message)
+                    // Add typed turns as is, but skip old SYSTEM prompts to avoid duplication
+                    if (kind != PromptTurnKind.SYSTEM) {
+                        preparedHistory.add(message)
+                    }
                 }
             }
         }
