@@ -11,6 +11,7 @@ import com.ai.assistance.operit.api.chat.enhance.ConversationService
 import com.ai.assistance.operit.api.chat.enhance.FileBindingService
 import com.ai.assistance.operit.api.chat.enhance.MultiServiceManager
 import com.ai.assistance.operit.api.chat.enhance.ToolExecutionManager
+import com.ai.assistance.operit.api.chat.ModelRouter
 import com.ai.assistance.operit.api.chat.llmprovider.AIService
 import com.ai.assistance.operit.core.chat.logMessageTiming
 import com.ai.assistance.operit.core.chat.messageTimingNow
@@ -99,6 +100,8 @@ import com.ai.assistance.operit.core.dualmode.DualModeStorageManager
  * components like tool execution, conversation management, user preferences, and problem library.
  */
 class EnhancedAIService private constructor(private val context: Context) {
+    private val modelRouter by lazy { ModelRouter.getInstance(context) }
+
     data class TurnTokenSnapshot(
         val inputTokens: Long,
         val outputTokens: Long,
@@ -547,6 +550,8 @@ class EnhancedAIService private constructor(private val context: Context) {
      */
     suspend fun getAIServiceForFunction(functionType: FunctionType): AIService {
         ensureInitialized()
+        val decision = modelRouter.route(functionType)
+        AppLogger.d("EnhancedAIService", "ModelRouter: ${'$'}{decision.target} | ${'$'}{decision.reason}")
         return getAIServiceForFunction(
             functionType = functionType,
             chatModelConfigIdOverride = null,
