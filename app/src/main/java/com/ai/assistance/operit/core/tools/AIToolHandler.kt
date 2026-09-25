@@ -1,6 +1,7 @@
 package com.ai.assistance.operit.core.tools
 
 import android.content.Context
+import java.util.UUID
 import com.ai.assistance.operit.util.AppLogger
 import com.ai.assistance.operit.core.tools.mcp.MCPManager
 import com.ai.assistance.operit.core.tools.packTool.PackageManager
@@ -360,7 +361,8 @@ class AIToolHandler private constructor(private val context: Context) {
 
 
     /** Executes a tool directly */
-    fun executeTool(tool: AITool): ToolResult {
+    fun executeTool(tool: AITool, traceId: String = ""): ToolResult {
+        val effectiveTraceId = traceId.ifBlank { "t-" + UUID.randomUUID().toString().take(8) }
         notifyToolCallRequested(tool)
         when (val interception = checkToolInterception(tool)) {
             AIToolHookDecision.Allow -> Unit
@@ -375,13 +377,13 @@ class AIToolHandler private constructor(private val context: Context) {
         val executor = getToolExecutorOrActivate(tool.name)
 
         if (executor == null) {
-            val notFoundResult =
-                    ToolResult(
-                            toolName = tool.name,
-                            success = false,
-                            result = StringResultData(""),
-                            error = "Tool not found: ${tool.name}"
-                    )
+            val notFoundResult = ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = "Tool not found: ${tool.name}",
+                traceId = effectiveTraceId
+            )
             notifyToolExecutionResult(tool, notFoundResult)
             notifyToolExecutionFinished(tool)
             return notFoundResult
@@ -390,29 +392,57 @@ class AIToolHandler private constructor(private val context: Context) {
         // Validate parameters
         val validationResult = executor.validateParameters(tool)
         if (!validationResult.valid) {
-            val validationFailedResult =
-                    ToolResult(
-                            toolName = tool.name,
-                            success = false,
-                            result = StringResultData(""),
-                            error = validationResult.errorMessage
-                    )
+            val validationFailedResult = ToolResult(
+                toolName = tool.name,
+                success = false,
+                result = StringResultData(""),
+                error = validationResult.errorMessage,
+                traceId = effectiveTraceId
+            )
             notifyToolExecutionResult(tool, validationFailedResult)
             notifyToolExecutionFinished(tool)
             return validationFailedResult
         }
 
         notifyToolExecutionStarted(tool)
-        return try {
-            val result = executor.invoke(tool)
-            notifyToolExecutionResult(tool, result)
-            result
-        } catch (e: Exception) {
-            notifyToolExecutionError(tool, e)
-            throw e
-        } finally {
-            notifyToolExecutionFinished(tool)
+        return executeWithRetry(tool, executor, effectiveTraceId)
+    }
+
+    private val MAX_RETRIES = 2
+    private val RETRY_DELAY_MS = 1000L
+
+    private fun executeWithRetry(tool: AITool, executor: ToolExecutor, traceId: String): ToolResult {
+        var lastError: Throwable? = null
+        repeat(MAX_RETRIES + 1) { attempt ->
+            if (attempt > 0) {
+                AppLogger.w(TAG, "[$traceId] Retry attempt $attempt/${MAX_RETRIES} for ${tool.name}")
+                Thread.sleep(RETRY_DELAY_MS)
+            }
+            try {
+                val result = executor.invoke(tool)
+                val resultWithTrace = result.copy(traceId = traceId)
+                notifyToolExecutionResult(tool, resultWithTrace)
+                notifyToolExecutionFinished(tool)
+                return resultWithTrace
+            } catch (e: Exception) {
+                lastError = e
+                notifyToolExecutionError(tool, e)
+                if (attempt < MAX_RETRIES) {
+                    AppLogger.e(TAG, "[$traceId] Tool ${tool.name} failed (attempt ${attempt + 1}), will retry", e)
+                }
+            }
         }
+        // All retries exhausted — return error result instead of throwing
+        val errorResult = ToolResult(
+            toolName = tool.name,
+            success = false,
+            result = StringResultData(""),
+            error = "[$traceId] Tool execution failed after ${MAX_RETRIES + 1} attempts: ${lastError?.message}",
+            traceId = traceId
+        )
+        notifyToolExecutionResult(tool, errorResult)
+        notifyToolExecutionFinished(tool)
+        return errorResult
     }
 
     /** Executes a tool and preserves intermediate streaming results when supported by the executor. */
