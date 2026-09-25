@@ -78,7 +78,12 @@ PACKAGE SYSTEM
   - tool_name 填写真实工具名（例如 packageName:toolName）
   - 将目标工具参数放入 params（JSON对象）"""
 
-    private suspend fun getAvailableToolsEn(
+    /**
+     * Locale-aware unified tool prompt generator.
+     * Supports "en", "cn"; extend the map to add more locales (e.g. "jp").
+     */
+    private suspend fun getAvailableTools(
+        useEnglish: Boolean,
         chatId: String?,
         hasImageRecognition: Boolean,
         chatModelHasDirectImage: Boolean,
@@ -97,66 +102,65 @@ PACKAGE SYSTEM
         } else {
             emptyList()
         }
-        return SystemToolPrompts.generateToolsPromptEn(
-            chatId = chatId,
-            hasBackendImageRecognition = hasImageRecognition,
-            includeMemoryTools = false,
-            chatModelHasDirectImage = chatModelHasDirectImage,
-            hasBackendAudioRecognition = hasAudioRecognition,
-            hasBackendVideoRecognition = hasVideoRecognition,
-            chatModelHasDirectAudio = chatModelHasDirectAudio,
-            chatModelHasDirectVideo = chatModelHasDirectVideo,
-            safBookmarkNames = safBookmarkNames,
-            toolVisibility = toolVisibility,
-            toolOrder = toolOrder,
-            hookMetadata = hookMetadata,
-            dispatchToolPromptComposeHooks = dispatchToolPromptComposeHooks
-        )
-    }
-
-    private fun getMemoryToolsEn(toolVisibility: Map<String, Boolean>): String {
-        return SystemToolPrompts.generateMemoryToolsPromptEn(toolVisibility)
-    }
-
-    private suspend fun getAvailableToolsCn(
-        chatId: String?,
-        hasImageRecognition: Boolean,
-        chatModelHasDirectImage: Boolean,
-        hasAudioRecognition: Boolean,
-        hasVideoRecognition: Boolean,
-        chatModelHasDirectAudio: Boolean,
-        chatModelHasDirectVideo: Boolean,
-        safBookmarkNames: List<String>,
-        toolVisibility: Map<String, Boolean>,
-        hookMetadata: Map<String, Any?> = emptyMap(),
-        dispatchToolPromptComposeHooks: (PromptHookContext) -> PromptHookContext = PromptHookRegistry::dispatchToolPromptComposeHooks,
-        context: Context? = null
-    ): String {
-        val toolOrder = if (context != null) {
-            ApiPreferences.getInstance(context).getToolPromptOrder()
+        return if (useEnglish) {
+            SystemToolPrompts.generateToolsPromptEn(
+                chatId = chatId,
+                hasBackendImageRecognition = hasImageRecognition,
+                includeMemoryTools = false,
+                chatModelHasDirectImage = chatModelHasDirectImage,
+                hasBackendAudioRecognition = hasAudioRecognition,
+                hasBackendVideoRecognition = hasVideoRecognition,
+                chatModelHasDirectAudio = chatModelHasDirectAudio,
+                chatModelHasDirectVideo = chatModelHasDirectVideo,
+                safBookmarkNames = safBookmarkNames,
+                toolVisibility = toolVisibility,
+                toolOrder = toolOrder,
+                hookMetadata = hookMetadata,
+                dispatchToolPromptComposeHooks = dispatchToolPromptComposeHooks
+            )
         } else {
-            emptyList()
+            SystemToolPrompts.generateToolsPromptCn(
+                chatId = chatId,
+                hasBackendImageRecognition = hasImageRecognition,
+                includeMemoryTools = false,
+                chatModelHasDirectImage = chatModelHasDirectImage,
+                hasBackendAudioRecognition = hasAudioRecognition,
+                hasBackendVideoRecognition = hasVideoRecognition,
+                chatModelHasDirectAudio = chatModelHasDirectAudio,
+                chatModelHasDirectVideo = chatModelHasDirectVideo,
+                safBookmarkNames = safBookmarkNames,
+                toolVisibility = toolVisibility,
+                toolOrder = toolOrder,
+                hookMetadata = hookMetadata,
+                dispatchToolPromptComposeHooks = dispatchToolPromptComposeHooks
+            )
         }
-        return SystemToolPrompts.generateToolsPromptCn(
-            chatId = chatId,
-            hasBackendImageRecognition = hasImageRecognition,
-            includeMemoryTools = false,
-            chatModelHasDirectImage = chatModelHasDirectImage,
-            hasBackendAudioRecognition = hasAudioRecognition,
-            hasBackendVideoRecognition = hasVideoRecognition,
-            chatModelHasDirectAudio = chatModelHasDirectAudio,
-            chatModelHasDirectVideo = chatModelHasDirectVideo,
-            safBookmarkNames = safBookmarkNames,
-            toolVisibility = toolVisibility,
-            toolOrder = toolOrder,
-            hookMetadata = hookMetadata,
-            dispatchToolPromptComposeHooks = dispatchToolPromptComposeHooks
-        )
     }
 
-    private fun getMemoryToolsCn(toolVisibility: Map<String, Boolean>): String {
-        return SystemToolPrompts.generateMemoryToolsPromptCn(toolVisibility)
+    private fun getMemoryTools(
+        useEnglish: Boolean,
+        toolVisibility: Map<String, Boolean>
+    ): String {
+        return if (useEnglish) {
+            SystemToolPrompts.generateMemoryToolsPromptEn(toolVisibility)
+        } else {
+            SystemToolPrompts.generateMemoryToolsPromptCn(toolVisibility)
+        }
     }
+
+    /**
+     * Locale-to-prompt mapping for future extensibility (e.g. Japanese, Korean).
+     * Currently supports: "en", "cn".
+     */
+    private fun getToolUsageGuidelines(useEnglish: Boolean): String =
+        if (useEnglish) TOOL_USAGE_GUIDELINES_EN else TOOL_USAGE_GUIDELINES_CN
+
+    private fun getPackageSystemGuidelines(useEnglish: Boolean): String =
+        if (useEnglish) PACKAGE_SYSTEM_GUIDELINES_EN else PACKAGE_SYSTEM_GUIDELINES_CN
+
+    private fun getPackageSystemGuidelinesToolCall(useEnglish: Boolean): String =
+        if (useEnglish) PACKAGE_SYSTEM_GUIDELINES_TOOL_CALL_EN else PACKAGE_SYSTEM_GUIDELINES_TOOL_CALL_CN
+
 
 
     /** Base system prompt template used by the enhanced AI service */
@@ -384,9 +388,10 @@ AVAILABLE_TOOLS_SECTION""".trimIndent()
 
     // Determine the available tools string based on tool visibility and recognition capabilities.
     // 当使用Tool Call API时，不在系统提示词中包含工具描述（工具已通过API的tools字段发送）
-    val availableToolsEn = if (useToolCallApi || toolExposureMode == ToolExposureMode.CLI) "" else (
-        getMemoryToolsEn(toolVisibility) +
-            getAvailableToolsEn(
+    val availableTools = if (useToolCallApi || toolExposureMode == ToolExposureMode.CLI) "" else (
+        getMemoryTools(useEnglish = useEnglish, toolVisibility = toolVisibility) +
+            getAvailableTools(
+                useEnglish = useEnglish,
                 chatId = chatId,
                 hasImageRecognition = hasImageRecognition,
                 chatModelHasDirectImage = chatModelHasDirectImage,
@@ -401,23 +406,7 @@ AVAILABLE_TOOLS_SECTION""".trimIndent()
                 context = context
             )
     )
-    val availableToolsCn = if (useToolCallApi || toolExposureMode == ToolExposureMode.CLI) "" else (
-        getMemoryToolsCn(toolVisibility) +
-            getAvailableToolsCn(
-                chatId = chatId,
-                hasImageRecognition = hasImageRecognition,
-                chatModelHasDirectImage = chatModelHasDirectImage,
-                hasAudioRecognition = hasAudioRecognition,
-                hasVideoRecognition = hasVideoRecognition,
-                chatModelHasDirectAudio = chatModelHasDirectAudio,
-                chatModelHasDirectVideo = chatModelHasDirectVideo,
-                safBookmarkNames = safBookmarkNames,
-                toolVisibility = toolVisibility,
-                hookMetadata = hookMetadata,
-                dispatchToolPromptComposeHooks = dispatchToolPromptComposeHooks,
-                context = context
-            )
-    )
+
 
     // Handle tools disable/enable
     if (enableTools) {
@@ -450,7 +439,7 @@ AVAILABLE_TOOLS_SECTION""".trimIndent()
                         ""
                     }
                 )
-                .replace("AVAILABLE_TOOLS_SECTION", if (useEnglish) availableToolsEn else availableToolsCn)
+                .replace("AVAILABLE_TOOLS_SECTION", availableTools)
         }
     } else {
         // Remove all guidance sections when tools are disabled
