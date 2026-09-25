@@ -30,7 +30,8 @@ data class ToolResult(
         val toolName: String,
         val success: Boolean,
         val result: ToolResultData,
-        val error: String? = null
+        val error: String? = null,
+        val traceId: String = ""
 )
 
 /** Represents the validation result for tool parameters */

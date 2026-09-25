@@ -405,14 +405,16 @@ object ToolExecutionManager {
         }
 
         return executor.invokeAndStream(invocation.tool).catch { e ->
-            AppLogger.e(TAG, "Tool execution error: ${invocation.tool.name}", e)
+            val traceId = ""
+            AppLogger.e(TAG, "[${traceId}] Tool execution error: ${invocation.tool.name}", e)
             toolHandler?.notifyToolExecutionError(invocation.tool, e)
             emit(
                 ToolResult(
                     toolName = invocation.tool.name,
                     success = false,
                     result = StringResultData(""),
-                    error = "Tool execution error: ${e.message}"
+                    error = "[${traceId}] Tool execution error: ${e.message}",
+                    traceId = traceId
                 )
             )
         }
