@@ -1225,32 +1225,59 @@ ${FunctionalPrompts.translationUserPrompt(targetLanguage, text)}
      * @param multiServiceManager 多服务管理器
      * @return AI分析结果
      */
-    suspend fun analyzeImageWithIntent(
-        imagePath: String,
+    // Phase 4: Unified media analysis core to eliminate triplicated logic
+    private enum class MediaAnalyzeType(
+        val functionType: FunctionType,
+        val defaultPromptResId: Int,
+        val errorMessage: String,
+        val logTag: String
+    ) {
+        IMAGE(
+            FunctionType.IMAGE_RECOGNITION,
+            R.string.conversation_analyze_image_prompt,
+            "Image recognition failed",
+            "识图分析失败"
+        ),
+        AUDIO(
+            FunctionType.AUDIO_RECOGNITION,
+            R.string.conversation_analyze_audio_prompt,
+            "Audio recognition failed",
+            "音频识别失败"
+        ),
+        VIDEO(
+            FunctionType.VIDEO_RECOGNITION,
+            R.string.conversation_analyze_video_prompt,
+            "Video recognition failed",
+            "视频识别失败"
+        )
+    }
+
+    private suspend fun analyzeMediaWithIntent(
+        mediaPath: String,
         userIntent: String?,
-        multiServiceManager: MultiServiceManager
+        multiServiceManager: MultiServiceManager,
+        type: MediaAnalyzeType,
+        addMedia: (String) -> String,
+        removeMedia: (String) -> Unit,
+        buildLink: (Context, String) -> String
     ): String {
         return try {
-            val service = multiServiceManager.getServiceForFunction(FunctionType.IMAGE_RECOGNITION)
-            
-            // 添加图片到池子并获取ID
-            val imageId = com.ai.assistance.operit.util.ImagePoolManager.addImage(imagePath)
-            if (imageId == "error") {
-                return "Failed to load image: $imagePath"
+            val service = multiServiceManager.getServiceForFunction(type.functionType)
+
+            val mediaId = addMedia(mediaPath)
+            if (mediaId == "error") {
+                return "Failed to load media: $mediaPath"
             }
 
-            // 构建提示词，包含用户意图和图片链接
-            val imageLink = MediaLinkBuilder.image(context, imageId)
+            val link = buildLink(context, mediaId)
             val prompt = if (userIntent.isNullOrBlank()) {
-                "$imageLink\n${context.getString(R.string.conversation_analyze_image_prompt)}"
+                "$link\n${context.getString(type.defaultPromptResId)}"
             } else {
-                "$imageLink\n$userIntent"
+                "$link\n$userIntent"
             }
-            
-            // 获取模型参数
-            val modelParameters = multiServiceManager.getModelParametersForFunction(FunctionType.IMAGE_RECOGNITION)
-            
-            // 调用AI服务分析图片
+
+            val modelParameters = multiServiceManager.getModelParametersForFunction(type.functionType)
+
             val result = StringBuilder()
             service.sendMessage(
                 context = context,
@@ -1259,15 +1286,29 @@ ${FunctionalPrompts.translationUserPrompt(targetLanguage, text)}
             ).collect { chunk ->
                 result.append(chunk)
             }
-            
-            // 清理图片缓存
-            com.ai.assistance.operit.util.ImagePoolManager.removeImage(imageId)
-            
+
+            removeMedia(mediaId)
             ChatUtils.removeThinkingContent(result.toString()).trim()
         } catch (e: Exception) {
-            AppLogger.e(TAG, "识图分析失败", e)
-            "Image recognition failed: ${e.message}"
+            AppLogger.e(TAG, type.logTag, e)
+            "${type.errorMessage}: ${e.message}"
         }
+    }
+
+    suspend fun analyzeImageWithIntent(
+        imagePath: String,
+        userIntent: String?,
+        multiServiceManager: MultiServiceManager
+    ): String {
+        return analyzeMediaWithIntent(
+            mediaPath = imagePath,
+            userIntent = userIntent,
+            multiServiceManager = multiServiceManager,
+            type = MediaAnalyzeType.IMAGE,
+            addMedia = { com.ai.assistance.operit.util.ImagePoolManager.addImage(it) },
+            removeMedia = { com.ai.assistance.operit.util.ImagePoolManager.removeImage(it) },
+            buildLink = { ctx, id -> MediaLinkBuilder.image(ctx, id) }
+        )
     }
 
     suspend fun analyzeAudioWithIntent(
@@ -1275,42 +1316,18 @@ ${FunctionalPrompts.translationUserPrompt(targetLanguage, text)}
         userIntent: String?,
         multiServiceManager: MultiServiceManager
     ): String {
-        return try {
-            val service = multiServiceManager.getServiceForFunction(FunctionType.AUDIO_RECOGNITION)
-
-            val mimeType = android.webkit.MimeTypeMap.getSingleton()
-                .getMimeTypeFromExtension(java.io.File(audioPath).extension.lowercase())
-                ?: "audio/*"
-
-            val mediaId = com.ai.assistance.operit.util.MediaPoolManager.addMedia(audioPath, mimeType)
-            if (mediaId == "error") {
-                return "Failed to load audio: $audioPath"
-            }
-
-            val audioLink = MediaLinkBuilder.audio(context, mediaId)
-            val prompt = if (userIntent.isNullOrBlank()) {
-                "$audioLink\n${context.getString(R.string.conversation_analyze_audio_prompt)}"
-            } else {
-                "$audioLink\n$userIntent"
-            }
-
-            val modelParameters = multiServiceManager.getModelParametersForFunction(FunctionType.AUDIO_RECOGNITION)
-
-            val result = StringBuilder()
-            service.sendMessage(
-                context = context,
-                chatHistory = listOf(PromptTurn(kind = PromptTurnKind.USER, content = prompt)),
-                modelParameters = modelParameters,
-            ).collect { chunk ->
-                result.append(chunk)
-            }
-
-            com.ai.assistance.operit.util.MediaPoolManager.removeMedia(mediaId)
-            ChatUtils.removeThinkingContent(result.toString()).trim()
-        } catch (e: Exception) {
-            AppLogger.e(TAG, "音频识别失败", e)
-            "Audio recognition failed: ${e.message}"
-        }
+        val mimeType = android.webkit.MimeTypeMap.getSingleton()
+            .getMimeTypeFromExtension(java.io.File(audioPath).extension.lowercase())
+            ?: "audio/*"
+        return analyzeMediaWithIntent(
+            mediaPath = audioPath,
+            userIntent = userIntent,
+            multiServiceManager = multiServiceManager,
+            type = MediaAnalyzeType.AUDIO,
+            addMedia = { path -> com.ai.assistance.operit.util.MediaPoolManager.addMedia(path, mimeType) },
+            removeMedia = { com.ai.assistance.operit.util.MediaPoolManager.removeMedia(it) },
+            buildLink = { ctx, id -> MediaLinkBuilder.audio(ctx, id) }
+        )
     }
 
     suspend fun analyzeVideoWithIntent(
@@ -1318,41 +1335,17 @@ ${FunctionalPrompts.translationUserPrompt(targetLanguage, text)}
         userIntent: String?,
         multiServiceManager: MultiServiceManager
     ): String {
-        return try {
-            val service = multiServiceManager.getServiceForFunction(FunctionType.VIDEO_RECOGNITION)
-
-            val mimeType = android.webkit.MimeTypeMap.getSingleton()
-                .getMimeTypeFromExtension(java.io.File(videoPath).extension.lowercase())
-                ?: "video/*"
-
-            val mediaId = com.ai.assistance.operit.util.MediaPoolManager.addMedia(videoPath, mimeType)
-            if (mediaId == "error") {
-                return "Failed to load video: $videoPath"
-            }
-
-            val videoLink = MediaLinkBuilder.video(context, mediaId)
-            val prompt = if (userIntent.isNullOrBlank()) {
-                "$videoLink\n${context.getString(R.string.conversation_analyze_video_prompt)}"
-            } else {
-                "$videoLink\n$userIntent"
-            }
-
-            val modelParameters = multiServiceManager.getModelParametersForFunction(FunctionType.VIDEO_RECOGNITION)
-
-            val result = StringBuilder()
-            service.sendMessage(
-                context = context,
-                chatHistory = listOf(PromptTurn(kind = PromptTurnKind.USER, content = prompt)),
-                modelParameters = modelParameters,
-            ).collect { chunk ->
-                result.append(chunk)
-            }
-
-            com.ai.assistance.operit.util.MediaPoolManager.removeMedia(mediaId)
-            ChatUtils.removeThinkingContent(result.toString()).trim()
-        } catch (e: Exception) {
-            AppLogger.e(TAG, "视频识别失败", e)
-            "Video recognition failed: ${e.message}"
-        }
+        val mimeType = android.webkit.MimeTypeMap.getSingleton()
+            .getMimeTypeFromExtension(java.io.File(videoPath).extension.lowercase())
+            ?: "video/*"
+        return analyzeMediaWithIntent(
+            mediaPath = videoPath,
+            userIntent = userIntent,
+            multiServiceManager = multiServiceManager,
+            type = MediaAnalyzeType.VIDEO,
+            addMedia = { path -> com.ai.assistance.operit.util.MediaPoolManager.addMedia(path, mimeType) },
+            removeMedia = { com.ai.assistance.operit.util.MediaPoolManager.removeMedia(it) },
+            buildLink = { ctx, id -> MediaLinkBuilder.video(ctx, id) }
+        )
     }
 }
