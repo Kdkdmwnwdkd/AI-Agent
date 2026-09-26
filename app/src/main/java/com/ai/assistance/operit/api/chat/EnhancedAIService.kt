@@ -90,10 +90,6 @@ import com.ai.assistance.operit.data.model.ToolPrompt
 import com.ai.assistance.operit.data.model.ToolParameterSchema
 import com.ai.assistance.operit.util.ChatUtils
 import com.ai.assistance.operit.util.LocaleUtils
-import com.ai.assistance.operit.core.dualmode.ModeManager
-import com.ai.assistance.operit.core.dualmode.OperitMode
-import com.ai.assistance.operit.core.dualmode.ModeAwareToolRegistry
-import com.ai.assistance.operit.core.dualmode.DualModeStorageManager
 
 /**
  * Enhanced AI service that provides advanced conversational capabilities by integrating various
@@ -963,39 +959,11 @@ class EnhancedAIService private constructor(private val context: Context) {
 
         AppLogger.d(TAG, "sendMessage调用开始: 功能类型=$functionType, 提示词类型=$promptFunctionType")
 
-        // ★ 双模式路由（v1.0.1g）
-        val modeManager = ModeManager.getInstance(context)
-        val currentMode = modeManager.currentMode.value
-        val isDualMode = modeManager.isDualModeEnabled
-        val effectiveFunctionType = if (isDualMode) {
-            when (currentMode) {
-                OperitMode.CODE -> FunctionType.GREP
-                OperitMode.ROLE -> FunctionType.CHAT
-                else -> functionType
-            }
-        } else {
-            functionType
-        }
-        val effectiveMemorySpaceId = if (isDualMode) {
-            when (currentMode) {
-                OperitMode.CODE -> "code_${memorySpaceIdOverride ?: chatId ?: "default"}"
-                OperitMode.ROLE -> "role_${memorySpaceIdOverride ?: chatId ?: "default"}"
-                else -> memorySpaceIdOverride
-            }
-        } else {
-            memorySpaceIdOverride
-        }
-        // ★ 双模式角色卡路由（v1.0.1g-fix）：根据当前模式覆盖 roleCardId，确保 system prompt 与模式一致
-        val effectiveRoleCardId = if (isDualMode) {
-            when (currentMode) {
-                OperitMode.CODE -> ModeManager.CODE_MODE_CHARACTER_ID
-                OperitMode.ROLE -> modeManager.getModeCharacterCardId(OperitMode.ROLE) ?: roleCardId
-                else -> roleCardId
-            }
-        } else {
-            roleCardId
-        }
-        AppLogger.d(TAG, "双模式路由: mode=$currentMode, effectiveFunctionType=$effectiveFunctionType, effectiveMemorySpaceId=$effectiveMemorySpaceId, effectiveRoleCardId=$effectiveRoleCardId")
+        // ★ 双模式已移除 — 使用原始参数
+        val effectiveFunctionType = functionType
+        val effectiveMemorySpaceId = memorySpaceIdOverride
+        val effectiveRoleCardId = roleCardId
+        AppLogger.d(TAG, "sendMessage调用开始: 功能类型=$functionType, 提示词类型=$promptFunctionType")
         accumulatedInputTokenCount = 0L
         accumulatedOutputTokenCount = 0L
         accumulatedCachedInputTokenCount = 0L
