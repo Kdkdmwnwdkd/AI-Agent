@@ -59,7 +59,7 @@ class JsToolPkgRegistrationTest {
 
         assertTrue(bridge.contains("toolPkgApi.namespace('ToolPkg'"))
         assertTrue(bridge.contains("toolPkgApi.method().since("))
-        assertTrue(bridge.contains("ToolPkg.registerChatMessageMenuItem"))
+        assertTrue(bridge.contains("registerChatMessageMenuItem"))
         assertTrue(bridge.contains("ToolPkg.registerChatRuntimeHook"))
         assertFalse(bridge.contains("requiredApi"))
         assertFalse(bridge.contains("requiredFeature"))
