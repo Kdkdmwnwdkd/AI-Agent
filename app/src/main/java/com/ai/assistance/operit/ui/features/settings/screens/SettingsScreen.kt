@@ -21,8 +21,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import com.ai.assistance.operit.R
-import com.ai.assistance.operit.core.dualmode.ModeManager
-import com.ai.assistance.operit.core.dualmode.OperitMode
 import com.ai.assistance.operit.core.tools.defaultTool.standard.CookiePrivacyManager
 import com.ai.assistance.operit.data.model.FunctionType
 import com.ai.assistance.operit.data.preferences.GitHubAuthPreferences
@@ -175,95 +173,6 @@ fun SettingsScreen(
                 }
 
                 // ======= 双模式（v1.0.1g） =======
-                val modeManager = remember { ModeManager.getInstance(context) }
-                val currentMode by modeManager.currentMode.collectAsState()
-                SettingsSection(
-                        title = "双模式（代码 / 角色）",
-                        icon = Icons.Default.Tune,
-                        containerColor = cardContainerColor
-                ) {
-                        // 双模式总开关
-                        Row(
-                                modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(6.dp))
-                                        .clickable {
-                                                modeManager.setDualModeEnabled(!modeManager.isDualModeEnabled)
-                                        }
-                                        .padding(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                        ) {
-                                Icon(
-                                        imageVector = Icons.Default.Settings,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(20.dp)
-                                )
-
-                                Spacer(modifier = Modifier.width(12.dp))
-
-                                Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                                text = "启用双模式",
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                fontWeight = FontWeight.Medium,
-                                                maxLines = 1
-                                        )
-                                        Text(
-                                                text = "开启后可在代码 / 角色模式间切换，聊天记录互相隔离",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                maxLines = 2,
-                                                overflow = TextOverflow.Ellipsis
-                                        )
-                                }
-
-                                Switch(
-                                        checked = modeManager.isDualModeEnabled,
-                                        onCheckedChange = { enabled ->
-                                                modeManager.setDualModeEnabled(enabled)
-                                        }
-                                )
-                        }
-
-                        if (modeManager.isDualModeEnabled) {
-                                // 模式快速切换
-                                Row(
-                                        modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(horizontal = 8.dp, vertical = 4.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                        OperitMode.values().forEach { mode ->
-                                                if (mode == OperitMode.SINGLE) return@forEach
-                                                val isActive = currentMode == mode
-                                                Surface(
-                                                        onClick = {
-                                                                scope.launch { modeManager.switchTo(mode) }
-                                                        },
-                                                        color =
-                                                                if (isActive) MaterialTheme.colorScheme.primaryContainer
-                                                                else MaterialTheme.colorScheme.surfaceVariant,
-                                                        shape = RoundedCornerShape(8.dp),
-                                                        modifier = Modifier.weight(1f)
-                                                ) {
-                                                        Text(
-                                                                text = mode.displayName,
-                                                                textAlign = TextAlign.Center,
-                                                                color =
-                                                                        if (isActive) MaterialTheme.colorScheme.onPrimaryContainer
-                                                                        else MaterialTheme.colorScheme.onSurfaceVariant,
-                                                                style = MaterialTheme.typography.labelLarge,
-                                                                modifier = Modifier
-                                                                        .fillMaxWidth()
-                                                                        .padding(vertical = 10.dp)
-                                                        )
-                                                }
-                                        }
-                                }
-                        }
-                }
-
                 // ======= AI模型配置 =======
                 SettingsSection(
                         title = stringResource(id = R.string.settings_section_ai_model),
