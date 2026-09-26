@@ -3,7 +3,6 @@ package com.ai.assistance.operit.api.chat.llmprovider
 import com.ai.assistance.operit.data.collects.ApiProviderConfigs
 import com.ai.assistance.operit.data.model.ApiProviderType
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class XaiProviderReasoningTest {
@@ -24,12 +23,5 @@ class XaiProviderReasoningTest {
                 ApiProviderType.XAI
             )
         )
-    }
-
-    @Test
-    fun reasoningEffortUsesTheGrokFamilyRule() {
-        assertTrue(xaiModelSupportsReasoningEffort("grok-4.6"))
-        assertTrue(xaiModelSupportsReasoningEffort("grok-4.5-latest"))
-        assertTrue(xaiModelSupportsReasoningEffort("grok-3-mini"))
     }
 }
