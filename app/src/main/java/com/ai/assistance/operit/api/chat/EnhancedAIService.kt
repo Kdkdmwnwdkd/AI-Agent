@@ -90,6 +90,10 @@ import com.ai.assistance.operit.data.model.ToolPrompt
 import com.ai.assistance.operit.data.model.ToolParameterSchema
 import com.ai.assistance.operit.util.ChatUtils
 import com.ai.assistance.operit.util.LocaleUtils
+import com.ai.assistance.operit.core.dualmode.ModeManager
+import com.ai.assistance.operit.core.dualmode.OperitMode
+import com.ai.assistance.operit.core.dualmode.ModeAwareToolRegistry
+import com.ai.assistance.operit.core.dualmode.DualModeStorageManager
 
 /**
  * Enhanced AI service that provides advanced conversational capabilities by integrating various
@@ -549,6 +553,7 @@ class EnhancedAIService private constructor(private val context: Context) {
         val decision = modelRouter.route(functionType)
         AppLogger.d("EnhancedAIService", "ModelRouter: ${'$'}{decision.target} | ${'$'}{decision.reason}")
         return getAIServiceForFunction(
+            functionType = functionType,
             chatModelConfigIdOverride = null,
             chatModelIndexOverride = null
         )
@@ -578,6 +583,7 @@ class EnhancedAIService private constructor(private val context: Context) {
      */
     suspend fun getProviderAndModelForFunction(functionType: FunctionType): Pair<String, String> {
         return getProviderAndModelForFunction(
+            functionType = functionType,
             chatModelConfigIdOverride = null,
             chatModelIndexOverride = null
         )
@@ -589,6 +595,7 @@ class EnhancedAIService private constructor(private val context: Context) {
         chatModelIndexOverride: Int?
     ): Pair<String, String> {
         val service = getAIServiceForFunction(
+            functionType = functionType,
             chatModelConfigIdOverride = chatModelConfigIdOverride,
             chatModelIndexOverride = chatModelIndexOverride
         )
@@ -611,10 +618,12 @@ class EnhancedAIService private constructor(private val context: Context) {
         chatModelIndexOverride: Int?
     ): Pair<String, String> {
         val (provider, modelName) = getProviderAndModelForFunction(
+            functionType = functionType,
             chatModelConfigIdOverride = chatModelConfigIdOverride,
             chatModelIndexOverride = chatModelIndexOverride
         )
         val config = getModelConfigForFunction(
+            functionType = functionType,
             chatModelConfigIdOverride = chatModelConfigIdOverride,
             chatModelIndexOverride = chatModelIndexOverride
         )
@@ -789,6 +798,7 @@ class EnhancedAIService private constructor(private val context: Context) {
     ): Long {
         val modelConfig =
             getModelConfigForFunction(
+                functionType = functionType,
                 chatModelConfigIdOverride = chatModelConfigIdOverride,
                 chatModelIndexOverride = chatModelIndexOverride
             )
@@ -801,11 +811,14 @@ class EnhancedAIService private constructor(private val context: Context) {
                 workspaceEnv = workspaceEnv,
                 promptFunctionType = promptFunctionType,
                 customSystemPromptTemplate = customSystemPromptTemplate,
+                roleCardId = roleCardId,
                 enableGroupOrchestrationHint = enableGroupOrchestrationHint,
                 groupParticipantNamesText = groupParticipantNamesText,
                 proxySenderName = proxySenderName,
                 isSubTask = isSubTask,
+                functionType = functionType,
                 modelConfig = modelConfig,
+                memorySpaceIdOverride = memorySpaceIdOverride,
                 dispatchHistoryHooks = PromptHookRegistry::dispatchPromptEstimateHistoryHooks,
                 dispatchSystemPromptComposeHooks = ::bypassPromptHooks,
                 dispatchToolPromptComposeHooks = ::bypassPromptHooks
@@ -813,18 +826,22 @@ class EnhancedAIService private constructor(private val context: Context) {
 
         val modelParameters =
             getModelParametersForFunction(
+                functionType = functionType,
                 chatModelConfigIdOverride = chatModelConfigIdOverride,
                 chatModelIndexOverride = chatModelIndexOverride
             )
         val serviceForFunction =
             getAIServiceForFunction(
+                functionType = functionType,
                 chatModelConfigIdOverride = chatModelConfigIdOverride,
                 chatModelIndexOverride = chatModelIndexOverride
             )
         val availableTools =
             getAvailableToolsForFunction(
+                functionType = functionType,
                 chatId = chatId,
                 promptFunctionType = promptFunctionType,
+                roleCardId = roleCardId,
                 modelConfig = modelConfig
             )
 
@@ -844,6 +861,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                     availableTools = serializePromptHookToolPrompts(availableTools),
                     metadata = buildPromptFinalizeMetadata(
                         chatId = chatId,
+                        roleCardId = roleCardId,
                         workspacePath = workspacePath,
                         workspaceEnv = workspaceEnv,
                         enableThinking = enableThinking,
@@ -945,6 +963,39 @@ class EnhancedAIService private constructor(private val context: Context) {
 
         AppLogger.d(TAG, "sendMessage调用开始: 功能类型=$functionType, 提示词类型=$promptFunctionType")
 
+        // ★ 双模式路由（v1.0.1g）
+        val modeManager = ModeManager.getInstance(context)
+        val currentMode = modeManager.currentMode.value
+        val isDualMode = modeManager.isDualModeEnabled
+        val effectiveFunctionType = if (isDualMode) {
+            when (currentMode) {
+                OperitMode.CODE -> FunctionType.GREP
+                OperitMode.ROLE -> FunctionType.CHAT
+                else -> functionType
+            }
+        } else {
+            functionType
+        }
+        val effectiveMemorySpaceId = if (isDualMode) {
+            when (currentMode) {
+                OperitMode.CODE -> "code_${memorySpaceIdOverride ?: chatId ?: "default"}"
+                OperitMode.ROLE -> "role_${memorySpaceIdOverride ?: chatId ?: "default"}"
+                else -> memorySpaceIdOverride
+            }
+        } else {
+            memorySpaceIdOverride
+        }
+        // ★ 双模式角色卡路由（v1.0.1g-fix）：根据当前模式覆盖 roleCardId，确保 system prompt 与模式一致
+        val effectiveRoleCardId = if (isDualMode) {
+            when (currentMode) {
+                OperitMode.CODE -> ModeManager.CODE_MODE_CHARACTER_ID
+                OperitMode.ROLE -> modeManager.getModeCharacterCardId(OperitMode.ROLE) ?: roleCardId
+                else -> roleCardId
+            }
+        } else {
+            roleCardId
+        }
+        AppLogger.d(TAG, "双模式路由: mode=$currentMode, effectiveFunctionType=$effectiveFunctionType, effectiveMemorySpaceId=$effectiveMemorySpaceId, effectiveRoleCardId=$effectiveRoleCardId")
         accumulatedInputTokenCount = 0L
         accumulatedOutputTokenCount = 0L
         accumulatedCachedInputTokenCount = 0L
@@ -982,7 +1033,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                     val modelSnapshot =
                         getModelExecutionSnapshot(
                             execContext,
-                            functionType,
+                            effectiveFunctionType,
                             chatModelConfigIdOverride,
                             chatModelIndexOverride
                         )
@@ -997,13 +1048,14 @@ class EnhancedAIService private constructor(private val context: Context) {
                                     workspaceEnv,
                                     promptFunctionType,
                                     customSystemPromptTemplate,
+                                    roleCardId = effectiveRoleCardId,
                                     enableGroupOrchestrationHint,
                                     groupParticipantNamesText,
                                     proxySenderName,
                                     isSubTask,
-                                    functionType,
+                                    effectiveFunctionType,
                                     modelSnapshot.config,
-                                    memorySpaceIdOverride
+                                    effectiveMemorySpaceId
                             )
                     val tAfterPrepareHistory = messageTimingNow()
                     AppLogger.d(TAG, "sendMessage本地耗时: prepareConversationHistory=${tAfterPrepareHistory - startTime}ms")
@@ -1037,8 +1089,10 @@ class EnhancedAIService private constructor(private val context: Context) {
 
                     // 获取工具列表（如果启用Tool Call）
                     val availableTools = getAvailableToolsForFunction(
+                        functionType = effectiveFunctionType,
                         chatId = chatId,
                         promptFunctionType = promptFunctionType,
+                        roleCardId = effectiveRoleCardId,
                         modelConfig = modelSnapshot.config
                     )
                     val tAfterGetTools = messageTimingNow()
@@ -1060,6 +1114,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                                 availableTools = serializePromptHookToolPrompts(availableTools),
                                 metadata = buildPromptFinalizeMetadata(
                                     chatId = chatId,
+                        roleCardId = effectiveRoleCardId,
                                     workspacePath = workspacePath,
                                     workspaceEnv = workspaceEnv,
                                     enableThinking = enableThinking,
@@ -1276,9 +1331,9 @@ class EnhancedAIService private constructor(private val context: Context) {
                                 execContext,
                                 functionType,
                                 promptFunctionType,
-                                functionType,
-                                roleCardId,
-                                memorySpaceIdOverride,
+                                effectiveFunctionType,
+                                effectiveRoleCardId,
+                                effectiveMemorySpaceId,
                                 collector,
                                 enableThinking,
                                 enableMemoryAutoUpdate,
@@ -1704,6 +1759,9 @@ class EnhancedAIService private constructor(private val context: Context) {
             context: MessageExecutionContext,
             functionType: FunctionType = FunctionType.CHAT,
             promptFunctionType: PromptFunctionType = PromptFunctionType.CHAT,
+            effectiveFunctionType: FunctionType? = null,
+            effectiveRoleCardId: String? = null,
+            effectiveMemorySpaceId: String? = null,
             collector: StreamCollector<String>,
             enableThinking: Boolean = false,
             enableMemoryAutoUpdate: Boolean = true,
@@ -1725,9 +1783,9 @@ class EnhancedAIService private constructor(private val context: Context) {
             enableGroupOrchestrationHint: Boolean = false,
             disableWarning: Boolean = false
     ) {
-        val useFunctionType = functionType
-        val useRoleCardId = roleCardId
-        val useMemorySpaceId = memorySpaceIdOverride
+        val useFunctionType = effectiveFunctionType ?: functionType
+        val useRoleCardId = effectiveRoleCardId ?: roleCardId
+        val useMemorySpaceId = effectiveMemorySpaceId ?: memorySpaceIdOverride
         try {
             val startTime = messageTimingNow()
             // If conversation is no longer active, return immediately
@@ -1749,7 +1807,9 @@ class EnhancedAIService private constructor(private val context: Context) {
                     onNonFatalError = onNonFatalError,
                     isSubTask = isSubTask,
                     chatId = chatId,
-                    notifyReplyOverride = notifyReplyOverride)
+                    notifyReplyOverride = notifyReplyOverride,
+                    memorySpaceIdOverride = effectiveMemorySpaceId
+                )
                 return
             }
 
@@ -1772,7 +1832,9 @@ class EnhancedAIService private constructor(private val context: Context) {
                         chatId = chatId,
                         characterName = characterName,
                         avatarUri = avatarUri,
-                        notifyReplyOverride = notifyReplyOverride)
+                        notifyReplyOverride = notifyReplyOverride,
+                        memorySpaceIdOverride = effectiveMemorySpaceId
+                    )
                     return
                 }
                 val pureThinkingWarning =
@@ -1796,7 +1858,11 @@ class EnhancedAIService private constructor(private val context: Context) {
                 handleToolInvocation(
                         toolInvocations = emptyList(),
                         context = context,
+                        functionType = functionType,
                         promptFunctionType = promptFunctionType,
+                        effectiveFunctionType = effectiveFunctionType,
+                        effectiveRoleCardId = effectiveRoleCardId,
+                        effectiveMemorySpaceId = effectiveMemorySpaceId,
                         collector = collector,
                         enableThinking = enableThinking,
                         enableMemoryAutoUpdate = enableMemoryAutoUpdate,
@@ -1807,11 +1873,13 @@ class EnhancedAIService private constructor(private val context: Context) {
                         isSubTask = isSubTask,
                         characterName = characterName,
                         avatarUri = avatarUri,
+                        roleCardId = effectiveRoleCardId,
                         chatId = chatId,
                         onToolInvocation = onToolInvocation,
                         notifyReplyOverride = notifyReplyOverride,
                         chatModelConfigIdOverride = chatModelConfigIdOverride,
                         chatModelIndexOverride = chatModelIndexOverride,
+                        memorySpaceIdOverride = memorySpaceIdOverride,
                         stream = stream,
                         enableGroupOrchestrationHint = enableGroupOrchestrationHint,
                         toolResultOverrideMessage = pureThinkingWarning,
@@ -1885,7 +1953,9 @@ class EnhancedAIService private constructor(private val context: Context) {
                         chatId = chatId,
                         characterName = characterName,
                         avatarUri = avatarUri,
-                        notifyReplyOverride = notifyReplyOverride)
+                        notifyReplyOverride = notifyReplyOverride,
+                        memorySpaceIdOverride = effectiveMemorySpaceId
+                    )
                     return
                 }
                 val warningStatus =
@@ -1904,7 +1974,11 @@ class EnhancedAIService private constructor(private val context: Context) {
                 handleToolInvocation(
                         toolInvocations = emptyList(),
                         context = context,
+                        functionType = functionType,
                         promptFunctionType = promptFunctionType,
+                        effectiveFunctionType = effectiveFunctionType,
+                        effectiveRoleCardId = effectiveRoleCardId,
+                        effectiveMemorySpaceId = effectiveMemorySpaceId,
                         collector = collector,
                         enableThinking = enableThinking,
                         enableMemoryAutoUpdate = enableMemoryAutoUpdate,
@@ -1915,11 +1989,13 @@ class EnhancedAIService private constructor(private val context: Context) {
                         isSubTask = isSubTask,
                         characterName = characterName,
                         avatarUri = avatarUri,
+                        roleCardId = effectiveRoleCardId,
                         chatId = chatId,
                         onToolInvocation = onToolInvocation,
                         notifyReplyOverride = notifyReplyOverride,
                         chatModelConfigIdOverride = chatModelConfigIdOverride,
                         chatModelIndexOverride = chatModelIndexOverride,
+                        memorySpaceIdOverride = memorySpaceIdOverride,
                         stream = stream,
                         enableGroupOrchestrationHint = enableGroupOrchestrationHint,
                         toolResultOverrideMessage = warningStatus,
@@ -1940,9 +2016,9 @@ class EnhancedAIService private constructor(private val context: Context) {
                         context,
                         functionType,
                         promptFunctionType,
-                        functionType,
-                        roleCardId,
-                        memorySpaceIdOverride,
+                        effectiveFunctionType,
+                        effectiveRoleCardId,
+                        effectiveMemorySpaceId,
                         collector,
                         enableThinking,
                         enableMemoryAutoUpdate,
@@ -1976,7 +2052,9 @@ class EnhancedAIService private constructor(private val context: Context) {
                         chatId = chatId,
                         characterName = characterName,
                         avatarUri = avatarUri,
-                        notifyReplyOverride = notifyReplyOverride)
+                        notifyReplyOverride = notifyReplyOverride,
+                        memorySpaceIdOverride = effectiveMemorySpaceId
+                    )
             logMessageTiming(
                 stage = "enhanced.processStreamCompletion.complete",
                 startTimeMs = startTime
@@ -2057,6 +2135,9 @@ class EnhancedAIService private constructor(private val context: Context) {
         context: MessageExecutionContext,
         functionType: FunctionType = FunctionType.CHAT,
         promptFunctionType: PromptFunctionType = PromptFunctionType.CHAT,
+        effectiveFunctionType: FunctionType? = null,
+        effectiveRoleCardId: String? = null,
+        effectiveMemorySpaceId: String? = null,
         collector: StreamCollector<String>,
         enableThinking: Boolean = false,
         enableMemoryAutoUpdate: Boolean = true,
@@ -2079,9 +2160,9 @@ class EnhancedAIService private constructor(private val context: Context) {
         toolResultOverrideMessage: String? = null,
         disableWarning: Boolean = false
     ) {
-        val useFunctionType = functionType
-        val useRoleCardId = roleCardId
-        val useMemorySpaceId = memorySpaceIdOverride
+        val useFunctionType = effectiveFunctionType ?: functionType
+        val useRoleCardId = effectiveRoleCardId ?: roleCardId
+        val useMemorySpaceId = effectiveMemorySpaceId ?: memorySpaceIdOverride
         val startTime = messageTimingNow()
 
         toolInvocations.forEach { invocation ->
@@ -2132,10 +2213,11 @@ class EnhancedAIService private constructor(private val context: Context) {
                 processToolResults(
                     results = emptyList(),
                     context = context,
+                    functionType = functionType,
                     promptFunctionType = promptFunctionType,
-                    functionType = useFunctionType,
-                    roleCardId = useRoleCardId,
-                    memorySpaceIdOverride = useMemorySpaceId,
+                    effectiveFunctionType = useFunctionType,
+                    effectiveRoleCardId = useRoleCardId,
+                    effectiveMemorySpaceId = useMemorySpaceId,
                     collector = collector,
                     enableThinking = enableThinking,
                     enableMemoryAutoUpdate = enableMemoryAutoUpdate,
@@ -2146,11 +2228,13 @@ class EnhancedAIService private constructor(private val context: Context) {
                     isSubTask = isSubTask,
                     characterName = characterName,
                     avatarUri = avatarUri,
+                    roleCardId = roleCardId,
                     chatId = chatId,
                     onToolInvocation = onToolInvocation,
                     notifyReplyOverride = notifyReplyOverride,
                     chatModelConfigIdOverride = chatModelConfigIdOverride,
                     chatModelIndexOverride = chatModelIndexOverride,
+                    memorySpaceIdOverride = memorySpaceIdOverride,
                     stream = stream,
                     enableGroupOrchestrationHint = enableGroupOrchestrationHint,
                     toolResultMessageOverride = toolResultOverrideMessage,
@@ -2175,12 +2259,16 @@ class EnhancedAIService private constructor(private val context: Context) {
         }
     }
 
+
     /** Process tool execution result - simplified version without callbacks */
     private suspend fun processToolResults(
             results: List<ToolResult>,
             context: MessageExecutionContext,
             functionType: FunctionType = FunctionType.CHAT,
             promptFunctionType: PromptFunctionType = PromptFunctionType.CHAT,
+            effectiveFunctionType: FunctionType? = null,
+            effectiveRoleCardId: String? = null,
+            effectiveMemorySpaceId: String? = null,
             collector: StreamCollector<String>,
             enableThinking: Boolean = false,
             enableMemoryAutoUpdate: Boolean = true,
@@ -2268,7 +2356,7 @@ class EnhancedAIService private constructor(private val context: Context) {
         // Get all model parameters from preferences (with enabled state)
         val modelSnapshot = getModelExecutionSnapshot(
             context,
-            functionType ?: functionType,
+            effectiveFunctionType ?: functionType,
             chatModelConfigIdOverride,
             chatModelIndexOverride
         )
@@ -2279,8 +2367,10 @@ class EnhancedAIService private constructor(private val context: Context) {
         
         // 获取工具列表（如果启用Tool Call）- 提前获取，以便在token计算中使用
         val availableTools = getAvailableToolsForFunction(
+            functionType = effectiveFunctionType ?: functionType,
             chatId = chatId,
             promptFunctionType = promptFunctionType,
+            roleCardId = effectiveRoleCardId ?: roleCardId,
             modelConfig = modelSnapshot.config
         )
  
@@ -2444,9 +2534,9 @@ class EnhancedAIService private constructor(private val context: Context) {
                     context,
                     functionType,
                     promptFunctionType,
-                    functionType,
-                    roleCardId,
-                    memorySpaceIdOverride,
+                    effectiveFunctionType,
+                    effectiveRoleCardId,
+                    effectiveMemorySpaceId,
                     collector,
                     enableThinking,
                     enableMemoryAutoUpdate,
@@ -2598,6 +2688,8 @@ class EnhancedAIService private constructor(private val context: Context) {
             recordTokenUsage,
         )
     }
+
+
 
     suspend fun generateConversationTitle(
         userText: String,
@@ -2883,6 +2975,7 @@ class EnhancedAIService private constructor(private val context: Context) {
                 apiPreferences.toolPromptVisibilityFlow.first()
             }.getOrElse { emptyMap() }
             val roleCardToolAccess = characterCardToolAccessResolver.resolve(
+                roleCardId = roleCardId,
                 packageManager = packageManager,
                 globalToolVisibility = toolPromptVisibility
             )
@@ -2984,6 +3077,7 @@ class EnhancedAIService private constructor(private val context: Context) {
             val hookedTools = applyToolPromptComposeHooksToAvailableTools(
                 availableTools = selectedTools,
                 chatId = chatId,
+                functionType = functionType,
                 promptFunctionType = promptFunctionType,
                 useEnglish = isEnglish
             )
@@ -3142,6 +3236,7 @@ class EnhancedAIService private constructor(private val context: Context) {
     ): String {
         return conversationService.generatePackageDescription(pluginName, toolDescriptions, multiServiceManager)
     }
+
 
     /**
      * Manually saves the current conversation to the problem library.
