@@ -33,29 +33,3 @@ class XaiProviderReasoningTest {
         assertTrue(xaiModelSupportsReasoningEffort("grok-3-mini"))
     }
 }
-
-    @Test
-    fun enabledOptionsMapToXaiEfforts() {
-        assertEquals(
-            listOf("low", "medium", "high", "xhigh"),
-            listOf("low", "medium", "high", "xhigh").map {
-                XaiReasoningMapper.effortForOption(optionId = it)
-            }
-        )
-    }
-
-    @Test
-    fun mapperPreservesTheSelectedEffort() {
-        assertEquals(
-            "high",
-            XaiReasoningMapper.effortForOption(optionId = "high")
-        )
-    }
-
-    @Test
-    fun reasoningEffortUsesTheGrokFamilyRule() {
-        assertTrue(xaiModelSupportsReasoningEffort("grok-4.6"))
-        assertTrue(xaiModelSupportsReasoningEffort("grok-4.5-latest"))
-        assertTrue(xaiModelSupportsReasoningEffort("grok-3-mini"))
-    }
-}
