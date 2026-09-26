@@ -601,9 +601,7 @@ class ConversationService(
                 AppLogger.d("petRules", avatarMoodRulesText)
 
                 // ★ v1.0.1g 双模式：根据当前模式注入角色卡设定
-                val characterSetting = when (currentMode) {
-                    else -> activeCard?.characterSetting?.takeIf { it.isNotBlank() } ?: ""
-                }
+                val characterSetting = activeCard?.characterSetting?.takeIf { it.isNotBlank() } ?: ""
 
                 // 构建最终的系统提示词
                 val finalSystemPrompt = buildString {
