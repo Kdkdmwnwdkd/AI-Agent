@@ -26,9 +26,13 @@ internal object ReleasedProviderModelKeyDecoder {
                 require(previous == null || previous == identity)
             }
         }
+        // Match the longest known provider prefix. Keys without a known prefix
+        // (for example legacy function keys such as FILE_BINDING) carry no
+        // provider/model identity and must be skipped, never split on '_'.
         val known = aliases.keys.sortedByDescending(String::length)
             .firstOrNull { encoded == it || encoded.startsWith("${it}_") }
-        val separator = known?.length ?: encoded.indexOf('_')
+            ?: throw IllegalArgumentException("released token key has no known provider prefix: $encoded")
+        val separator = known.length
         require(separator > 0 && separator < encoded.lastIndex) {
             "released token key does not contain a provider and model: $encoded"
         }
@@ -36,7 +40,7 @@ internal object ReleasedProviderModelKeyDecoder {
         val model = encoded.substring(separator + 1)
         return ReleasedProviderModelKey(
             storedProviderModel = "$providerAlias:$model",
-            provider = if (known == null) providerAlias else aliases.getValue(providerAlias),
+            provider = aliases.getValue(providerAlias),
             model = model,
         )
     }
