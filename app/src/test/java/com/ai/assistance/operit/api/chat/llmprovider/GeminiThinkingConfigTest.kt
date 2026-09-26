@@ -113,9 +113,11 @@ class GeminiThinkingConfigTest {
         history: List<PromptTurn>,
     ): org.json.JSONArray {
         val method =
-            GeminiProvider::class.java.declaredMethods.single {
-                it.name == "buildContentsAndCountTokens" && it.parameterCount == 3
-            }
+            GeminiProvider::class.java.declaredMethods
+                .filter { !it.isSynthetic }
+                .single {
+                    it.name == "buildContentsAndCountTokens" && it.parameterCount == 3
+                }
         method.isAccessible = true
         val result = method.invoke(provider, history, null, false) as Pair<*, *>
         val contentsAndSystem = result.first as Pair<*, *>
