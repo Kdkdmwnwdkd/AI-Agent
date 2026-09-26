@@ -36,7 +36,7 @@ object SensitiveToolRegistry {
         // 浏览器破坏性
         Regex("^(browser_close_all|browser_clear_|browser_evaluate_js)"),
         // 系统级操作
-        Regex("^(reboot|shutdown|airplane_mode|install_apk|uninstall_apk|system_"),
+        Regex("^(reboot|shutdown|airplane_mode|install_apk|uninstall_apk|system_)"),
         // 蓝牙破坏性
         Regex("^(ble_disconnect|ble_remove_bond)"),
         // 网络破坏性（排除安全HTTP方法到危险端点）
