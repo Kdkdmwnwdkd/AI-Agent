@@ -45,8 +45,6 @@ class ChatRuntimeHolder private constructor(context: Context) {
                 selectionMode = when (slot) {
                     ChatRuntimeSlot.MAIN -> ChatSelectionMode.FOLLOW_GLOBAL
                     ChatRuntimeSlot.FLOATING -> ChatSelectionMode.LOCAL_ONLY
-                    ChatRuntimeSlot.CODE_MODE -> ChatSelectionMode.FOLLOW_GLOBAL
-                    ChatRuntimeSlot.ROLE_MODE -> ChatSelectionMode.FOLLOW_GLOBAL
                 }
             )
         }
@@ -162,48 +160,6 @@ class ChatRuntimeHolder private constructor(context: Context) {
         registerTurnSync(
             sourceSlot = ChatRuntimeSlot.FLOATING,
             targetSlot = ChatRuntimeSlot.MAIN
-        )
-
-        // ★ v1.0.1g 双模式隔离：
-        // CODE_MODE 和 ROLE_MODE 之间**不**互相同步（§6.2 物理隔离）。
-        // 各自内部仍支持 MAIN ↔ FLOATING 多窗口同步。
-        setupModeSlotSync()
-    }
-
-    /**
-     * 设置模式插槽的同步策略（v1.0.1g）。
-     *
-     * - 代码模式：CODE_MODE ↔ FLOATING（当浮窗用于代码模式时）
-     * - 角色模式：ROLE_MODE ↔ FLOATING（当浮窗用于角色模式时）
-     * - 跨模式：CODE_MODE ↔ ROLE_MODE 之间**绝对不同步**
-     */
-    private fun setupModeSlotSync() {
-        // 代码模式内同步：CODE_MODE ↔ FLOATING（方向与 MAIN ↔ FLOATING 相同）
-        registerChatSelectionSync(
-            sourceSlot = ChatRuntimeSlot.CODE_MODE,
-            targetSlot = ChatRuntimeSlot.FLOATING
-        )
-        registerTurnSync(
-            sourceSlot = ChatRuntimeSlot.CODE_MODE,
-            targetSlot = ChatRuntimeSlot.FLOATING
-        )
-        registerTurnSync(
-            sourceSlot = ChatRuntimeSlot.FLOATING,
-            targetSlot = ChatRuntimeSlot.CODE_MODE
-        )
-
-        // 角色模式内同步：ROLE_MODE ↔ FLOATING
-        registerChatSelectionSync(
-            sourceSlot = ChatRuntimeSlot.ROLE_MODE,
-            targetSlot = ChatRuntimeSlot.FLOATING
-        )
-        registerTurnSync(
-            sourceSlot = ChatRuntimeSlot.ROLE_MODE,
-            targetSlot = ChatRuntimeSlot.FLOATING
-        )
-        registerTurnSync(
-            sourceSlot = ChatRuntimeSlot.FLOATING,
-            targetSlot = ChatRuntimeSlot.ROLE_MODE
         )
     }
 

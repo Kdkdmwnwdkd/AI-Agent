@@ -959,7 +959,6 @@ class EnhancedAIService private constructor(private val context: Context) {
 
         AppLogger.d(TAG, "sendMessage调用开始: 功能类型=$functionType, 提示词类型=$promptFunctionType")
 
-        // ★ 双模式已移除 — 使用原始参数
         val effectiveFunctionType = functionType
         val effectiveMemorySpaceId = memorySpaceIdOverride
         val effectiveRoleCardId = roleCardId

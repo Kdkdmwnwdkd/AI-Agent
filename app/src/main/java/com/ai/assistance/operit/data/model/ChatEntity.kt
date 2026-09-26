@@ -24,9 +24,7 @@ data class ChatEntity(
         val characterCardName: String? = null,
         val characterGroupId: String? = null,
         val locked: Boolean = false,
-        val pinned: Boolean = false,
-        /** ★ v1.0.1g 双模式隔离字段：SINGLE / CODE / ROLE */
-        val mode: String = "SINGLE"
+        val pinned: Boolean = false
 ) {
     /** 转换为ChatHistory对象（供UI层使用） */
     fun toChatHistory(messages: List<ChatMessage>): ChatHistory {

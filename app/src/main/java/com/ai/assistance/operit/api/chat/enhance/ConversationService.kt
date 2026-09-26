@@ -502,8 +502,8 @@ class ConversationService(
         val preparedHistory = mutableListOf<PromptTurn>()
         var resolvedUseEnglish: Boolean? = null
         conversationMutex.withLock {
-            // ★ 双模式修复：无论 chatHistory 中是否已有 system prompt，都重新构建
-            // 以确保模式切换后 characterSetting 正确注入
+            // 无论 chatHistory 中是否已有 system prompt，都重新构建
+            // 以确保 characterSetting 正确注入
             val effectiveMemorySpaceId =
                     memorySpaceIdOverride?.takeIf { it.isNotBlank() }
                         ?: userPreferencesManager.activeMemorySpaceIdFlow.first()
@@ -600,7 +600,7 @@ class ConversationService(
                     }
                 AppLogger.d("petRules", avatarMoodRulesText)
 
-                // ★ v1.0.1g 双模式：根据当前模式注入角色卡设定
+                // 根据当前角色卡注入角色卡设定
                 val characterSetting = activeCard?.characterSetting?.takeIf { it.isNotBlank() } ?: ""
 
                 // 构建最终的系统提示词

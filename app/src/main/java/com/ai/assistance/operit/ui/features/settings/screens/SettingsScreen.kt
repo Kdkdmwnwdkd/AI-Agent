@@ -172,7 +172,6 @@ fun SettingsScreen(
                         )
                 }
 
-                // ======= 双模式（v1.0.1g） =======
                 // ======= AI模型配置 =======
                 SettingsSection(
                         title = stringResource(id = R.string.settings_section_ai_model),
