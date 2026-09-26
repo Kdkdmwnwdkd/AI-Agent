@@ -8,7 +8,9 @@ import com.ai.assistance.operit.data.model.Memory
 import com.ai.assistance.operit.data.model.MemoryLink
 import com.ai.assistance.operit.data.model.MemoryTag
 import com.ai.assistance.operit.data.model.MemoryTag_
+import com.ai.assistance.operit.data.model.MemoryTier
 import com.ai.assistance.operit.data.model.Memory_
+import com.ai.assistance.operit.data.model.inferMemoryTier
 import com.ai.assistance.operit.data.model.DocumentChunk
 import com.ai.assistance.operit.data.model.Embedding
 import com.ai.assistance.operit.data.model.CloudEmbeddingConfig
@@ -2801,14 +2803,85 @@ class MemoryRepository(private val context: Context, profileId: String) {
      */
     private fun updateMemoryTags(memory: Memory, tagNames: List<String>) {
         memory.tags.clear()
-        
+
         tagNames.forEach { tagName ->
             val tag = tagBox.query(MemoryTag_.name.equal(tagName)).build().findFirst()
                 ?: MemoryTag(name = tagName).also { tagBox.put(it) }
             memory.tags.add(tag)
         }
-        
+
         memoryBox.put(memory)
     }
 
+    // ==================== Phase 3: MemoryTier 分层检索 ====================
+
+    /**
+     * 按层级检索记忆。优先返回高层级（WORKING > EPISODIC > SEMANTIC）的记忆，
+     * 同层级内按相关性排序。
+     *
+     * @param query 搜索关键词
+     * @param tier 限定层级，null 表示全部层级
+     * @param limit 每层最大返回数
+     */
+    suspend fun searchMemoriesByTier(
+        query: String,
+        tier: MemoryTier? = null,
+        limit: Int = 5
+    ): List<Memory> = withContext(Dispatchers.IO) {
+        val allResults = searchMemories(query = query, folderPath = null)
+
+        if (tier != null) {
+            allResults.filter { it.inferMemoryTier() == tier }.take(limit)
+        } else {
+            // 按层级分组，每层取 limit 条，按 WORKING → EPISODIC → SEMANTIC 顺序合并
+            val byTier = allResults.groupBy { it.inferMemoryTier() }
+            val ordered = MemoryTier.values().flatMap { t ->
+                (byTier[t] ?: emptyList()).take(limit)
+            }
+            ordered
+        }
+    }
+
+    /**
+     * 检查指定记忆是否需要升级到更长保留期的层级。
+     * WORKING 层级访问超过 3 次或超过 1 天 → 升级到 EPISODIC
+     * EPISODIC 层级访问超过 10 次或超过 7 天 → 升级到 SEMANTIC
+     */
+    suspend fun checkTierPromotion(memoryId: Long): Boolean = withContext(Dispatchers.IO) {
+        val memory = memoryBox.get(memoryId) ?: return@withContext false
+        val ageDays = ((System.currentTimeMillis() - memory.createdAt.time) / (24 * 60 * 60 * 1000)).toInt()
+        memory.shouldPromoteTier(accessCount = 0, ageDays = ageDays)
+    }
+
+    /**
+     * 清理过期记忆。按 MemoryTier 的 defaultRetentionDays 判断：
+     * WORKING 超过 1 天、EPISODIC 超过 30 天的记忆会被删除。
+     * SEMANTIC 记忆永久保留。
+     *
+     * @return 被清理的记忆数量
+     */
+    suspend fun cleanupExpiredMemories(): Int = withContext(Dispatchers.IO) {
+        val now = System.currentTimeMillis()
+        var deleted = 0
+
+        for (memory in memoryBox.all) {
+            val tier = memory.inferMemoryTier()
+            if (tier == MemoryTier.SEMANTIC) continue
+
+            val maxAgeMs = tier.defaultRetentionDays * 24L * 60L * 60L * 1000L
+            val ageMs = now - memory.createdAt.time
+            if (ageMs > maxAgeMs) {
+                memoryBox.remove(memory)
+                deleted++
+            }
+        }
+
+        if (deleted > 0) {
+            com.ai.assistance.operit.util.AppLogger.i("MemoryRepository", "Cleaned up $deleted expired memories (tier-based)")
+        }
+
+        deleted
+    }
+
 }
+

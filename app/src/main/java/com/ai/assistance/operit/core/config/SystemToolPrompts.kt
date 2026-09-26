@@ -824,8 +824,118 @@ object SystemToolPrompts {
     )
     
     /**
-     * 生成完整的工具提示词文本（英文）
+     * 生成完整的工具提示词文本（统一入口，按语言切换工具分类）。
+     * 消除原 generateToolsPromptEn / generateToolsPromptCn 的重复逻辑。
+     *
+     * @param useEnglish true=英文工具分类, false=中文工具分类
      */
+    fun generateToolsPrompt(
+        useEnglish: Boolean = true,
+        chatId: String? = null,
+        hasBackendImageRecognition: Boolean = false,
+        includeMemoryTools: Boolean = true,
+        chatModelHasDirectImage: Boolean = false,
+        hasBackendAudioRecognition: Boolean = false,
+        hasBackendVideoRecognition: Boolean = false,
+        chatModelHasDirectAudio: Boolean = false,
+        chatModelHasDirectVideo: Boolean = false,
+        safBookmarkNames: List<String> = emptyList(),
+        toolVisibility: Map<String, Boolean> = emptyMap(),
+        toolOrder: List<String> = emptyList(),
+        hookMetadata: Map<String, Any?> = emptyMap(),
+        dispatchToolPromptComposeHooks: (PromptHookContext) -> PromptHookContext = PromptHookRegistry::dispatchToolPromptComposeHooks
+    ): String {
+        val memoryCategoryName = if (useEnglish) "Memory and Memory Library Tools" else "记忆与记忆库工具"
+        val categories = if (includeMemoryTools) {
+            if (useEnglish) getAIAllCategoriesEn(
+                hasBackendImageRecognition = hasBackendImageRecognition,
+                chatModelHasDirectImage = chatModelHasDirectImage,
+                hasBackendAudioRecognition = hasBackendAudioRecognition,
+                hasBackendVideoRecognition = hasBackendVideoRecognition,
+                chatModelHasDirectAudio = chatModelHasDirectAudio,
+                chatModelHasDirectVideo = chatModelHasDirectVideo,
+                safBookmarkNames = safBookmarkNames
+            ) else getAIAllCategoriesCn(
+                hasBackendImageRecognition = hasBackendImageRecognition,
+                chatModelHasDirectImage = chatModelHasDirectImage,
+                hasBackendAudioRecognition = hasBackendAudioRecognition,
+                hasBackendVideoRecognition = hasBackendVideoRecognition,
+                chatModelHasDirectAudio = chatModelHasDirectAudio,
+                chatModelHasDirectVideo = chatModelHasDirectVideo,
+                safBookmarkNames = safBookmarkNames
+            )
+        } else {
+            (if (useEnglish) getAIAllCategoriesEn(
+                hasBackendImageRecognition = hasBackendImageRecognition,
+                chatModelHasDirectImage = chatModelHasDirectImage,
+                hasBackendAudioRecognition = hasBackendAudioRecognition,
+                hasBackendVideoRecognition = hasBackendVideoRecognition,
+                chatModelHasDirectAudio = chatModelHasDirectAudio,
+                chatModelHasDirectVideo = chatModelHasDirectVideo,
+                safBookmarkNames = safBookmarkNames
+            ) else getAIAllCategoriesCn(
+                hasBackendImageRecognition = hasBackendImageRecognition,
+                chatModelHasDirectImage = chatModelHasDirectImage,
+                hasBackendAudioRecognition = hasBackendAudioRecognition,
+                hasBackendVideoRecognition = hasBackendVideoRecognition,
+                chatModelHasDirectAudio = chatModelHasDirectAudio,
+                chatModelHasDirectVideo = chatModelHasDirectVideo,
+                safBookmarkNames = safBookmarkNames
+            ))
+                .filter { it.categoryName != memoryCategoryName }
+        }
+        val orderedCategories = applyToolOrder(categories, toolOrder)
+        val visibleCategories = applyToolVisibility(orderedCategories, toolVisibility)
+        val availableTools = buildToolHookPayload(visibleCategories)
+        val beforeContext =
+            dispatchToolPromptComposeHooks(
+                PromptHookContext(
+                    stage = "before_compose_tool_prompt",
+                    chatId = chatId,
+                    useEnglish = useEnglish,
+                    availableTools = availableTools,
+                    metadata =
+                        mapOf(
+                            "includeMemoryTools" to includeMemoryTools,
+                            "hasBackendImageRecognition" to hasBackendImageRecognition,
+                            "chatModelHasDirectImage" to chatModelHasDirectImage,
+                            "hasBackendAudioRecognition" to hasBackendAudioRecognition,
+                            "hasBackendVideoRecognition" to hasBackendVideoRecognition,
+                            "chatModelHasDirectAudio" to chatModelHasDirectAudio,
+                            "chatModelHasDirectVideo" to chatModelHasDirectVideo,
+                            "safBookmarkNames" to safBookmarkNames,
+                            "toolVisibility" to toolVisibility,
+                            "toolOrder" to toolOrder
+                        ) + hookMetadata
+                )
+            )
+        var currentAvailableTools = beforeContext.availableTools
+        var prompt = beforeContext.toolPrompt
+            ?: renderToolPromptFromAvailableTools(currentAvailableTools)
+        val filterContext =
+            dispatchToolPromptComposeHooks(
+                beforeContext.copy(
+                    stage = "filter_tool_prompt_items",
+                    toolPrompt = prompt,
+                    availableTools = currentAvailableTools
+                )
+            )
+        currentAvailableTools = filterContext.availableTools
+        prompt = filterContext.toolPrompt
+            ?: renderToolPromptFromAvailableTools(currentAvailableTools)
+        val afterContext =
+            dispatchToolPromptComposeHooks(
+                filterContext.copy(
+                    stage = "after_compose_tool_prompt",
+                    toolPrompt = prompt,
+                    availableTools = currentAvailableTools
+                )
+            )
+        return afterContext.toolPrompt
+            ?: renderToolPromptFromAvailableTools(afterContext.availableTools)
+    }
+
+    /** 英文工具提示词（委托给统一入口） */
     fun generateToolsPromptEn(
         chatId: String? = null,
         hasBackendImageRecognition: Boolean = false,
@@ -840,83 +950,24 @@ object SystemToolPrompts {
         toolOrder: List<String> = emptyList(),
         hookMetadata: Map<String, Any?> = emptyMap(),
         dispatchToolPromptComposeHooks: (PromptHookContext) -> PromptHookContext = PromptHookRegistry::dispatchToolPromptComposeHooks
-    ): String {
-        val categories = if (includeMemoryTools) {
-            getAIAllCategoriesEn(
-                hasBackendImageRecognition = hasBackendImageRecognition,
-                chatModelHasDirectImage = chatModelHasDirectImage,
-                hasBackendAudioRecognition = hasBackendAudioRecognition,
-                hasBackendVideoRecognition = hasBackendVideoRecognition,
-                chatModelHasDirectAudio = chatModelHasDirectAudio,
-                chatModelHasDirectVideo = chatModelHasDirectVideo,
-                safBookmarkNames = safBookmarkNames
-            )
-        } else {
-            getAIAllCategoriesEn(
-                hasBackendImageRecognition = hasBackendImageRecognition,
-                chatModelHasDirectImage = chatModelHasDirectImage,
-                hasBackendAudioRecognition = hasBackendAudioRecognition,
-                hasBackendVideoRecognition = hasBackendVideoRecognition,
-                chatModelHasDirectAudio = chatModelHasDirectAudio,
-                chatModelHasDirectVideo = chatModelHasDirectVideo,
-                safBookmarkNames = safBookmarkNames
-            )
-                .filter { it.categoryName != "Memory and Memory Library Tools" }
-        }
-        val orderedCategories = applyToolOrder(categories, toolOrder)
-        val visibleCategories = applyToolVisibility(orderedCategories, toolVisibility)
-        val availableTools = buildToolHookPayload(visibleCategories)
-        val beforeContext =
-            dispatchToolPromptComposeHooks(
-                PromptHookContext(
-                    stage = "before_compose_tool_prompt",
-                    chatId = chatId,
-                    useEnglish = true,
-                    availableTools = availableTools,
-                    metadata =
-                        mapOf(
-                            "includeMemoryTools" to includeMemoryTools,
-                            "hasBackendImageRecognition" to hasBackendImageRecognition,
-                            "chatModelHasDirectImage" to chatModelHasDirectImage,
-                            "hasBackendAudioRecognition" to hasBackendAudioRecognition,
-                            "hasBackendVideoRecognition" to hasBackendVideoRecognition,
-                            "chatModelHasDirectAudio" to chatModelHasDirectAudio,
-                            "chatModelHasDirectVideo" to chatModelHasDirectVideo,
-                            "safBookmarkNames" to safBookmarkNames,
-                            "toolVisibility" to toolVisibility,
-                            "toolOrder" to toolOrder
-                        ) + hookMetadata
-                )
-            )
-        var currentAvailableTools = beforeContext.availableTools
-        var prompt = beforeContext.toolPrompt
-            ?: renderToolPromptFromAvailableTools(currentAvailableTools)
-        val filterContext =
-            dispatchToolPromptComposeHooks(
-                beforeContext.copy(
-                    stage = "filter_tool_prompt_items",
-                    toolPrompt = prompt,
-                    availableTools = currentAvailableTools
-                )
-            )
-        currentAvailableTools = filterContext.availableTools
-        prompt = filterContext.toolPrompt
-            ?: renderToolPromptFromAvailableTools(currentAvailableTools)
-        val afterContext =
-            dispatchToolPromptComposeHooks(
-                filterContext.copy(
-                    stage = "after_compose_tool_prompt",
-                    toolPrompt = prompt,
-                    availableTools = currentAvailableTools
-                )
-            )
-        return afterContext.toolPrompt
-            ?: renderToolPromptFromAvailableTools(afterContext.availableTools)
-    }
-    
-    /**
-     * 生成完整的工具提示词文本（中文）
-     */
+    ): String = generateToolsPrompt(
+        useEnglish = true,
+        chatId = chatId,
+        hasBackendImageRecognition = hasBackendImageRecognition,
+        includeMemoryTools = includeMemoryTools,
+        chatModelHasDirectImage = chatModelHasDirectImage,
+        hasBackendAudioRecognition = hasBackendAudioRecognition,
+        hasBackendVideoRecognition = hasBackendVideoRecognition,
+        chatModelHasDirectAudio = chatModelHasDirectAudio,
+        chatModelHasDirectVideo = chatModelHasDirectVideo,
+        safBookmarkNames = safBookmarkNames,
+        toolVisibility = toolVisibility,
+        toolOrder = toolOrder,
+        hookMetadata = hookMetadata,
+        dispatchToolPromptComposeHooks = dispatchToolPromptComposeHooks
+    )
+
+    /** 中文工具提示词（委托给统一入口） */
     fun generateToolsPromptCn(
         chatId: String? = null,
         hasBackendImageRecognition: Boolean = false,
@@ -931,77 +982,20 @@ object SystemToolPrompts {
         toolOrder: List<String> = emptyList(),
         hookMetadata: Map<String, Any?> = emptyMap(),
         dispatchToolPromptComposeHooks: (PromptHookContext) -> PromptHookContext = PromptHookRegistry::dispatchToolPromptComposeHooks
-    ): String {
-        val categories = if (includeMemoryTools) {
-            getAIAllCategoriesCn(
-                hasBackendImageRecognition = hasBackendImageRecognition,
-                chatModelHasDirectImage = chatModelHasDirectImage,
-                hasBackendAudioRecognition = hasBackendAudioRecognition,
-                hasBackendVideoRecognition = hasBackendVideoRecognition,
-                chatModelHasDirectAudio = chatModelHasDirectAudio,
-                chatModelHasDirectVideo = chatModelHasDirectVideo,
-                safBookmarkNames = safBookmarkNames
-            )
-        } else {
-            getAIAllCategoriesCn(
-                hasBackendImageRecognition = hasBackendImageRecognition,
-                chatModelHasDirectImage = chatModelHasDirectImage,
-                hasBackendAudioRecognition = hasBackendAudioRecognition,
-                hasBackendVideoRecognition = hasBackendVideoRecognition,
-                chatModelHasDirectAudio = chatModelHasDirectAudio,
-                chatModelHasDirectVideo = chatModelHasDirectVideo,
-                safBookmarkNames = safBookmarkNames
-            )
-                .filter { it.categoryName != "记忆与记忆库工具" }
-        }
-        val orderedCategories = applyToolOrder(categories, toolOrder)
-        val visibleCategories = applyToolVisibility(orderedCategories, toolVisibility)
-        val availableTools = buildToolHookPayload(visibleCategories)
-        val beforeContext =
-            dispatchToolPromptComposeHooks(
-                PromptHookContext(
-                    stage = "before_compose_tool_prompt",
-                    chatId = chatId,
-                    useEnglish = false,
-                    availableTools = availableTools,
-                    metadata =
-                        mapOf(
-                            "includeMemoryTools" to includeMemoryTools,
-                            "hasBackendImageRecognition" to hasBackendImageRecognition,
-                            "chatModelHasDirectImage" to chatModelHasDirectImage,
-                            "hasBackendAudioRecognition" to hasBackendAudioRecognition,
-                            "hasBackendVideoRecognition" to hasBackendVideoRecognition,
-                            "chatModelHasDirectAudio" to chatModelHasDirectAudio,
-                            "chatModelHasDirectVideo" to chatModelHasDirectVideo,
-                            "safBookmarkNames" to safBookmarkNames,
-                            "toolVisibility" to toolVisibility,
-                            "toolOrder" to toolOrder
-                        ) + hookMetadata
-                )
-            )
-        var currentAvailableTools = beforeContext.availableTools
-        var prompt = beforeContext.toolPrompt
-            ?: renderToolPromptFromAvailableTools(currentAvailableTools)
-        val filterContext =
-            dispatchToolPromptComposeHooks(
-                beforeContext.copy(
-                    stage = "filter_tool_prompt_items",
-                    toolPrompt = prompt,
-                    availableTools = currentAvailableTools
-                )
-            )
-        currentAvailableTools = filterContext.availableTools
-        prompt = filterContext.toolPrompt
-            ?: renderToolPromptFromAvailableTools(currentAvailableTools)
-        val afterContext =
-            dispatchToolPromptComposeHooks(
-                filterContext.copy(
-                    stage = "after_compose_tool_prompt",
-                    toolPrompt = prompt,
-                    availableTools = currentAvailableTools
-                )
-            )
-        return afterContext.toolPrompt
-            ?: renderToolPromptFromAvailableTools(afterContext.availableTools)
-    }
+    ): String = generateToolsPrompt(
+        useEnglish = false,
+        chatId = chatId,
+        hasBackendImageRecognition = hasBackendImageRecognition,
+        includeMemoryTools = includeMemoryTools,
+        chatModelHasDirectImage = chatModelHasDirectImage,
+        hasBackendAudioRecognition = hasBackendAudioRecognition,
+        hasBackendVideoRecognition = hasBackendVideoRecognition,
+        chatModelHasDirectAudio = chatModelHasDirectAudio,
+        chatModelHasDirectVideo = chatModelHasDirectVideo,
+        safBookmarkNames = safBookmarkNames,
+        toolVisibility = toolVisibility,
+        toolOrder = toolOrder,
+        hookMetadata = hookMetadata,
+        dispatchToolPromptComposeHooks = dispatchToolPromptComposeHooks
+    )
 }

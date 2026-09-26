@@ -11,6 +11,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.ai.assistance.operit.core.tools.SensitiveToolRegistry
 import com.ai.assistance.operit.data.model.AITool
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -197,7 +198,10 @@ class ToolPermissionSystem private constructor(private val context: Context) {
         val key = toolPermissionKey(tool.name)
         val overrideLevel = preferences[key]?.let { PermissionLevel.fromString(it) }
         
-        val permissionLevel = overrideLevel ?: masterSwitch
+        val permissionLevel = overrideLevel ?: when {
+            SensitiveToolRegistry.isSensitive(tool.name) -> PermissionLevel.ASK
+            else -> masterSwitch
+        }
         
         return when (permissionLevel) {
             PermissionLevel.ALLOW -> ToolPermissionCheckResult.GRANTED

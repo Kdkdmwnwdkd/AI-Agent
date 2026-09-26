@@ -550,7 +550,7 @@ class EnhancedAIService private constructor(private val context: Context) {
         AppLogger.d("EnhancedAIService", "ModelRouter: ${'$'}{decision.target} | ${'$'}{decision.reason}")
         return getAIServiceForFunction(
             functionType = functionType,
-            chatModelConfigIdOverride = null,
+            chatModelConfigIdOverride = decision.configId,
             chatModelIndexOverride = null
         )
     }

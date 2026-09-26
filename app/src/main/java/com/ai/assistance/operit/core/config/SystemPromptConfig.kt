@@ -102,39 +102,22 @@ PACKAGE SYSTEM
         } else {
             emptyList()
         }
-        return if (useEnglish) {
-            SystemToolPrompts.generateToolsPromptEn(
-                chatId = chatId,
-                hasBackendImageRecognition = hasImageRecognition,
-                includeMemoryTools = false,
-                chatModelHasDirectImage = chatModelHasDirectImage,
-                hasBackendAudioRecognition = hasAudioRecognition,
-                hasBackendVideoRecognition = hasVideoRecognition,
-                chatModelHasDirectAudio = chatModelHasDirectAudio,
-                chatModelHasDirectVideo = chatModelHasDirectVideo,
-                safBookmarkNames = safBookmarkNames,
-                toolVisibility = toolVisibility,
-                toolOrder = toolOrder,
-                hookMetadata = hookMetadata,
-                dispatchToolPromptComposeHooks = dispatchToolPromptComposeHooks
-            )
-        } else {
-            SystemToolPrompts.generateToolsPromptCn(
-                chatId = chatId,
-                hasBackendImageRecognition = hasImageRecognition,
-                includeMemoryTools = false,
-                chatModelHasDirectImage = chatModelHasDirectImage,
-                hasBackendAudioRecognition = hasAudioRecognition,
-                hasBackendVideoRecognition = hasVideoRecognition,
-                chatModelHasDirectAudio = chatModelHasDirectAudio,
-                chatModelHasDirectVideo = chatModelHasDirectVideo,
-                safBookmarkNames = safBookmarkNames,
-                toolVisibility = toolVisibility,
-                toolOrder = toolOrder,
-                hookMetadata = hookMetadata,
-                dispatchToolPromptComposeHooks = dispatchToolPromptComposeHooks
-            )
-        }
+        return SystemToolPrompts.generateToolsPrompt(
+            useEnglish = useEnglish,
+            chatId = chatId,
+            hasBackendImageRecognition = hasImageRecognition,
+            includeMemoryTools = false,
+            chatModelHasDirectImage = chatModelHasDirectImage,
+            hasBackendAudioRecognition = hasAudioRecognition,
+            hasBackendVideoRecognition = hasVideoRecognition,
+            chatModelHasDirectAudio = chatModelHasDirectAudio,
+            chatModelHasDirectVideo = chatModelHasDirectVideo,
+            safBookmarkNames = safBookmarkNames,
+            toolVisibility = toolVisibility,
+            toolOrder = toolOrder,
+            hookMetadata = hookMetadata,
+            dispatchToolPromptComposeHooks = dispatchToolPromptComposeHooks
+        )
     }
 
     private fun getMemoryTools(
