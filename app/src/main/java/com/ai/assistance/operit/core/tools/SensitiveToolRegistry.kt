@@ -67,6 +67,9 @@ object SensitiveToolRegistry {
         "http_request",
         "multipart_request",
 
+        // 代码执行
+        "run_code",
+
         // 蓝牙连接
         "bluetooth_connect",
         "bluetooth_listen",
@@ -96,6 +99,7 @@ object SensitiveToolRegistry {
         "grep_code", "grep_context",
         "copy_file", "make_directory", "zip_files", "unzip_files",
         "download_file", "open_file",
+        "file_tree",
 
         // 浏览器只读
         "browser_snapshot", "browser_take_screenshot", "browser_console_messages",
@@ -124,7 +128,7 @@ object SensitiveToolRegistry {
         "music_seek", "music_set_volume", "music_status", "music_play_queue",
 
         // 其他安全操作
-        "calculate", "visit_web", "sleep", "toast",
+        "calculate", "visit_web", "web_search", "sleep", "toast",
         "start_app", "start_chat_service", "stop_chat_service",
         "create_new_chat", "switch_chat", "clear_active_character_card",
         "set_active_character_card", "use_package", "package_proxy",

@@ -7,6 +7,8 @@ import com.ai.assistance.operit.core.tools.climode.CliToolModeSupport
 import com.ai.assistance.operit.core.tools.climode.ToolExposureMode
 import com.ai.assistance.operit.core.tools.defaultTool.ToolGetter
 import com.ai.assistance.operit.core.tools.system.AndroidShellExecutor
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
 import com.ai.assistance.operit.data.model.AITool
 import com.ai.assistance.operit.data.model.ToolParameter
 import com.ai.assistance.operit.data.model.ToolResult
@@ -1435,8 +1437,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                     }
                     // Add body for POST/PUT
                     if (body.isNotBlank() && (method == "POST" || method == "PUT")) {
-                        val mediaType = okhttp3.MediaType.parse("application/json; charset=utf-8")
-                        reqBuilder.method(method, okhttp3.RequestBody.create(mediaType, body))
+                        reqBuilder.method(method, body.toRequestBody("application/json; charset=utf-8".toMediaType()))
                     } else {
                         reqBuilder.method(method, null)
                     }
