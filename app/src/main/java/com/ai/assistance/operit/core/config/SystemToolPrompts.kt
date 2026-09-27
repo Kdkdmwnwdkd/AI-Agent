@@ -222,6 +222,23 @@ object SystemToolPrompts {
                 )
             ),
             ToolPrompt(
+                name = "run_code",
+                description = "Execute code directly and return stdout+stderr. Supports python3, node (JavaScript), and shell. No need to create a file first. Uses the Linux environment (Ubuntu 24 via proot).",
+                parametersStructured = listOf(
+                    ToolParameterSchema(name = "language", type = "string", description = "language: \"python\" | \"node\" | \"shell\"", required = true),
+                    ToolParameterSchema(name = "code", type = "string", description = "the code to execute", required = true)
+                )
+            ),
+            ToolPrompt(
+                name = "file_tree",
+                description = "Show directory tree structure. Returns a tree-like listing of files and subdirectories. Better than calling list_files repeatedly.",
+                parametersStructured = listOf(
+                    ToolParameterSchema(name = "path", type = "string", description = "directory path", required = true),
+                    ToolParameterSchema(name = "environment", type = "string", description = "optional, same as read_file environment", required = false),
+                    ToolParameterSchema(name = "max_depth", type = "integer", description = "optional, max depth of subdirectories, default 3", required = false, default = "3")
+                )
+            ),
+            ToolPrompt(
                 name = "download_file",
                 description = "Download a file from the internet. Two modes: (1) Provide `url` + `destination`. (2) Provide `visit_key` + (`link_number` or `image_number`) + `destination` to download an item by index from a previous `visit_web` result.",
                 parametersStructured = listOf(
@@ -366,6 +383,23 @@ object SystemToolPrompts {
                     ToolParameterSchema(name = "intent", type = "string", description = "意图或上下文描述字符串", required = true),
                     ToolParameterSchema(name = "file_pattern", type = "string", description = "目录模式下的文件过滤", required = false, default = "\"*\""),
                     ToolParameterSchema(name = "max_results", type = "integer", description = "返回的最大项数", required = false, default = "10")
+                )
+            ),
+            ToolPrompt(
+                name = "run_code",
+                description = "直接执行代码并返回 stdout+stderr。支持 python3、node（JavaScript）、shell。无需先创建文件。使用 Linux 环境（Ubuntu 24，通过 proot）。",
+                parametersStructured = listOf(
+                    ToolParameterSchema(name = "language", type = "string", description = "语言：\"python\" | \"node\" | \"shell\"", required = true),
+                    ToolParameterSchema(name = "code", type = "string", description = "要执行的代码", required = true)
+                )
+            ),
+            ToolPrompt(
+                name = "file_tree",
+                description = "显示目录树结构。返回文件和子目录的树状列表，比反复调用 list_files 更高效。",
+                parametersStructured = listOf(
+                    ToolParameterSchema(name = "path", type = "string", description = "目录路径", required = true),
+                    ToolParameterSchema(name = "environment", type = "string", description = "可选，同 read_file 的 environment", required = false),
+                    ToolParameterSchema(name = "max_depth", type = "integer", description = "可选，子目录最大深度，默认3", required = false, default = "3")
                 )
             ),
             ToolPrompt(

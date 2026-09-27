@@ -6,6 +6,7 @@ import com.ai.assistance.operit.api.chat.enhance.ToolExecutionManager
 import com.ai.assistance.operit.core.tools.climode.CliToolModeSupport
 import com.ai.assistance.operit.core.tools.climode.ToolExposureMode
 import com.ai.assistance.operit.core.tools.defaultTool.ToolGetter
+import com.ai.assistance.operit.core.tools.system.AndroidShellExecutor
 import com.ai.assistance.operit.data.model.AITool
 import com.ai.assistance.operit.data.model.ToolParameter
 import com.ai.assistance.operit.data.model.ToolResult
@@ -275,6 +276,90 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             executor = { tool ->
                 val adbTool = ToolGetter.getShellToolExecutor(context)
                 adbTool.invoke(tool)
+            }
+    )
+
+    // Run code directly without creating a file first
+    handler.registerTool(
+            name = "run_code",
+            descriptionGenerator = { tool ->
+                val lang = tool.parameters.find { it.name == "language" }?.value ?: ""
+                "Run $lang code"
+            },
+            executor = { tool ->
+                val language = tool.parameters.find { it.name == "language" }?.value ?: ""
+                val code = tool.parameters.find { it.name == "code" }?.value ?: ""
+                if (code.isBlank()) {
+                    return@registerTool ToolResult(
+                        toolName = tool.name, success = false,
+                        result = StringResultData(""), error = "code parameter is required"
+                    )
+                }
+                try {
+                    val wrappedCmd = when (language.lowercase()) {
+                        "python", "python3" -> "python3 -c ${'$'}'" + code.replace("'", "'\\''") + "'"
+                        "node", "javascript", "js" -> "node -e ${'$'}'" + code.replace("'", "'\\''") + "'"
+                        "shell", "sh", "bash" -> code
+                        else -> return@registerTool ToolResult(
+                            toolName = tool.name, success = false,
+                            result = StringResultData(""),
+                            error = "Unsupported language: $language. Use: python, node, or shell"
+                        )
+                    }
+                    val result = runBlocking { AndroidShellExecutor.executeShellCommand(wrappedCmd) }
+                    val output = result.stdout + (if (result.stderr.isNotBlank()) "\nSTDERR:\n${'$'}{result.stderr}" else "")
+                    ToolResult(
+                        toolName = tool.name,
+                        success = result.success,
+                        result = StringResultData(output.ifBlank { "(no output)" }),
+                        error = if (result.success) null else "Exit code: ${'$'}{result.exitCode}"
+                    )
+                } catch (e: Exception) {
+                    ToolResult(
+                        toolName = tool.name, success = false,
+                        result = StringResultData(""), error = e.message
+                    )
+                }
+            }
+    )
+
+    // Show directory tree structure
+    handler.registerTool(
+            name = "file_tree",
+            descriptionGenerator = { tool ->
+                val path = tool.parameters.find { it.name == "path" }?.value ?: ""
+                "Tree: $path"
+            },
+            executor = { tool ->
+                val path = tool.parameters.find { it.name == "path" }?.value ?: ""
+                val maxDepth = tool.parameters.find { it.name == "max_depth" }?.value?.toIntOrNull() ?: 3
+                if (path.isBlank()) {
+                    return@registerTool ToolResult(
+                        toolName = tool.name, success = false,
+                        result = StringResultData(""), error = "path parameter is required"
+                    )
+                }
+                try {
+                    val treeCmd = "find '${'$'}path' -maxdepth ${'$'}maxDepth -type f -o -type d 2>/dev/null | head -200 | sort"
+                    val result = runBlocking { AndroidShellExecutor.executeShellCommand(treeCmd) }
+                    val treeOutput = buildString {
+                        for (line in result.stdout.lines().filter { it.isNotBlank() }) {
+                            val indent = line.count { it == '/' }
+                            val name = line.substringAfterLast('/')
+                            appendLine("${"  ".repeat(indent.coerceAtMost(8))}$name")
+                        }
+                    }
+                    ToolResult(
+                        toolName = tool.name,
+                        success = true,
+                        result = StringResultData(treeOutput.ifBlank { "(empty directory)" })
+                    )
+                } catch (e: Exception) {
+                    ToolResult(
+                        toolName = tool.name, success = false,
+                        result = StringResultData(""), error = e.message
+                    )
+                }
             }
     )
 

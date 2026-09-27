@@ -58,6 +58,18 @@ PACKAGE SYSTEM
 - 这将显示包中的所有工具及其使用方法
 - 只有在激活包后，才能直接使用其工具"""
 
+    private const val CODING_GUIDELINES_EN = """
+CODING GUIDELINES:
+- Before modifying any file, use grep_code and read_file to understand the existing code structure and context. Never guess code content.
+- For small changes, use edit_file with precise old/new content. For new files, use create_file.
+- After writing code, proactively verify it works: use shell to run tests or compile, or use the Linux environment (environment="linux") to run python/node scripts.
+- When encountering errors, analyze the error message carefully before retrying. Do not blindly repeat the same action.
+- Keep changes minimal and focused. Do not refactor or add features beyond what was asked.
+- Use the user's current language for code comments. Always specify language when outputting code blocks.
+- When searching code, use grep_context for semantic search and grep_code for pattern matching. Combine both for best results.
+- You have access to a Linux terminal environment (Ubuntu 24 via proot). Use environment="linux" to run code, install packages, or compile projects.
+- For complex tasks, break them down: first search and read, then plan, then modify, then verify."""
+
 
     // Tool Call API 模式下的包系统说明（不使用XML格式）
     private const val PACKAGE_SYSTEM_GUIDELINES_TOOL_CALL_EN = """
@@ -151,6 +163,8 @@ PACKAGE SYSTEM
 """
 BEGIN_SELF_INTRODUCTION_SECTION
 
+CODING_GUIDELINES_SECTION
+
 WORKSPACE_GUIDELINES_SECTION
 
 TOOL_USAGE_GUIDELINES_SECTION
@@ -167,6 +181,8 @@ AVAILABLE_TOOLS_SECTION
     val SYSTEM_PROMPT_TEMPLATE_CN =
 """
 BEGIN_SELF_INTRODUCTION_SECTION
+
+CODING_GUIDELINES_SECTION
 
 WORKSPACE_GUIDELINES_SECTION
 
@@ -366,6 +382,7 @@ AVAILABLE_TOOLS_SECTION""".trimIndent()
 
     // Build prompt with appropriate sections
     var prompt = templateToUse
+        .replace("CODING_GUIDELINES_SECTION", CODING_GUIDELINES_EN)
         .replace("ACTIVE_PACKAGES_SECTION", if (enableTools) packagesSection.toString() else "")
         .replace("WORKSPACE_GUIDELINES_SECTION", workspaceGuidelines)
 
