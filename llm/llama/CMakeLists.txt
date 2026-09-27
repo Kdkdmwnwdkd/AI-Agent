@@ -93,6 +93,10 @@ endif()
 set(SPIRV-Headers_FOUND TRUE)
 ")
 set(SPIRV-Headers_DIR "${SPIRV_HEADERS_CONFIG_DIR}" CACHE PATH "" FORCE)
+# llama.cpp 720d7fa 的 ggml-vulkan 未 link SPIRV-Headers::SPIRV-Headers target，
+# 但其 ggml-vulkan.cpp 直接 #include <spirv/unified1/spirv.hpp>，
+# 因此需将 SPIRV-Headers 的 include 目录加入全局 include path。
+include_directories("${OPERIT_SPIRV_HEADERS_SOURCE_DIR}/include")
 
 operit_prepare_git_source(
     OPERIT_LLAMA_CPP_SOURCE_DIR
