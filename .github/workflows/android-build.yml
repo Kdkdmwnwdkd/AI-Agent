@@ -55,10 +55,10 @@ permissions:
 env:
   JAVA_VERSION: '21'
   NODE_VERSION: '22'
-  ANDROID_NDK_VERSION: '27.2.12479018'
-  ANDROID_CMAKE_VERSION: '3.31.4'
+  ANDROID_NDK_VERSION: '25.1.8937393'
+  ANDROID_CMAKE_VERSION: '3.22.1'
   ANDROID_API_LEVEL: '26'
-  RUST_VERSION: '1.98.1'
+  RUST_VERSION: '1.88.0'
   MANUAL_DEPS_DIR: manual-deps
 
 jobs:
@@ -112,9 +112,10 @@ jobs:
           set -euo pipefail
           sdkmanager --install \
             "platform-tools" \
-            "platforms;android-35" \
+            "platforms;android-34" \
             "platforms;android-36" \
-            "build-tools;36.0.0" \
+            "build-tools;34.0.0" \
+            "build-tools;35.0.0" \
             "ndk;$ANDROID_NDK_VERSION" \
             "cmake;$ANDROID_CMAKE_VERSION"
 
