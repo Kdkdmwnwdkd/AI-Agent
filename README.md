@@ -9,6 +9,9 @@
   <img src="app/src/main/assets/logo.svg" width="48" height="48" align="absmiddle" alt=""> Operit AI
 </h1>
 
+<div align="center"><b>Forked from <a href="https://github.com/AAswordman/Operit">AAswordman/Operit</a></b></div>
+
+
 <div align="center">
   <b>🔧 OperitAI 增强版 Fork</b><br>
   基于 <a href="https://github.com/AAswordman/Operit">AAswordman/Operit</a> 进行深度优化与改造<br>
