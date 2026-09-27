@@ -359,6 +359,9 @@ val syncMainAssets by tasks.registering(Sync::class) {
 android {
     namespace = "com.ai.assistance.operit"
     compileSdk = 36
+    // 显式锁定 NDK 版本，避免 AGP 自动选中 SDK 里预装的更新版本 NDK（如 27.x）。
+    // 25.1.8937393 是项目验证过的稳定版本，与 CI 安装的 NDK 及 ndk.dir 一致。
+    ndkVersion = "25.1.8937393"
 
     sourceSets {
         getByName("main") {
