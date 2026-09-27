@@ -7,8 +7,6 @@ import com.ai.assistance.operit.core.tools.climode.CliToolModeSupport
 import com.ai.assistance.operit.core.tools.climode.ToolExposureMode
 import com.ai.assistance.operit.core.tools.defaultTool.ToolGetter
 import com.ai.assistance.operit.core.tools.system.AndroidShellExecutor
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.RequestBody.Companion.toRequestBody
 import com.ai.assistance.operit.data.model.AITool
 import com.ai.assistance.operit.data.model.ToolParameter
 import com.ai.assistance.operit.data.model.ToolResult
@@ -1399,80 +1397,6 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                     ToolResult(
                         toolName = tool.name, success = false,
                         result = StringResultData(""), error = "Search error: ${e.message}"
-                    )
-                }
-            }
-    )
-
-    // HTTP request tool - raw GET/POST/PUT/DELETE
-    handler.registerTool(
-            name = "http_request",
-            descriptionGenerator = { tool ->
-                val url = tool.parameters.find { it.name == "url" }?.value ?: ""
-                val method = tool.parameters.find { it.name == "method" }?.value ?: "GET"
-                "$method $url"
-            },
-            executor = { tool ->
-                val url = tool.parameters.find { it.name == "url" }?.value ?: ""
-                val method = tool.parameters.find { it.name == "method" }?.value?.uppercase() ?: "GET"
-                val headersJson = tool.parameters.find { it.name == "headers" }?.value ?: ""
-                val body = tool.parameters.find { it.name == "body" }?.value ?: ""
-                val timeoutSec = tool.parameters.find { it.name == "timeout" }?.value?.toIntOrNull()?.coerceIn(1, 60) ?: 15
-
-                if (url.isBlank()) {
-                    return@registerTool ToolResult(
-                        toolName = tool.name, success = false,
-                        result = StringResultData(""), error = "url parameter is required"
-                    )
-                }
-                try {
-                    val client = okhttp3.OkHttpClient.Builder()
-                        .connectTimeout(timeoutSec.toLong(), java.util.concurrent.TimeUnit.SECONDS)
-                        .readTimeout(timeoutSec.toLong(), java.util.concurrent.TimeUnit.SECONDS)
-                        .build()
-                    val reqBuilder = okhttp3.Request.Builder().url(url)
-                    // Parse headers
-                    if (headersJson.isNotBlank()) {
-                        try {
-                            val headersObj = org.json.JSONObject(headersJson)
-                            for (key in headersObj.keys()) {
-                                reqBuilder.header(key, headersObj.getString(key))
-                            }
-                        } catch (_: Exception) {
-                            // Ignore malformed headers
-                        }
-                    }
-                    // Add body for POST/PUT
-                    if (body.isNotBlank() && (method == "POST" || method == "PUT")) {
-                        reqBuilder.method(method, body.toRequestBody("application/json; charset=utf-8".toMediaType()))
-                    } else {
-                        reqBuilder.method(method, null)
-                    }
-                    client.newCall(reqBuilder.build()).execute().use { response ->
-                        val respBody = response.body?.string() ?: ""
-                        val maxLen = 10000
-                        val truncated = if (respBody.length > maxLen) respBody.take(maxLen) + "\n...(truncated)" else respBody
-                        ToolResult(
-                            toolName = tool.name,
-                            success = response.isSuccessful,
-                            result = StringResultData("HTTP ${response.code}\n\n$truncated"),
-                            error = if (response.isSuccessful) null else "HTTP ${response.code} ${response.message}"
-                        )
-                    }
-                } catch (e: java.net.SocketTimeoutException) {
-                    ToolResult(
-                        toolName = tool.name, success = false,
-                        result = StringResultData(""), error = "Request timed out (${timeoutSec}s)"
-                    )
-                } catch (e: IllegalArgumentException) {
-                    ToolResult(
-                        toolName = tool.name, success = false,
-                        result = StringResultData(""), error = "Invalid URL: ${e.message}"
-                    )
-                } catch (e: Exception) {
-                    ToolResult(
-                        toolName = tool.name, success = false,
-                        result = StringResultData(""), error = "Request error: ${e.message}"
                     )
                 }
             }
