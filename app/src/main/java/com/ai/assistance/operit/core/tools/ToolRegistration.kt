@@ -299,8 +299,14 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                 }
                 try {
                     val wrappedCmd = when (language.lowercase()) {
-                        "python", "python3" -> "python3 -c ${'$'}'" + code.replace("'", "'\\''") + "'"
-                        "node", "javascript", "js" -> "node -e ${'$'}'" + code.replace("'", "'\\''") + "'"
+                        "python", "python3" -> {
+                            val escaped = code.replace("\\", "\\\\").replace("'", "'\"'\"'")
+                            "python3 -c '" + escaped + "'"
+                        }
+                        "node", "javascript", "js" -> {
+                            val escaped = code.replace("\\", "\\\\").replace("'", "'\"'\"'")
+                            "node -e '" + escaped + "'"
+                        }
                         "shell", "sh", "bash" -> code
                         else -> return@registerTool ToolResult(
                             toolName = tool.name, success = false,
@@ -309,12 +315,12 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                         )
                     }
                     val result = runBlocking { AndroidShellExecutor.executeShellCommand(wrappedCmd) }
-                    val output = result.stdout + (if (result.stderr.isNotBlank()) "\nSTDERR:\n${'$'}{result.stderr}" else "")
+                    val output = result.stdout + (if (result.stderr.isNotBlank()) "\nSTDERR:\n" + result.stderr else "")
                     ToolResult(
                         toolName = tool.name,
                         success = result.success,
                         result = StringResultData(output.ifBlank { "(no output)" }),
-                        error = if (result.success) null else "Exit code: ${'$'}{result.exitCode}"
+                        error = if (result.success) null else "Exit code: " + result.exitCode
                     )
                 } catch (e: Exception) {
                     ToolResult(
@@ -342,13 +348,14 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                     )
                 }
                 try {
-                    val treeCmd = "find '${'$'}path' -maxdepth ${'$'}maxDepth -type f -o -type d 2>/dev/null | head -200 | sort"
+                    val safePath = path.replace("'", "'\"'\"'")
+                    val treeCmd = "find '" + safePath + "' -maxdepth " + maxDepth + " -type f -o -type d 2>/dev/null | head -200 | sort"
                     val result = runBlocking { AndroidShellExecutor.executeShellCommand(treeCmd) }
                     val treeOutput = buildString {
                         for (line in result.stdout.lines().filter { it.isNotBlank() }) {
                             val indent = line.count { it == '/' }
                             val name = line.substringAfterLast('/')
-                            appendLine("${"  ".repeat(indent.coerceAtMost(8))}$name")
+                            appendLine("  ".repeat(indent.coerceAtMost(8)) + name)
                         }
                     }
                     ToolResult(
