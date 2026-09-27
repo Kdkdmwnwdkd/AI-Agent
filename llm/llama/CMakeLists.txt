@@ -38,6 +38,17 @@ else()
     message(STATUS "ANDROID_NDK=${ANDROID_NDK} CMAKE_ANDROID_NDK=${CMAKE_ANDROID_NDK}")
 endif()
 
+# Vulkan-Hpp：Android NDK 只带 vulkan.h（C），不带 vulkan.hpp（C++），ggml-vulkan 需要它
+operit_prepare_git_source(
+    OPERIT_VULKAN_HPP_SOURCE_DIR
+    OPERIT_VULKAN_HPP_BINARY_DIR
+    vulkan_hpp
+    "https://github.com/KhronosGroup/Vulkan-Hpp.git"
+    "main"
+)
+# 让 ggml-vulkan 能找到 vulkan/vulkan.hpp
+include_directories("${OPERIT_VULKAN_HPP_SOURCE_DIR}")
+
 # SPIRV-Headers：llama.cpp 的 Vulkan 后端依赖它，但 Android NDK 不提供 CMake config
 operit_prepare_git_source(
     OPERIT_SPIRV_HEADERS_SOURCE_DIR
