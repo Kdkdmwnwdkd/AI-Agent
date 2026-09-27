@@ -14,6 +14,31 @@ set(LLAMA_BUILD_SERVER OFF CACHE BOOL "" FORCE)
 set(GGML_VULKAN ON CACHE BOOL "" FORCE)
 set(LLAMA_VULKAN ON CACHE BOOL "" FORCE)
 
+# SPIRV-Headers：llama.cpp 的 Vulkan 后端依赖它，但 Android NDK 不提供 CMake config
+operit_prepare_git_source(
+    OPERIT_SPIRV_HEADERS_SOURCE_DIR
+    OPERIT_SPIRV_HEADERS_BINARY_DIR
+    spirv_headers
+    "https://github.com/KhronosGroup/SPIRV-Headers.git"
+    "main"
+)
+
+# 生成 SPIRV-HeadersConfig.cmake，让 find_package(SPIRV-Headers CONFIG) 能找到
+set(SPIRV_HEADERS_CONFIG_DIR "${OPERIT_SPIRV_HEADERS_BINARY_DIR}/cmake")
+file(MAKE_DIRECTORY "${SPIRV_HEADERS_CONFIG_DIR}")
+file(WRITE "${SPIRV_HEADERS_CONFIG_DIR}/SPIRV-HeadersConfig.cmake"
+"set(SPIRV-Headers_INCLUDE_DIR \"${OPERIT_SPIRV_HEADERS_SOURCE_DIR}/include\")
+set(SPIRV-Headers_INCLUDE_DIRS \"${OPERIT_SPIRV_HEADERS_SOURCE_DIR}/include\")
+if(NOT TARGET SPIRV-Headers::SPIRV-Headers)
+    add_library(SPIRV-Headers::SPIRV-Headers INTERFACE IMPORTED)
+    set_target_properties(SPIRV-Headers::SPIRV-Headers PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES \"${OPERIT_SPIRV_HEADERS_SOURCE_DIR}/include\"
+    )
+endif()
+set(SPIRV-Headers_FOUND TRUE)
+")
+set(SPIRV-Headers_DIR "${SPIRV_HEADERS_CONFIG_DIR}" CACHE PATH "" FORCE)
+
 operit_prepare_git_source(
     OPERIT_LLAMA_CPP_SOURCE_DIR
     OPERIT_LLAMA_CPP_BINARY_DIR
