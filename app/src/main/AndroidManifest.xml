@@ -93,7 +93,7 @@
         android:usesCleartextTraffic="true"
         android:largeHeap="true"
         tools:targetApi="31"
-        tools:replace="android:theme,android:icon,android:roundIcon">
+        tools:replace="android:theme,android:icon,android:roundIcon,android:allowBackup">
 
         <!-- OpenCL 库权限声明 (Android 10+ 命名空间隔离解决方案) -->
         <uses-native-library 
