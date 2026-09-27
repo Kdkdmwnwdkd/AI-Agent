@@ -2,6 +2,9 @@
   <img src="app/src/main/assets/logo.svg" width="48" height="48" align="absmiddle" alt=""> Operit AI
 </h1>
 
+<div align="center"><b>Forked from <a href="https://github.com/AAswordman/Operit">AAswordman/Operit</a></b></div>
+
+
 <div align="center">
   <span>中文</span> | <a href="README.md">English</a>
   <br>
