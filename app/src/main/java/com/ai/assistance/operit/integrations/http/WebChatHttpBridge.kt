@@ -22,6 +22,7 @@ import com.ai.assistance.operit.data.model.CharacterCard
 import com.ai.assistance.operit.data.model.CharacterCardChatModelBindingMode
 import com.ai.assistance.operit.data.model.CharacterGroupCard
 import com.ai.assistance.operit.data.model.FunctionType
+import com.ai.assistance.operit.data.model.GroupMemberConfig
 import com.ai.assistance.operit.data.model.InputProcessingState
 import com.ai.assistance.operit.data.model.getModelByIndex
 import com.ai.assistance.operit.data.model.getModelList
@@ -1410,24 +1411,10 @@ class WebChatHttpBridge(
             val directGroupAvatarSource = runCatching {
                 userPreferencesManager.getAiAvatarForCharacterGroupFlow(groupId).first()
             }.getOrNull()?.trim()?.takeIf { it.isNotBlank() }
-            val fallbackMemberCardId = characterGroupsById[groupId]
-                ?.members
-                ?.sortedBy { it.orderIndex }
-                ?.firstOrNull()
-                ?.characterCardId
-                ?.trim()
-                ?.takeIf { it.isNotBlank() }
-            val fallbackMemberAvatarSource = if (directGroupAvatarSource.isNullOrBlank()) {
-                fallbackMemberCardId?.let { cardId ->
-                    runCatching {
-                        userPreferencesManager.getAiAvatarForCharacterCardFlow(cardId).first()
-                    }.getOrNull()?.trim()?.takeIf { it.isNotBlank() }
-                }
-            } else {
-                null
-            }
-
-            val resolvedSource = directGroupAvatarSource ?: fallbackMemberAvatarSource ?: return@forEach
+            val resolvedSource = resolveGroupAvatarSource(
+                directGroupAvatarSource,
+                characterGroupsById[groupId]?.members.orEmpty()
+            ) ?: return@forEach
             val registeredAssetUrl = registerAsset(resolvedSource, guessMimeType(resolvedSource))
             if (!registeredAssetUrl.isNullOrBlank()) {
                 groupAvatarUrlById[groupId] = registeredAssetUrl
@@ -1631,7 +1618,25 @@ class WebChatHttpBridge(
         val directGroupAvatarSource = runCatching {
             userPreferencesManager.getAiAvatarForCharacterGroupFlow(group.id).first()
         }.getOrNull()?.trim()?.takeIf { it.isNotBlank() }
-        val fallbackMemberCardId = group.members
+        val resolvedSource = resolveGroupAvatarSource(directGroupAvatarSource, group.members) ?: return null
+        return registerAsset(resolvedSource, guessMimeType(resolvedSource))
+    }
+
+    /**
+     * 解析角色组头像来源：优先使用组级头像；缺失时按 orderIndex 取第一个成员的角色卡头像作为补充。
+     *
+     * 为什么提取：原先「群头像批量构建」与「单组解析」两处存在几乎相同的解析逻辑，收敛到此处统一维护，
+     * 避免后续修改一处漏改另一处。行为与原实现完全一致（纯提取，不改变任何逻辑）。
+     *
+     * @param directGroupAvatarSource 组级头像来源（已获取，可能为空白）
+     * @param members 组成员列表（按 orderIndex 取第一个成员的角色卡）
+     * @return 解析后的头像来源；组级与成员级均不可用时返回 null
+     */
+    private suspend fun resolveGroupAvatarSource(
+        directGroupAvatarSource: String?,
+        members: List<GroupMemberConfig>
+    ): String? {
+        val fallbackMemberCardId = members
             .sortedBy { it.orderIndex }
             .firstOrNull()
             ?.characterCardId
@@ -1646,9 +1651,7 @@ class WebChatHttpBridge(
         } else {
             null
         }
-
-        val resolvedSource = directGroupAvatarSource ?: fallbackMemberAvatarSource ?: return null
-        return registerAsset(resolvedSource, guessMimeType(resolvedSource))
+        return directGroupAvatarSource ?: fallbackMemberAvatarSource
     }
 
     private suspend fun resolveMessageAvatarUrl(
