@@ -327,6 +327,11 @@ jobs:
             "platforms;android-36" \
             "build-tools;$ANDROID_BUILD_TOOLS_VERSION" \
             "ndk;$ANDROID_NDK_VERSION"
+          # 安装 glslc（Vulkan 着色器编译器）。NDK 自带的 glslc 路径在不同版本间有差异，
+          # 直接装系统包确保 find_program 的 /usr/bin 路径能命中。
+          sudo apt-get update
+          sudo apt-get install -y glslc
+          glslc --version
           # 校验系统预装 CMake 版本，确保 ≥ 3.24 且与 build.gradle.kts 的 version 字段一致
           CMAKE_REAL_PATH=$(readlink -f "$(command -v cmake)")
           echo "Resolved system cmake: $CMAKE_REAL_PATH"
@@ -412,6 +417,8 @@ jobs:
         run: |
           set -euo pipefail
           echo "sdk.dir=$ANDROID_HOME" > local.properties
+          # 强制使用 sdkmanager 安装的 NDK 25.1.8937393，避免 AGP 选中 SDK 里预装的更新版本 NDK。
+          echo "ndk.dir=$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION" >> local.properties
           # 复用系统预装 CMake 3.31.6（≥ 3.24，支持 Vulkan FindVulkan glslc 组件）。
           # cmake.dir 指向包含 bin/cmake 的目录的父目录，AGP 会优先使用它而非 SDK Manager 的版本。
           CMAKE_REAL_PATH=$(readlink -f "$(command -v cmake)")
@@ -558,6 +565,8 @@ jobs:
         run: |
           set -euo pipefail
           echo "sdk.dir=$ANDROID_HOME" > local.properties
+          # 强制使用 sdkmanager 安装的 NDK 25.1.8937393，避免 AGP 选中 SDK 里预装的更新版本 NDK。
+          echo "ndk.dir=$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION" >> local.properties
           # 复用系统预装 CMake 3.31.6（≥ 3.24，支持 Vulkan FindVulkan glslc 组件）。
           # cmake.dir 指向包含 bin/cmake 的目录的父目录，AGP 会优先使用它而非 SDK Manager 的版本。
           CMAKE_REAL_PATH=$(readlink -f "$(command -v cmake)")

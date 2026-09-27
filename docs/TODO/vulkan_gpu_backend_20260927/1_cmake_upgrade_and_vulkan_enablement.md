@@ -38,7 +38,7 @@ sdkmanager 仓库不含 3.24.x / 3.31.6 精确 micro 版本，因此 CI 不再�
 - 删除前序对话的「暂时关闭」「已有兜底」「后续单独适配」等违规注释，替换为正面说明（解释为何选 CMake ≥ 3.24）
 - 重新 `set(GGML_VULKAN ON)` / `set(LLAMA_VULKAN ON)`
 - 保留 glslc 的 `find_program` workaround（交叉编译时 `CMAKE_FIND_ROOT_PATH_MODE_PROGRAM=ONLY` 会限制搜索，且 CMake 3.24+ 的 FindVulkan glslc 组件会读取 `Vulkan_GLSLC_EXECUTABLE` 变量）
-- Vulkan-Headers / Vulkan-Hpp / SPIRV-Headers 三个依赖的 git ref 由 `main` 改为 tag `vulkan-sdk-1.3.275.0`
+- Vulkan-Headers / Vulkan-Hpp / SPIRV-Headers 三个依赖的 git ref 由 `main` 改为对应 Vulkan SDK 1.3.275 的稳定 tag。各仓库 tag 命名不同：Vulkan-Headers / SPIRV-Headers 用 `vulkan-sdk-1.3.275.0`，Vulkan-Hpp 用 `v1.3.275`
 - 保留手写的 `SPIRV-HeadersConfig.cmake`（该 tag 源码仅含 `.in` 模板，未 install 时无可用 config 文件）
 - `target_link_libraries` 加回 `vulkan`
 
@@ -48,9 +48,10 @@ sdkmanager 仓库不含 3.24.x / 3.31.6 精确 micro 版本，因此 CI 不再�
 
 ### Vulkan-Headers / Vulkan-Hpp / SPIRV-Headers tag 选择
 
-三者统一固定到 `vulkan-sdk-1.3.275.0`：
+三者统一固定到 Vulkan SDK 1.3.275 对应的稳定 tag：
 
-- 该 tag 对应 VK_HEADER_VERSION 275，是 Khronos 同步发布的稳定配套版本
+- 该版本对应 VK_HEADER_VERSION 275，是 Khronos 同步发布的稳定配套版本
+- 各仓库 tag 命名不同：Vulkan-Headers / SPIRV-Headers 用 `vulkan-sdk-1.3.275.0`，Vulkan-Hpp 用 `v1.3.275`
 - 1.3 系列与 llama.cpp 720d7fa（2024 年初版本）时间线匹配
 - 三者版本一致，互相兼容，避免 `main` 分支漂移
 - `include_directories(BEFORE ...)` 让拉取的头文件优先于 NDK 自带的 vulkan.h

@@ -31,7 +31,7 @@ find_package(Vulkan COMPONENTS glslc REQUIRED)
 - 升级 CMake 到 3.31.6（≥ 3.24，支持 FindVulkan glslc 组件）
 - 重新打开 `GGML_VULKAN ON` / `LLAMA_VULKAN ON`
 - 删除违规的回退/兜底注释
-- 将 Vulkan-Headers / Vulkan-Hpp / SPIRV-Headers 三个依赖从 `main` 分支固定到 tag `vulkan-sdk-1.3.275.0`（Khronos 同步发布的稳定配套版本，对应 VK_HEADER_VERSION 275）
+- 将 Vulkan-Headers / Vulkan-Hpp / SPIRV-Headers 三个依赖从 `main` 分支固定到对应 Vulkan SDK 1.3.275 的稳定 tag（Khronos 同步发布的配套版本，对应 VK_HEADER_VERSION 275）。注意各仓库 tag 命名不同：Vulkan-Headers / SPIRV-Headers 用 `vulkan-sdk-1.3.275.0`，Vulkan-Hpp 用 `v1.3.275`
 - CI 通过 `local.properties` 的 `cmake.dir` 复用 ubuntu-24.04 runner 系统预装的 CMake 3.31.6（sdkmanager 仓库无 3.24.x / 3.31.6 精确 micro 版本）
 
 ## 预期结果

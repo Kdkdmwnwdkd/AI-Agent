@@ -45,8 +45,9 @@ endif()
 
 # Vulkan 头文件：Android NDK 自带的 vulkan.h 版本较旧，与 Vulkan-Hpp 不匹配。
 # 拉取配套版本的 Vulkan-Headers + Vulkan-Hpp，用 BEFORE 让它们优先于 NDK 自带的 vulkan.h。
-# 三者（Vulkan-Headers / Vulkan-Hpp / SPIRV-Headers）统一固定到 tag vulkan-sdk-1.3.275.0，
-# 该 tag 对应 VK_HEADER_VERSION 275，是 Khronos 同步发布的稳定配套版本。
+# 三者对应同一个 Vulkan SDK 1.3.275 版本（VK_HEADER_VERSION 275），Khronos 同步发布的稳定配套版本。
+# 注意各仓库 tag 命名不同：Vulkan-Headers/SPIRV-Headers 用 vulkan-sdk-1.3.275.0，
+# Vulkan-Hpp 用 v1.3.275。
 # Vulkan-Hpp header 最低要求 C++11，spaceship operator 等特性为条件编译，
 # 在 C++17（NDK 25 clang 14）下自动走 #else 分支，无需额外兼容宏。
 operit_prepare_git_source(
@@ -61,7 +62,7 @@ operit_prepare_git_source(
     OPERIT_VULKAN_HPP_BINARY_DIR
     vulkan_hpp
     "https://github.com/KhronosGroup/Vulkan-Hpp.git"
-    "vulkan-sdk-1.3.275.0"
+    "v1.3.275"
 )
 include_directories(BEFORE "${OPERIT_VULKAN_HEADERS_SOURCE_DIR}/include")
 include_directories(BEFORE "${OPERIT_VULKAN_HPP_SOURCE_DIR}")

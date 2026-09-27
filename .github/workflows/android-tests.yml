@@ -100,6 +100,10 @@ jobs:
             "platforms;android-36" \
             "build-tools;$ANDROID_BUILD_TOOLS_VERSION" \
             "ndk;$ANDROID_NDK_VERSION"
+          # 安装 glslc（Vulkan 着色器编译器），供 CMake 配置阶段的 find_program 命中。
+          sudo apt-get update
+          sudo apt-get install -y glslc
+          glslc --version
 
       - name: Restore Android dependency cache
         id: cache-manual-deps
@@ -157,6 +161,8 @@ jobs:
         run: |
           set -euo pipefail
           echo "sdk.dir=$ANDROID_HOME" > local.properties
+          # 强制使用 sdkmanager 安装的 NDK 25.1.8937393，避免 AGP 选中 SDK 里预装的更新版本 NDK。
+          echo "ndk.dir=$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION" >> local.properties
           # 复用系统预装 CMake 3.31.6（≥ 3.24，支持 Vulkan FindVulkan glslc 组件），
           # 避免 AGP 自动从 SDK Manager 下载 3.22.1（不支持 glslc 组件，Vulkan 配置会失败）。
           CMAKE_REAL_PATH=$(readlink -f "$(command -v cmake)")
