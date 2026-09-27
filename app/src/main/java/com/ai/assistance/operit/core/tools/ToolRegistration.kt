@@ -6,6 +6,7 @@ import com.ai.assistance.operit.api.chat.enhance.ToolExecutionManager
 import com.ai.assistance.operit.core.tools.climode.CliToolModeSupport
 import com.ai.assistance.operit.core.tools.climode.ToolExposureMode
 import com.ai.assistance.operit.core.tools.defaultTool.ToolGetter
+import com.ai.assistance.operit.core.tools.defaultTool.standard.StandardSoftwareSettingsModifyTools
 import com.ai.assistance.operit.core.tools.system.AndroidShellExecutor
 import com.ai.assistance.operit.data.model.AITool
 import com.ai.assistance.operit.data.model.ToolParameter
@@ -28,6 +29,32 @@ import org.json.JSONObject
  * This file contains all tool registrations centralized for easier maintenance and integration It
  * extracts the registerTools logic from AIToolHandler into a dedicated file
  */
+
+/**
+ * 注册「软件设置」类工具的辅助函数。
+ *
+ * 为什么提取：本文件中 26 个 softwareSettings 工具的 executor 都是同一样板——
+ * `ToolGetter.getSoftwareSettingsModifyTools(context)` 后用 `runBlocking(Dispatchers.IO)` 调用单个方法。
+ * 收敛到此处消除重复样板，行为与原显式写法完全一致（纯去重，不改变任何逻辑）。
+ *
+ * @param action 要执行的操作，接收 (StandardSoftwareSettingsModifyTools, AITool)，如 `{ t, tool -> t.listModelConfigs(tool) }`
+ */
+private fun registerSoftwareSettingsTool(
+    handler: AIToolHandler,
+    context: Context,
+    name: String,
+    descriptionGenerator: (AITool) -> String,
+    action: suspend (StandardSoftwareSettingsModifyTools, AITool) -> ToolResult
+) {
+    handler.registerTool(
+        name = name,
+        descriptionGenerator = descriptionGenerator,
+        executor = { tool ->
+            val tools = ToolGetter.getSoftwareSettingsModifyTools(context)
+            runBlocking(Dispatchers.IO) { action(tools, tool) }
+        }
+    )
+}
 
 /**
  * Register all available tools with the AIToolHandler
@@ -694,102 +721,58 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             }
     )
 
-    handler.registerTool(
-            name = "list_model_configs",
-            descriptionGenerator = { _ ->
-                "List all model configs and current function-to-config mappings"
-            },
-            executor = { tool ->
-                val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
-                runBlocking(Dispatchers.IO) { softwareSettingsTools.listModelConfigs(tool) }
-            }
-    )
+    registerSoftwareSettingsTool(handler, context, name = "list_model_configs",
+            descriptionGenerator = { "List all model configs and current function-to-config mappings" }
+    ) { t, tool -> t.listModelConfigs(tool) }
 
-    handler.registerTool(
-            name = "create_model_config",
+    registerSoftwareSettingsTool(handler, context, name = "create_model_config",
             descriptionGenerator = { tool ->
                 val name = tool.parameters.find { it.name == "name" }?.value ?: "New Model Config"
                 "Create model config: $name"
-            },
-            executor = { tool ->
-                val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
-                runBlocking(Dispatchers.IO) { softwareSettingsTools.createModelConfig(tool) }
             }
-    )
+    ) { t, tool -> t.createModelConfig(tool) }
 
-    handler.registerTool(
-            name = "update_model_config",
+    registerSoftwareSettingsTool(handler, context, name = "update_model_config",
             descriptionGenerator = { tool ->
                 val configId = tool.parameters.find { it.name == "config_id" }?.value ?: ""
                 "Update model config: $configId"
-            },
-            executor = { tool ->
-                val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
-                runBlocking(Dispatchers.IO) { softwareSettingsTools.updateModelConfig(tool) }
             }
-    )
+    ) { t, tool -> t.updateModelConfig(tool) }
 
-    handler.registerTool(
-            name = "delete_model_config",
+    registerSoftwareSettingsTool(handler, context, name = "delete_model_config",
             descriptionGenerator = { tool ->
                 val configId = tool.parameters.find { it.name == "config_id" }?.value ?: ""
                 "Delete model config: $configId"
-            },
-            executor = { tool ->
-                val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
-                runBlocking(Dispatchers.IO) { softwareSettingsTools.deleteModelConfig(tool) }
             }
-    )
+    ) { t, tool -> t.deleteModelConfig(tool) }
 
-    handler.registerTool(
-            name = "list_function_model_configs",
-            descriptionGenerator = { _ ->
-                "List function model bindings only (function -> config_id + model_index)"
-            },
-            executor = { tool ->
-                val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
-                runBlocking(Dispatchers.IO) { softwareSettingsTools.listFunctionModelConfigs(tool) }
-            }
-    )
+    registerSoftwareSettingsTool(handler, context, name = "list_function_model_configs",
+            descriptionGenerator = { "List function model bindings only (function -> config_id + model_index)" }
+    ) { t, tool -> t.listFunctionModelConfigs(tool) }
 
-    handler.registerTool(
-            name = "get_function_model_config",
+    registerSoftwareSettingsTool(handler, context, name = "get_function_model_config",
             descriptionGenerator = { tool ->
                 val functionType = tool.parameters.find { it.name == "function_type" }?.value ?: ""
                 "Get function model config: $functionType"
-            },
-            executor = { tool ->
-                val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
-                runBlocking(Dispatchers.IO) { softwareSettingsTools.getFunctionModelConfig(tool) }
             }
-    )
+    ) { t, tool -> t.getFunctionModelConfig(tool) }
 
-    handler.registerTool(
-            name = "set_function_model_config",
+    registerSoftwareSettingsTool(handler, context, name = "set_function_model_config",
             descriptionGenerator = { tool ->
                 val functionType = tool.parameters.find { it.name == "function_type" }?.value ?: ""
                 val configId = tool.parameters.find { it.name == "config_id" }?.value ?: ""
                 val modelIndex = tool.parameters.find { it.name == "model_index" }?.value ?: "0"
                 "Set function model config: $functionType -> $configId (model_index=$modelIndex)"
-            },
-            executor = { tool ->
-                val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
-                runBlocking(Dispatchers.IO) { softwareSettingsTools.setFunctionModelConfig(tool) }
             }
-    )
+    ) { t, tool -> t.setFunctionModelConfig(tool) }
 
-    handler.registerTool(
-            name = "test_model_config_connection",
+    registerSoftwareSettingsTool(handler, context, name = "test_model_config_connection",
             descriptionGenerator = { tool ->
                 val configId = tool.parameters.find { it.name == "config_id" }?.value ?: ""
                 val modelIndex = tool.parameters.find { it.name == "model_index" }?.value ?: "0"
                 "Test model config connection: $configId (model_index=$modelIndex)"
-            },
-            executor = { tool ->
-                val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
-                runBlocking(Dispatchers.IO) { softwareSettingsTools.testModelConfigConnection(tool) }
             }
-    )
+    ) { t, tool -> t.testModelConfigConnection(tool) }
 
     handler.registerTool(
             name = "list_character_cards_settings",
