@@ -1311,6 +1311,165 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             }
     )
 
+    // Web search tool - DuckDuckGo HTML, no API key needed
+    handler.registerTool(
+            name = "web_search",
+            descriptionGenerator = { tool ->
+                val query = tool.parameters.find { it.name == "query" }?.value ?: ""
+                "Search: $query"
+            },
+            executor = { tool ->
+                val query = tool.parameters.find { it.name == "query" }?.value ?: ""
+                val maxResults = tool.parameters.find { it.name == "max_results" }?.value?.toIntOrNull()?.coerceIn(1, 10) ?: 5
+                if (query.isBlank()) {
+                    return@registerTool ToolResult(
+                        toolName = tool.name, success = false,
+                        result = StringResultData(""), error = "query parameter is required"
+                    )
+                }
+                try {
+                    val encodedQuery = java.net.URLEncoder.encode(query, "UTF-8")
+                    val searchUrl = "https://html.duckduckgo.com/html/?q=$encodedQuery"
+                    val client = okhttp3.OkHttpClient.Builder()
+                        .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
+                        .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+                        .build()
+                    val request = okhttp3.Request.Builder()
+                        .url(searchUrl)
+                        .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36")
+                        .build()
+                    client.newCall(request).execute().use { response ->
+                        if (!response.isSuccessful) {
+                            return@registerTool ToolResult(
+                                toolName = tool.name, success = false,
+                                result = StringResultData(""),
+                                error = "Search failed: HTTP ${response.code}"
+                            )
+                        }
+                        val html = response.body?.string() ?: ""
+                        // Parse DuckDuckGo HTML results
+                        val results = StringBuilder()
+                        val resultPattern = java.util.regex.Pattern.compile(
+                            """<a rel="nofollow" class="result__a" href="([^"]+)">(.*?)</a>.*?<a class="result__snippet"[^>]*>(.*?)</a>""",
+                            java.util.regex.Pattern.DOTALL
+                        )
+                        val matcher = resultPattern.matcher(html)
+                        var count = 0
+                        while (matcher.find() && count < maxResults) {
+                            val rawUrl = matcher.group(1) ?: ""
+                            val title = (matcher.group(2) ?: "").replace("<[^>]*>".toRegex(), "").trim()
+                            val snippet = (matcher.group(3) ?: "").replace("<[^>]*>".toRegex(), "").trim()
+                            // DuckDuckGo wraps URLs in redirect
+                            val cleanUrl = if (rawUrl.contains("uddg=")) {
+                                java.net.URLDecoder.decode(rawUrl.substringAfter("uddg=").substringBefore("&"), "UTF-8")
+                            } else rawUrl
+                            count++
+                            results.appendLine("[$count] $title")
+                            results.appendLine("    URL: $cleanUrl")
+                            results.appendLine("    $snippet")
+                            results.appendLine()
+                        }
+                        if (results.isBlank()) {
+                            ToolResult(
+                                toolName = tool.name, success = true,
+                                result = StringResultData("No results found for: $query")
+                            )
+                        } else {
+                            ToolResult(
+                                toolName = tool.name, success = true,
+                                result = StringResultData("Search results for \"$query\":\n\n$results")
+                            )
+                        }
+                    }
+                } catch (e: java.net.SocketTimeoutException) {
+                    ToolResult(
+                        toolName = tool.name, success = false,
+                        result = StringResultData(""), error = "Search timed out"
+                    )
+                } catch (e: Exception) {
+                    ToolResult(
+                        toolName = tool.name, success = false,
+                        result = StringResultData(""), error = "Search error: ${e.message}"
+                    )
+                }
+            }
+    )
+
+    // HTTP request tool - raw GET/POST/PUT/DELETE
+    handler.registerTool(
+            name = "http_request",
+            descriptionGenerator = { tool ->
+                val url = tool.parameters.find { it.name == "url" }?.value ?: ""
+                val method = tool.parameters.find { it.name == "method" }?.value ?: "GET"
+                "$method $url"
+            },
+            executor = { tool ->
+                val url = tool.parameters.find { it.name == "url" }?.value ?: ""
+                val method = tool.parameters.find { it.name == "method" }?.value?.uppercase() ?: "GET"
+                val headersJson = tool.parameters.find { it.name == "headers" }?.value ?: ""
+                val body = tool.parameters.find { it.name == "body" }?.value ?: ""
+                val timeoutSec = tool.parameters.find { it.name == "timeout" }?.value?.toIntOrNull()?.coerceIn(1, 60) ?: 15
+
+                if (url.isBlank()) {
+                    return@registerTool ToolResult(
+                        toolName = tool.name, success = false,
+                        result = StringResultData(""), error = "url parameter is required"
+                    )
+                }
+                try {
+                    val client = okhttp3.OkHttpClient.Builder()
+                        .connectTimeout(timeoutSec.toLong(), java.util.concurrent.TimeUnit.SECONDS)
+                        .readTimeout(timeoutSec.toLong(), java.util.concurrent.TimeUnit.SECONDS)
+                        .build()
+                    val reqBuilder = okhttp3.Request.Builder().url(url)
+                    // Parse headers
+                    if (headersJson.isNotBlank()) {
+                        try {
+                            val headersObj = org.json.JSONObject(headersJson)
+                            for (key in headersObj.keys()) {
+                                reqBuilder.header(key, headersObj.getString(key))
+                            }
+                        } catch (_: Exception) {
+                            // Ignore malformed headers
+                        }
+                    }
+                    // Add body for POST/PUT
+                    if (body.isNotBlank() && (method == "POST" || method == "PUT")) {
+                        val mediaType = okhttp3.MediaType.parse("application/json; charset=utf-8")
+                        reqBuilder.method(method, okhttp3.RequestBody.create(mediaType, body))
+                    } else {
+                        reqBuilder.method(method, null)
+                    }
+                    client.newCall(reqBuilder.build()).execute().use { response ->
+                        val respBody = response.body?.string() ?: ""
+                        val maxLen = 10000
+                        val truncated = if (respBody.length > maxLen) respBody.take(maxLen) + "\n...(truncated)" else respBody
+                        ToolResult(
+                            toolName = tool.name,
+                            success = response.isSuccessful,
+                            result = StringResultData("HTTP ${response.code}\n\n$truncated"),
+                            error = if (response.isSuccessful) null else "HTTP ${response.code} ${response.message}"
+                        )
+                    }
+                } catch (e: java.net.SocketTimeoutException) {
+                    ToolResult(
+                        toolName = tool.name, success = false,
+                        result = StringResultData(""), error = "Request timed out (${timeoutSec}s)"
+                    )
+                } catch (e: IllegalArgumentException) {
+                    ToolResult(
+                        toolName = tool.name, success = false,
+                        result = StringResultData(""), error = "Invalid URL: ${e.message}"
+                    )
+                } catch (e: Exception) {
+                    ToolResult(
+                        toolName = tool.name, success = false,
+                        result = StringResultData(""), error = "Request error: ${e.message}"
+                    )
+                }
+            }
+    )
+
     handler.registerTool(
             name = "browser_click",
             descriptionGenerator = { tool ->

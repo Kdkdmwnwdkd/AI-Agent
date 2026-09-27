@@ -434,10 +434,29 @@ object SystemToolPrompts {
                     ToolParameterSchema(name = "user_agent_preset", type = "string", description = "optional, quick select user agent: desktop/android", required = false),
                     ToolParameterSchema(name = "user_agent", type = "string", description = "optional, full custom user agent override", required = false)
                 )
+            ),
+            ToolPrompt(
+                name = "web_search",
+                description = "Search the web using DuckDuckGo and return results (title, URL, snippet). No API key needed. Returns up to 10 results.",
+                parametersStructured = listOf(
+                    ToolParameterSchema(name = "query", type = "string", description = "search query", required = true),
+                    ToolParameterSchema(name = "max_results", type = "integer", description = "optional, max results (1-10), default 5", required = false, default = "5")
+                )
+            ),
+            ToolPrompt(
+                name = "http_request",
+                description = "Send a raw HTTP request and return status code + body. Supports GET/POST/PUT/DELETE with custom headers and JSON body. Use this instead of visit_web when you need precise API responses.",
+                parametersStructured = listOf(
+                    ToolParameterSchema(name = "url", type = "string", description = "request URL", required = true),
+                    ToolParameterSchema(name = "method", type = "string", description = "optional, HTTP method: GET (default) | POST | PUT | DELETE", required = false, default = "GET"),
+                    ToolParameterSchema(name = "headers", type = "string", description = "optional, JSON object of HTTP headers, e.g. {\"Authorization\":\"Bearer ...\"}", required = false),
+                    ToolParameterSchema(name = "body", type = "string", description = "optional, request body (for POST/PUT)", required = false),
+                    ToolParameterSchema(name = "timeout", type = "integer", description = "optional, timeout in seconds, default 15", required = false, default = "15")
+                )
             )
         )
     )
-    
+
     val httpToolsCn = SystemToolPromptCategory(
         categoryName = "HTTP工具",
         tools = listOf(
@@ -453,10 +472,29 @@ object SystemToolPrompts {
                     ToolParameterSchema(name = "user_agent_preset", type = "string", description = "可选：UA预设，快速选择：desktop/android", required = false),
                     ToolParameterSchema(name = "user_agent", type = "string", description = "可选：完整自定义UA（优先级高于预设）", required = false)
                 )
+            ),
+            ToolPrompt(
+                name = "web_search",
+                description = "通过 DuckDuckGo 搜索网页，返回结果（标题、URL、摘要）。无需 API key。最多返回 10 条结果。",
+                parametersStructured = listOf(
+                    ToolParameterSchema(name = "query", type = "string", description = "搜索关键词", required = true),
+                    ToolParameterSchema(name = "max_results", type = "integer", description = "可选，最大结果数（1-10），默认5", required = false, default = "5")
+                )
+            ),
+            ToolPrompt(
+                name = "http_request",
+                description = "发送原始 HTTP 请求，返回状态码和响应体。支持 GET/POST/PUT/DELETE，可自定义 headers 和 JSON body。需要精确 API 响应时用这个，不要用 visit_web。",
+                parametersStructured = listOf(
+                    ToolParameterSchema(name = "url", type = "string", description = "请求 URL", required = true),
+                    ToolParameterSchema(name = "method", type = "string", description = "可选，HTTP 方法：GET（默认）| POST | PUT | DELETE", required = false, default = "GET"),
+                    ToolParameterSchema(name = "headers", type = "string", description = "可选，HTTP 请求头 JSON 对象，例如 {\"Authorization\":\"Bearer ...\"}", required = false),
+                    ToolParameterSchema(name = "body", type = "string", description = "可选，请求体（POST/PUT 用）", required = false),
+                    ToolParameterSchema(name = "timeout", type = "integer", description = "可选，超时秒数，默认15", required = false, default = "15")
+                )
             )
         )
     )
-    
+
     // ==================== 记忆库工具 ====================
     val memoryTools = SystemToolPromptCategory(
         categoryName = "Memory and Memory Library Tools",
