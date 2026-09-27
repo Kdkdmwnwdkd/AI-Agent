@@ -11,6 +11,7 @@ import com.ai.assistance.operit.data.model.MemoryTag_
 import com.ai.assistance.operit.data.model.MemoryTier
 import com.ai.assistance.operit.data.model.Memory_
 import com.ai.assistance.operit.data.model.inferMemoryTier
+import com.ai.assistance.operit.data.model.shouldPromoteTier
 import com.ai.assistance.operit.data.model.DocumentChunk
 import com.ai.assistance.operit.data.model.Embedding
 import com.ai.assistance.operit.data.model.CloudEmbeddingConfig
