@@ -472,7 +472,23 @@ class EnhancedAIService private constructor(private val context: Context) {
     ): ModelExecutionSnapshot {
         context.modelExecutionSnapshot?.let { return it }
         ensureInitialized()
-        val overrideConfigId = chatModelConfigIdOverride?.takeIf { it.isNotBlank() }
+        var overrideConfigId = chatModelConfigIdOverride?.takeIf { it.isNotBlank() }
+
+        // ModelRouter: CHAT 请求无显式 override 时，按工具状态路由
+        if (functionType == FunctionType.CHAT && overrideConfigId == null) {
+            val enableTools = apiPreferences.enableToolsFlow.first()
+            val localConfigId = multiServiceManager.findLocalLlamaConfigId()
+            val decision = modelRouter.route(
+                functionType = functionType,
+                requiresToolCalling = enableTools,
+                localConfigId = localConfigId
+            )
+            AppLogger.d(TAG, "ModelRouter: ${decision.target} | ${decision.reason}")
+            if (decision.configId != null) {
+                overrideConfigId = decision.configId
+            }
+        }
+
         val lease =
             if (functionType == FunctionType.CHAT && overrideConfigId != null) {
                 multiServiceManager.acquireServiceForConfig(
