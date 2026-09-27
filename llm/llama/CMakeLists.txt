@@ -15,18 +15,23 @@ set(GGML_VULKAN ON CACHE BOOL "" FORCE)
 set(LLAMA_VULKAN ON CACHE BOOL "" FORCE)
 
 # 手动指定 glslc 路径（Android NDK 自带，CMake 的 find_package(Vulkan COMPONENTS glslc) 找不到）
+# 交叉编译时需要 NO_CMAKE_FIND_ROOT_PATH 才能在宿主机路径中搜索
 find_program(Vulkan_GLSLC_EXECUTABLE
     NAMES glslc
     HINTS
         "${ANDROID_NDK}/shader-tools"
+        "${CMAKE_ANDROID_NDK}/shader-tools"
+        "$ENV{ANDROID_NDK_HOME}/shader-tools"
         "${ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin"
-        "${ANDROID_NDK}/toolchains/llvm/prebuilt/${HOST_EXTRAS}/bin"
+        "${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin"
+    NO_CMAKE_FIND_ROOT_PATH
 )
 if(Vulkan_GLSLC_EXECUTABLE)
     set(Vulkan_GLSLC_EXECUTABLE "${Vulkan_GLSLC_EXECUTABLE}" CACHE FILEPATH "" FORCE)
     message(STATUS "Found glslc: ${Vulkan_GLSLC_EXECUTABLE}")
 else()
     message(WARNING "glslc not found, Vulkan shaders will fail to compile")
+    message(STATUS "ANDROID_NDK=${ANDROID_NDK} CMAKE_ANDROID_NDK=${CMAKE_ANDROID_NDK}")
 endif()
 
 # SPIRV-Headers：llama.cpp 的 Vulkan 后端依赖它，但 Android NDK 不提供 CMake config
