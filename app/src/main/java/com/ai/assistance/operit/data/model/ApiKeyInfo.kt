@@ -1,5 +1,6 @@
 package com.ai.assistance.operit.data.model
 
+import com.ai.assistance.operit.util.crypto.EncryptedStringSerializer
 import kotlinx.serialization.Serializable
 
 /**
@@ -32,6 +33,7 @@ enum class ApiKeyAvailabilityStatus {
 @Serializable
 data class ApiKeyInfo(
     val id: String,
+    @Serializable(with = EncryptedStringSerializer::class)
     val key: String,
     val name: String = "",
     val isEnabled: Boolean = true,

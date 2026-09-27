@@ -1,6 +1,7 @@
 package com.ai.assistance.operit.data.preferences
 
 import android.content.Context
+import com.ai.assistance.operit.util.crypto.SecureStringCrypto
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -100,7 +101,7 @@ class GitHubAuthPreferences(private val context: Context) {
 
     // 访问令牌Flow
     val accessTokenFlow: Flow<String?> = context.githubAuthDataStore.data.map { preferences ->
-        if (isAuthSessionCurrent(preferences)) preferences[ACCESS_TOKEN] else null
+        if (isAuthSessionCurrent(preferences)) preferences[ACCESS_TOKEN]?.let { SecureStringCrypto.decrypt(it) } else null
     }
 
     // 用户信息Flow
@@ -138,7 +139,7 @@ class GitHubAuthPreferences(private val context: Context) {
     ) {
         context.githubAuthDataStore.edit { preferences ->
             preferences[IS_LOGGED_IN] = true
-            preferences[ACCESS_TOKEN] = accessToken
+            preferences[ACCESS_TOKEN] = SecureStringCrypto.encrypt(accessToken)
             preferences[TOKEN_TYPE] = tokenType
             preferences[USER_INFO] = json.encodeToString(userInfo)
             preferences[LAST_LOGIN_TIME] = System.currentTimeMillis()
@@ -190,7 +191,7 @@ class GitHubAuthPreferences(private val context: Context) {
         if (!isAuthSessionCurrent(preferences)) {
             return null
         }
-        return preferences[ACCESS_TOKEN]
+        return preferences[ACCESS_TOKEN]?.let { SecureStringCrypto.decrypt(it) }
     }
 
     /**

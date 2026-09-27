@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.ai.assistance.operit.util.crypto.SecureStringCrypto
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -38,7 +39,7 @@ class ExternalHttpApiPreferences private constructor(private val context: Contex
 
     val bearerTokenFlow: Flow<String> =
         context.externalHttpApiDataStore.data.map { preferences ->
-            preferences[KEY_BEARER_TOKEN].orEmpty()
+            SecureStringCrypto.decrypt(preferences[KEY_BEARER_TOKEN].orEmpty())
         }
 
     suspend fun setEnabled(enabled: Boolean) {
@@ -61,7 +62,7 @@ class ExternalHttpApiPreferences private constructor(private val context: Contex
         }
         val generated = generateBearerToken()
         context.externalHttpApiDataStore.edit { preferences ->
-            preferences[KEY_BEARER_TOKEN] = generated
+            preferences[KEY_BEARER_TOKEN] = SecureStringCrypto.encrypt(generated)
         }
         return generated
     }
@@ -69,14 +70,14 @@ class ExternalHttpApiPreferences private constructor(private val context: Contex
     suspend fun resetBearerToken(): String {
         val generated = generateBearerToken()
         context.externalHttpApiDataStore.edit { preferences ->
-            preferences[KEY_BEARER_TOKEN] = generated
+            preferences[KEY_BEARER_TOKEN] = SecureStringCrypto.encrypt(generated)
         }
         return generated
     }
 
     suspend fun setBearerToken(token: String) {
         context.externalHttpApiDataStore.edit { preferences ->
-            preferences[KEY_BEARER_TOKEN] = token
+            preferences[KEY_BEARER_TOKEN] = SecureStringCrypto.encrypt(token)
         }
     }
 
@@ -85,7 +86,7 @@ class ExternalHttpApiPreferences private constructor(private val context: Contex
         return ExternalHttpApiConfig(
             enabled = preferences[KEY_ENABLED] ?: false,
             port = preferences[KEY_PORT] ?: DEFAULT_PORT,
-            bearerToken = preferences[KEY_BEARER_TOKEN].orEmpty()
+            bearerToken = SecureStringCrypto.decrypt(preferences[KEY_BEARER_TOKEN].orEmpty())
         )
     }
 

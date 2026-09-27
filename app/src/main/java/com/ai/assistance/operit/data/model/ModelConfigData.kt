@@ -1,5 +1,6 @@
 package com.ai.assistance.operit.data.model
 
+import com.ai.assistance.operit.util.crypto.EncryptedStringSerializer
 import kotlinx.serialization.Serializable
 
 /** API提供商类型枚举 */
@@ -97,6 +98,7 @@ data class ModelConfigData(
         val name: String,
 
         // API设置
+        @Serializable(with = EncryptedStringSerializer::class)
         val apiKey: String = "",
         val apiEndpoint: String = "",
         val modelName: String = "",
