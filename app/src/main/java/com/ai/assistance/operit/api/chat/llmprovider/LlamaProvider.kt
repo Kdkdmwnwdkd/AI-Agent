@@ -30,6 +30,8 @@ class LlamaProvider(
 
     companion object {
         private const val TAG = "LlamaProvider"
+        /** 本地模型默认最大生成 token 数，避免无限制输出导致等待过久 */
+        private const val DEFAULT_MAX_NEW_TOKENS = 1024
 
         fun getModelsDir(): File {
             return File(
@@ -278,7 +280,9 @@ class LlamaProvider(
         val requestedMaxNewTokens = modelParameters
             .find { it.name == "max_tokens" }
             ?.let { (it.currentValue as? Number)?.toInt() }
-            ?: -1
+            ?.takeIf { it > 0 }
+        // 本地模型必须限制生成长度，否则可能生成上千 token 导致等待过久
+        val maxNewTokens = requestedMaxNewTokens ?: DEFAULT_MAX_NEW_TOKENS
 
         AppLogger.d(
             TAG,
@@ -294,7 +298,7 @@ class LlamaProvider(
             onUsageReported,
         )
         val success = withContext(Dispatchers.IO) {
-                s.generateStream(prompt, requestedMaxNewTokens) { token ->
+                s.generateStream(prompt, maxNewTokens) { token ->
                     if (isCancelled) {
                         false
                     } else {

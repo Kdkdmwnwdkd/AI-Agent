@@ -164,13 +164,13 @@ data class ModelConfigData(
         val mnnThreadCount: Int = 4, // 推理线程数
 
         // llama.cpp 特定配置
-        val llamaThreadCount: Int = 4, // 推理线程数
+        val llamaThreadCount: Int = 8, // 推理线程数（实际会被 clamp 到可用核心数）
         val llamaContextSize: Int = 2048, // n_ctx
-        val llamaBatchSize: Int = 512, // n_batch
-        val llamaUBatchSize: Int = 512, // n_ubatch
+        val llamaBatchSize: Int = 1024, // n_batch，更大批量加快 prompt 处理
+        val llamaUBatchSize: Int = 1024, // n_ubatch
         val llamaGpuLayers: Int = 0, // n_gpu_layers
-        val llamaUseMmap: Boolean = false, // Android上默认关闭，减少mmap导致的兼容性问题
-        val llamaFlashAttention: Boolean = false, // Android上默认关闭，更接近PocketPal安全值
+        val llamaUseMmap: Boolean = true, // 使用 mmap 减少内存占用，避免大模型 OOM
+        val llamaFlashAttention: Boolean = true, // 开启 flash attention 加速长上下文推理
         val llamaKvUnified: Boolean = true, // 单并发聊天默认开启统一KV缓存
         val llamaOffloadKqv: Boolean = false, // 仅在启用GPU层时有意义
 

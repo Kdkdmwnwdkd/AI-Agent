@@ -238,19 +238,20 @@ object AIServiceFactory {
     }
 
     private fun buildAndroidLlamaSessionConfig(config: ModelConfigData): LlamaSession.Config {
-        val safeThreadCount =
-            config.llamaThreadCount.coerceAtLeast(1)
-                .coerceAtMost(Runtime.getRuntime().availableProcessors().coerceAtLeast(1))
+        // 用满所有 CPU 核心，最大化推理吞吐量
+        val availableCores = Runtime.getRuntime().availableProcessors().coerceAtLeast(1)
+        val safeThreadCount = config.llamaThreadCount.coerceAtLeast(1).coerceAtMost(availableCores)
+        // 性能优化：flash attention + mmap + 更大 batch
         return LlamaSession.Config(
             nThreads = safeThreadCount,
             nCtx = config.llamaContextSize.coerceAtLeast(1),
-            nBatch = 512,
-            nUBatch = 512,
+            nBatch = config.llamaBatchSize.coerceAtLeast(1),
+            nUBatch = config.llamaUBatchSize.coerceAtLeast(1),
             nGpuLayers = config.llamaGpuLayers.coerceAtLeast(0),
-            useMmap = false,
-            flashAttention = false,
-            kvUnified = true,
-            offloadKqv = false
+            useMmap = config.llamaUseMmap,
+            flashAttention = config.llamaFlashAttention,
+            kvUnified = config.llamaKvUnified,
+            offloadKqv = config.llamaOffloadKqv
         )
     }
 
