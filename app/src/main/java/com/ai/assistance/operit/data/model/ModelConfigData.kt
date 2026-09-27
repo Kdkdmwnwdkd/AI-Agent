@@ -163,16 +163,16 @@ data class ModelConfigData(
         val mnnForwardType: Int = 0, // 前向计算类型 (CPU/GPU等)
         val mnnThreadCount: Int = 4, // 推理线程数
 
-        // llama.cpp 特定配置
-        val llamaThreadCount: Int = 8, // 推理线程数（实际会被 clamp 到可用核心数）
-        val llamaContextSize: Int = 2048, // n_ctx
+        // llama.cpp 特定配置（针对魅族20/骁龙8Gen2/Adreno740/12GB 优化）
+        val llamaThreadCount: Int = 8, // 推理线程数（骁龙8Gen2 共8核，全部用上）
+        val llamaContextSize: Int = 4096, // n_ctx，3B模型4096够用且快
         val llamaBatchSize: Int = 1024, // n_batch，更大批量加快 prompt 处理
         val llamaUBatchSize: Int = 1024, // n_ubatch
-        val llamaGpuLayers: Int = 0, // n_gpu_layers
+        val llamaGpuLayers: Int = 99, // n_gpu_layers，99=尽可能全部offload到GPU
         val llamaUseMmap: Boolean = true, // 使用 mmap 减少内存占用，避免大模型 OOM
         val llamaFlashAttention: Boolean = true, // 开启 flash attention 加速长上下文推理
         val llamaKvUnified: Boolean = true, // 单并发聊天默认开启统一KV缓存
-        val llamaOffloadKqv: Boolean = false, // 仅在启用GPU层时有意义
+        val llamaOffloadKqv: Boolean = true, // GPU offload 时把 K/Q/V 也放 GPU
 
         // 图片处理配置
         val enableDirectImageProcessing: Boolean = false, // 是否启用直接图片处理

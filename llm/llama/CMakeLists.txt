@@ -10,6 +10,10 @@ set(LLAMA_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
 set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(LLAMA_BUILD_SERVER OFF CACHE BOOL "" FORCE)
 
+# 启用 Vulkan GPU 后端，支持 Adreno GPU 层 offload（魅族20/骁龙8Gen2 Adreno740）
+set(GGML_VULKAN ON CACHE BOOL "" FORCE)
+set(LLAMA_VULKAN ON CACHE BOOL "" FORCE)
+
 operit_prepare_git_source(
     OPERIT_LLAMA_CPP_SOURCE_DIR
     OPERIT_LLAMA_CPP_BINARY_DIR
@@ -38,6 +42,7 @@ target_link_libraries(
     LlamaWrapper
     android
     log
+    vulkan
 )
 
 # 16KB page size support (Android 15+ requirement)
