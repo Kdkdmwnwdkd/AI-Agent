@@ -48,20 +48,24 @@ class ModelRouter private constructor(private val context: Context) {
 
     /**
      * Decide target model for a request.
+     *
+     * @param localConfigId 自动发现的本地 llama 模型配置 ID（由调用方扫描配置列表获得）。
+     *                      若为 null 则回退到 SharedPreferences 中的手动配置。
      * @return Decision with target and optional configId override.
      */
     fun route(
         functionType: FunctionType,
         requiresToolCalling: Boolean = false,
         estimatedContextSize: Int = 0,
-        networkAvailable: Boolean = true
+        networkAvailable: Boolean = true,
+        localConfigId: String? = null
     ): RoutingDecision {
         if (requiresToolCalling) {
             log(functionType, ModelTarget.CLOUD, "tool calling not supported locally")
             return RoutingDecision(ModelTarget.CLOUD, null, "Tool calling requires cloud")
         }
         if (!networkAvailable) {
-            val local = localConfig(functionType)
+            val local = localConfig(functionType, localConfigId)
             return if (local != null) {
                 log(functionType, local.target, "network offline -> local")
                 RoutingDecision(local.target, local.configId, "Network unavailable, using local model")
@@ -70,23 +74,24 @@ class ModelRouter private constructor(private val context: Context) {
                 RoutingDecision(ModelTarget.CLOUD, null, "No network and no local model configured")
             }
         }
-        val limit = localContextLimit(functionType)
+        val limit = localContextLimit(functionType, localConfigId)
         if (limit > 0 && estimatedContextSize > limit) {
             log(functionType, ModelTarget.CLOUD, "context $estimatedContextSize > limit $limit")
             return RoutingDecision(ModelTarget.CLOUD, null, "Context exceeds local capacity")
         }
-        if (functionType == FunctionType.CHAT && estimatedContextSize < SIMPLE_CHAT_THRESHOLD && !requiresToolCalling) {
-            val local = localConfig(functionType)
+        if (functionType == FunctionType.CHAT && !requiresToolCalling) {
+            val local = localConfig(functionType, localConfigId)
             if (local != null) {
-                log(functionType, local.target, "simple chat -> local")
-                return RoutingDecision(local.target, local.configId, "Simple chat routed locally")
+                log(functionType, local.target, "chat -> local")
+                return RoutingDecision(local.target, local.configId, "Chat routed to local model")
             }
         }
         log(functionType, ModelTarget.CLOUD, "default")
         return RoutingDecision(ModelTarget.CLOUD, null, "Default routing to cloud")
     }
 
-    fun isLocalModelAvailable(functionType: FunctionType): Boolean = localConfig(functionType) != null
+    fun isLocalModelAvailable(functionType: FunctionType, localConfigId: String? = null): Boolean =
+        localConfig(functionType, localConfigId) != null
 
     /**
      * 配置本地模型。设置后 route() 会根据条件路由到本地。
@@ -127,7 +132,19 @@ class ModelRouter private constructor(private val context: Context) {
 
     private data class LocalConfig(val target: ModelTarget, val configId: String, val contextLimit: Int)
 
-    private fun localConfig(functionType: FunctionType): LocalConfig? {
+    /**
+     * 解析本地模型配置。
+     * 优先使用调用方传入的 localConfigId（自动发现的 llama 配置），
+     * 其次回退到 SharedPreferences 中的手动配置。
+     */
+    private fun localConfig(functionType: FunctionType, localConfigId: String?): LocalConfig? {
+        // 自动发现的本地 llama 配置
+        if (!localConfigId.isNullOrBlank()) {
+            val contextLimit = prefs.getInt("local_context_limit_${functionType.name}", 2048)
+            return LocalConfig(ModelTarget.LOCAL_LLAMA, localConfigId, contextLimit)
+        }
+
+        // 手动配置（SharedPreferences）
         val enabled = prefs.getBoolean("local_enabled_${functionType.name}", false)
         if (!enabled) return null
 
@@ -141,7 +158,8 @@ class ModelRouter private constructor(private val context: Context) {
         return LocalConfig(target, configId, contextLimit)
     }
 
-    private fun localContextLimit(functionType: FunctionType): Int = localConfig(functionType)?.contextLimit ?: 0
+    private fun localContextLimit(functionType: FunctionType, localConfigId: String?): Int =
+        localConfig(functionType, localConfigId)?.contextLimit ?: 0
 
     private fun log(functionType: FunctionType, target: ModelTarget, reason: String) {
         AppLogger.d(TAG, "[route] $functionType -> $target | $reason")

@@ -1,6 +1,7 @@
 package com.ai.assistance.operit.api.chat.enhance
 
 import android.content.Context
+import com.ai.assistance.operit.data.model.ApiProviderType
 import com.ai.assistance.operit.util.AppLogger
 import com.ai.assistance.operit.api.chat.llmprovider.AIService
 import com.ai.assistance.operit.api.chat.llmprovider.AIServiceFactory
@@ -381,6 +382,17 @@ class MultiServiceManager(private val context: Context) {
     suspend fun getModelConfigForConfig(configId: String): ModelConfigData {
         ensureInitialized()
         return modelConfigManager.getModelConfigFlow(configId).first()
+    }
+
+    /**
+     * 查找第一个 LLAMA_CPP 本地模型配置 ID。
+     * 用于 ModelRouter 自动将简单对话路由到端侧模型。
+     * @return 本地 llama 配置 ID，没有则返回 null
+     */
+    suspend fun findLocalLlamaConfigId(): String? {
+        ensureInitialized()
+        val summaries = modelConfigManager.getAllConfigSummaries()
+        return summaries.firstOrNull { it.apiProviderType == ApiProviderType.LLAMA_CPP }?.id
     }
 
     /** 获取指定配置ID的模型参数 */

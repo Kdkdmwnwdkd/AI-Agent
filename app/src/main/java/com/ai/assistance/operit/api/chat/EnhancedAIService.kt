@@ -546,7 +546,9 @@ class EnhancedAIService private constructor(private val context: Context) {
      */
     suspend fun getAIServiceForFunction(functionType: FunctionType): AIService {
         ensureInitialized()
-        val decision = modelRouter.route(functionType)
+        // 自动发现本地 llama 模型配置，供 ModelRouter 路由决策
+        val localConfigId = multiServiceManager.findLocalLlamaConfigId()
+        val decision = modelRouter.route(functionType, localConfigId = localConfigId)
         AppLogger.d("EnhancedAIService", "ModelRouter: ${'$'}{decision.target} | ${'$'}{decision.reason}")
         return getAIServiceForFunction(
             functionType = functionType,
