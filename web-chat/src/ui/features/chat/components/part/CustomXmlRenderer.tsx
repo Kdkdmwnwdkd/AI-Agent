@@ -651,7 +651,8 @@ function renderXmlBlock(
   }
 
   if (tagName === 'html') {
-    return <div className="structured-html-card" dangerouslySetInnerHTML={{ __html: block.content ?? '' }} />;
+    // 安全加固：不再使用 dangerouslySetInnerHTML 渲染原始 HTML（存储型 XSS），改为纯文本展示
+    return <div className="structured-html-card">{block.content ?? ''}</div>;
   }
 
   if (tagName === 'font') {

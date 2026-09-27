@@ -15,7 +15,7 @@ class DeepseekJsInterface(
     @JavascriptInterface
     fun onKeysReceived(json: String) {
         try {
-            AppLogger.d(TAG, "Received keys JSON from JavaScript: ${json.take(100)}...")
+            AppLogger.d(TAG, "Received keys JSON from JavaScript (length=${json.length})")
             onKeysReceived.invoke(json)
         } catch (e: Exception) {
             AppLogger.e(TAG, "Error processing keys in JS interface: ${e.message}", e)
@@ -26,7 +26,7 @@ class DeepseekJsInterface(
     @JavascriptInterface
     fun onKeyCreated(key: String) {
         try {
-            AppLogger.d(TAG, "Key created: $key")
+            AppLogger.d(TAG, "Key created (length=${key.length})")
             onKeyCreated.invoke(key)
         } catch (e: Exception) {
             AppLogger.e(TAG, "Error processing created key: ${e.message}", e)

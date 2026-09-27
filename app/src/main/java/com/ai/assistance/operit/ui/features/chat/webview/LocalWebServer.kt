@@ -50,7 +50,7 @@ private constructor(
     private val port: Int,
     initialRootPath: String,
     private val type: ServerType
-) : NanoHTTPD(port) {
+) : NanoHTTPD("127.0.0.1", port) {
 
     @Volatile
     private var rootPath: String = initialRootPath
@@ -716,14 +716,16 @@ private constructor(
         val requestBuilder = Request.Builder().url(targetUrl).method(session.method.name, requestBody)
         session.headers.forEach { (name, value) ->
             val lower = name.lowercase(Locale.US)
-            if (lower in setOf("host", "connection", "content-length", "accept-encoding")) return@forEach
+            if (lower in setOf(
+                    "host", "connection", "content-length", "accept-encoding",
+                    // 安全加固：不透传认证凭据，防止代理接口泄露会话
+                    "authorization", "cookie", "proxy-authorization"
+                )
+            ) return@forEach
             requestBuilder.addHeader(name, value)
         }
 
-        val cookie = CookieManager.getInstance().getCookie(targetUrl)
-        if (!cookie.isNullOrBlank()) {
-            requestBuilder.addHeader("Cookie", cookie)
-        }
+        // 安全加固：不再附加 WebView 已登录 Cookie，防止会话窃取
 
         return try {
             val response = proxyClient.newCall(requestBuilder.build()).execute()

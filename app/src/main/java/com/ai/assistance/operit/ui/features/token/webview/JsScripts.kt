@@ -72,16 +72,11 @@ object JsScripts {
                             getFromStorage('id_token') ||
                             getFromStorage('access_token');
                 
-                // If no token found in storage, use hardcoded token
+                // 安全：不再回退到硬编码 token（凭据泄露），未登录时直接报错
                 if (!token) {
-                    token = "trP/KIrtNAMNnQxN1P1YMivruoy0STI5onzNhCdzo8iOM7CObxaGhjg+w+JPm/jC";
-                    console.log('Using hardcoded token');
-                    // Save for future use
-                    try {
-                        localStorage.setItem('auth_token', token);
-                    } catch (e) {
-                        console.error('Failed to store token:', e);
-                    }
+                    console.error('No auth token found in storage');
+                    Android.onError("未找到授权令牌，请先登录");
+                    return;
                 }
                 
                 console.log('Token found (length: ' + token.length + ')');
@@ -184,10 +179,11 @@ object JsScripts {
                             getFromStorage('id_token') ||
                             getFromStorage('access_token');
                 
-                // If no token found in storage, use hardcoded token
+                // 安全：不再回退到硬编码 token（凭据泄露），未登录时直接报错
                 if (!token) {
-                    token = "trP/KIrtNAMNnQxN1P1YMivruoy0STI5onzNhCdzo8iOM7CObxaGhjg+w+JPm/jC";
-                    console.log('Using hardcoded token');
+                    console.error('No auth token found in storage');
+                    Android.onError("未找到授权令牌，请先登录");
+                    return;
                 }
                 
                 fetch('${DeepseekApiConstants.DEEPSEEK_DELETE_API_KEY_URL}', {

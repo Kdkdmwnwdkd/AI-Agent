@@ -545,6 +545,8 @@ class ExternalChatHttpServer(
 
     companion object {
         private const val TAG = "ExternalChatHttpServer"
+        // 保留 0.0.0.0：该服务的设计用途是让局域网内电脑访问手机上的 Agent（用户需显式开启），
+        // 绑定回环会使该功能失效。安全依赖 Bearer Token 校验。
         private const val LISTEN_HOST = "0.0.0.0"
         private const val API_PREFIX = "/api"
         private const val CHAT_PATH = "/api/external-chat"

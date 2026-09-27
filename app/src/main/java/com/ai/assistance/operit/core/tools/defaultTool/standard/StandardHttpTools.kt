@@ -421,7 +421,11 @@ class StandardHttpTools(private val context: Context) {
         }
     }
 
-    /** 验证URL格式 */
+    /**
+     * 验证URL格式。
+     * 说明：本应用为本地运行的 Agent，http_request 需要访问局域网/本地模型服务（如 ollama、
+     * llama.cpp 常部署在内网 IP），因此此处不做内网地址拦截；SSRF 防护应由上层权限/确认机制承担。
+     */
     private fun isValidUrl(urlString: String): Boolean {
         return try {
             val url = URL(urlString)

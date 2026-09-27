@@ -27,6 +27,19 @@ object PathValidator {
                 error = "Invalid path: '$path'. Path must be an absolute path starting with '/'."
             )
         }
+        if (containsTraversal(path)) {
+            return ToolResult(
+                toolName = toolName,
+                success = false,
+                result = FileOperationData(
+                    operation = toolName,
+                    path = path,
+                    successful = false,
+                    details = "Invalid path: '$path'. Path traversal ('..') is not allowed."
+                ),
+                error = "Invalid path: '$path'. Path traversal ('..') is not allowed."
+            )
+        }
         return null
     }
 
@@ -53,6 +66,26 @@ object PathValidator {
                 error = "Invalid path: '$path'. Path must start with '/' or '~'."
             )
         }
+        if (containsTraversal(path)) {
+            return ToolResult(
+                toolName = toolName,
+                success = false,
+                result = FileOperationData(
+                    operation = toolName,
+                    env = "linux",
+                    path = path,
+                    successful = false,
+                    details = "Invalid path: '$path'. Path traversal ('..') is not allowed."
+                ),
+                error = "Invalid path: '$path'. Path traversal ('..') is not allowed."
+            )
+        }
         return null
+    }
+
+    /** 检测路径穿越：拒绝 ".." 段与反斜杠（防止越出允许目录） */
+    private fun containsTraversal(path: String): Boolean {
+        if (path.contains('\\')) return true
+        return path.split('/').any { it == ".." }
     }
 }

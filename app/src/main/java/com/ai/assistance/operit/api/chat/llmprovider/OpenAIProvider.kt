@@ -702,14 +702,18 @@ open class OpenAIProvider(
 
         customizeFinalRequestObject(finalRequestObject, messagesArray, toolsJson)
 
-        // 使用分块日志函数记录请求体（省略过长的tools字段）
+        // 安全：请求体含完整对话内容，不落日志；仅记录脱敏后的元数据
         val logJson = JSONObject(finalRequestObject.toString())
+        if (logJson.has("messages")) {
+            val msgCount = logJson.getJSONArray("messages").length()
+            logJson.put("messages", "[$msgCount messages omitted for privacy]")
+        }
         if (logJson.has("tools")) {
             val toolsArray = logJson.getJSONArray("tools")
             logJson.put("tools", "[${toolsArray.length()} tools omitted for brevity]")
         }
         val sanitizedLogJson = sanitizeImageDataForLogging(logJson)
-        logLargeString("AIService", sanitizedLogJson.toString(4), "Request body: ")
+        logLargeString("AIService", sanitizedLogJson.toString(4), "Request body (redacted): ")
         return finalRequestObject.toString()
     }
 

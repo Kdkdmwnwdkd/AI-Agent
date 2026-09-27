@@ -77,7 +77,7 @@
 
     <application
         android:name=".core.application.OperitApplication"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher_simple"
@@ -381,6 +381,8 @@
             </intent-filter>
         </receiver>
 
+        <!-- 注：ExternalChatReceiver 是开放的第三方集成接口（设计供 Tasker 等外部 App 调用），
+             不能加 signature 权限否则集成失效。真正需要的是"执行前用户确认"，属产品级改动。 -->
         <receiver
             android:name=".integrations.intent.ExternalChatReceiver"
             android:exported="true">
@@ -437,6 +439,8 @@
         </activity>
 
         <!-- Receive Shower Binder handoff broadcast from the Shower server (Shizuku-style) -->
+        <!-- 注：ShowerBinderReceiver 接收 Shower server（同进程/同签名服务）的 binder，
+             若服务端与本应用同签名可加权限加固；当前保持开放以免破坏 Shower 功能。 -->
         <receiver
             android:name=".core.tools.agent.ShowerBinderReceiver"
             android:exported="true">
@@ -457,6 +461,7 @@
         </activity>
         
         <!-- Workflow Tasker Receiver -->
+        <!-- 注：WorkflowTaskerReceiver 是 Tasker 集成接口，加 signature 权限会使 Tasker 失效，保持开放。 -->
         <receiver
             android:name=".integrations.tasker.WorkflowTaskerReceiver"
             android:exported="true"

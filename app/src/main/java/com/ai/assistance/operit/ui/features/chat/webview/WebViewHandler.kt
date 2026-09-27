@@ -165,11 +165,12 @@ class WebViewHandler(private val context: Context) {
                 javaScriptCanOpenWindowsAutomatically = true
 
                 // 跨域和混合内容支持
-                mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                // 安全加固：禁止混合内容与 file:// 跨源访问，防止恶意页面读取本地文件
+                mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
                 allowContentAccess = true
                 allowFileAccess = true
-                allowFileAccessFromFileURLs = true
-                allowUniversalAccessFromFileURLs = true
+                allowFileAccessFromFileURLs = false
+                allowUniversalAccessFromFileURLs = false
 
                 // DOM存储和数据库
                 domStorageEnabled = true
@@ -273,10 +274,9 @@ class WebViewHandler(private val context: Context) {
                 builder.setTitle(context.getString(R.string.webview_security_warning_title))
                 builder.setMessage(message)
 
-                builder.setPositiveButton(context.getString(R.string.continue_action)) { _, _ ->
-                    handler?.proceed()
-                }
-                builder.setNegativeButton(context.getString(R.string.cancel)) { _, _ -> handler?.cancel() }
+                // 安全加固：证书错误一律拒绝加载，不提供“继续”选项（防中间人劫持）
+                handler?.cancel()
+                builder.setPositiveButton(context.getString(R.string.cancel)) { _, _ -> }
 
                 // 在UI线程上显示对话框
                 Handler(Looper.getMainLooper()).post { builder.create().show() }
@@ -360,7 +360,8 @@ class WebViewHandler(private val context: Context) {
 
             // 处理权限请求
             override fun onPermissionRequest(request: android.webkit.PermissionRequest?) {
-                request?.grant(request.resources)
+                // 安全加固：不静默授予摄像头/麦克风/地理位置等敏感权限，默认拒绝
+                request?.deny()
             }
         }
     }
