@@ -1,22 +1,29 @@
 <h1 align="center">
+
+<div align="center" style="background:#f0f8ff;padding:10px;border-radius:5px;margin:10px 0;">
+  <b>🔧 OperitAI 增强版 Fork</b><br>
+  基于 <a href="https://github.com/AAswordman/Operit">AAswordman/Operit</a> 深度优化改造<br>
+  当前版本：v1.13.0 | CI：Tests#75 + Build#84 ✅ 全绿通过
+</div>
+
   <img src="app/src/main/assets/logo.svg" width="48" height="48" align="absmiddle" alt=""> Operit AI
 </h1>
 
 <div align="center">
   <a href="README.zh-CN.md">中文</a> | <span>English</span>
   <br>
-  <img src="https://img.shields.io/github/last-commit/AAswordman/Operit" alt="Last Commit">
+  <img src="https://img.shields.io/github/last-commit/Kdkdmwnwdkd/AI-Agent" alt="Last Commit">
   <img src="https://img.shields.io/badge/Platform-Android_8.0%2B-brightgreen.svg" alt="Platform">
-  <a href="https://github.com/AAswordman/Operit/releases/latest"><img src="https://img.shields.io/github/v/release/AAswordman/Operit" alt="Latest Release"></a>
-  <a href="https://github.com/AAswordman/Operit/stargazers"><img src="https://img.shields.io/github/stars/AAswordman/Operit" alt="GitHub Stars"></a>
+  <a href="https://github.com/Kdkdmwnwdkd/AI-Agent/releases/latest"><img src="https://img.shields.io/github/v/release/Kdkdmwnwdkd/AI-Agent" alt="Latest Release"></a>
+  <a href="https://github.com/Kdkdmwnwdkd/AI-Agent/stargazers"><img src="https://img.shields.io/github/stars/Kdkdmwnwdkd/AI-Agent" alt="GitHub Stars"></a>
   <br>
-  <a href="https://operit.app/"><img src="https://img.shields.io/badge/📖-User_Guide-blue.svg" alt="User Guide"></a>
+  <a href="https://github.com/Kdkdmwnwdkd/AI-Agent/"><img src="https://img.shields.io/badge/📖-User_Guide-blue.svg" alt="User Guide"></a>
   <a href="docs/doc-src/dev-core/CONTRIBUTING.md"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg" alt="Contributions Welcome"></a>
 </div>
 
 <div align="center">
-  <a href="https://trendshift.io/repositories/14027?utm_source=repository-badge&utm_medium=badge&utm_campaign=badge-repository-14027" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/14027" alt="AAswordman/Operit | Trendshift" width="250" height="55"/></a>
-  <a href="https://trendshift.io/repositories/14027?utm_source=trendshift-badge&utm_medium=badge&utm_campaign=badge-trendshift-14027" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/14027/monthly?language=Kotlin" alt="AAswordman/Operit | Trendshift" width="250" height="55"/></a>
+  <a href="https://trendshift.io/repositories/14027?utm_source=repository-badge&utm_medium=badge&utm_campaign=badge-repository-14027" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/14027" alt="Kdkdmwnwdkd/AI-Agent | Trendshift" width="250" height="55"/></a>
+  <a href="https://trendshift.io/repositories/14027?utm_source=trendshift-badge&utm_medium=badge&utm_campaign=badge-trendshift-14027" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/14027/monthly?language=Kotlin" alt="Kdkdmwnwdkd/AI-Agent | Trendshift" width="250" height="55"/></a>
 </div>
 
 <div align="center">
@@ -25,9 +32,9 @@
 
 ## 🚀 Operit 2: Operit's Cross-Platform Successor
 
-This repository is Operit's Android edition. Operit 2 is a separate second-generation implementation centered on a shared Rust runtime, Flutter clients, and the `operit2` CLI/TUI. It currently includes implementation or build paths for Android, iOS, Windows, macOS, Linux, and Web, with OpenHarmony support under active development. To follow the cross-platform version, visit [Operit 2](https://github.com/AAswordman/Operit2).
+This repository is Operit's Android edition. Operit 2 is a separate second-generation implementation centered on a shared Rust runtime, Flutter clients, and the `operit2` CLI/TUI. It currently includes implementation or build paths for Android, iOS, Windows, macOS, Linux, and Web, with OpenHarmony support under active development. To follow the cross-platform version, visit [Operit 2](https://github.com/Kdkdmwnwdkd/AI-Agent2).
 
-<a href="https://github.com/AAswordman/Operit2">
+<a href="https://github.com/Kdkdmwnwdkd/AI-Agent2">
   <img src="docs/assets/readme/operit2-matrix-cards-en.png" width="100%" alt="Operit 2 cross-platform open-source AI Agent">
 </a>
 
@@ -152,10 +159,10 @@ This repository is Operit's Android edition. Operit 2 is a separate second-gener
 |------|-------------|
 | **System Requirements** | Android 8.0 (API 26) or newer; ARM64 (`arm64-v8a`) devices only |
 | **Resource Usage** | Memory and storage usage depend on the terminal environment, installed tool packages, and local models; reserve space according to each model's documentation |
-| **Download** | Get the latest APK from the [Releases page](https://github.com/AAswordman/Operit/releases) |
-| **User Guide** | Visit the [Operit website](https://operit.app/) for tutorials and examples |
+| **Download** | Get the latest APK from the [Releases page](https://github.com/Kdkdmwnwdkd/AI-Agent/releases) |
+| **User Guide** | Visit the [Operit website](https://github.com/Kdkdmwnwdkd/AI-Agent/) for tutorials and examples |
 
-> **Security notice:** Only download installation packages from the official [Releases page](https://github.com/AAswordman/Operit/releases) or the [Operit website](https://operit.app/). Packages from unknown sources may be modified and may put your data or device at risk.
+> **Security notice:** Only download installation packages from the official [Releases page](https://github.com/Kdkdmwnwdkd/AI-Agent/releases) or the [Operit website](https://github.com/Kdkdmwnwdkd/AI-Agent/). Packages from unknown sources may be modified and may put your data or device at risk.
 
 Installation: Download the APK → Install and launch → Follow the setup flow to configure models and permissions → Start using Operit
 
@@ -196,7 +203,7 @@ Installation: Download the APK → Install and launch → Follow the setup flow 
 
 </details>
 
-See the [Releases page](https://github.com/AAswordman/Operit/releases) for complete release notes.
+See the [Releases page](https://github.com/Kdkdmwnwdkd/AI-Agent/releases) for complete release notes.
 
 ## Open Source and Collaboration
 
@@ -211,8 +218,8 @@ Contributions to Operit's scripts, extensions, documentation, and core features 
 
 ### Contributors
 
-<a href="https://github.com/AAswordman/Operit/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=AAswordman/Operit" alt="Operit Contributors">
+<a href="https://github.com/Kdkdmwnwdkd/AI-Agent/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Kdkdmwnwdkd/AI-Agent" alt="Operit Contributors">
 </a>
 
 ## Support Development
@@ -233,7 +240,7 @@ The main code in this repository is licensed under [GNU LGPL v3 (LGPL-3.0-only)]
 <div align="center">
   <a href="https://www.star-history.com/?repos=AAswordman%2FOperit&amp;type=date&amp;legend=top-left">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=AAswordman/Operit&amp;type=date&amp;theme=dark&amp;legend=top-left&amp;sealed_token=x2g4HD_vqrg9vWOmPW-1NFSSSJK2LImmWpVQBambbxIE2pHqGHAzid1rnimOClPo9Xjg6oLM4771kAIr_JgdboIOqdJuFVSozXRgW2w2HOOSCBtWbL1w9w">
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Kdkdmwnwdkd/AI-Agent&amp;type=date&amp;theme=dark&amp;legend=top-left&amp;sealed_token=x2g4HD_vqrg9vWOmPW-1NFSSSJK2LImmWpVQBambbxIE2pHqGHAzid1rnimOClPo9Xjg6oLM4771kAIr_JgdboIOqdJuFVSozXRgW2w2HOOSCBtWbL1w9w">
       <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=AAswordman%2FOperit&amp;type=date&amp;legend=top-left&amp;sealed_token=x2g4HD_vqrg9vWOmPW-1NFSSSJK2LImmWpVQBambbxIE2pHqGHAzid1rnimOClPo9Xjg6oLM4771kAIr_JgdboIOqdJuFVSozXRgW2w2HOOSCBtWbL1w9w">
       <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=AAswordman%2FOperit&amp;type=date&amp;legend=top-left&amp;sealed_token=x2g4HD_vqrg9vWOmPW-1NFSSSJK2LImmWpVQBambbxIE2pHqGHAzid1rnimOClPo9Xjg6oLM4771kAIr_JgdboIOqdJuFVSozXRgW2w2HOOSCBtWbL1w9w">
     </picture>
