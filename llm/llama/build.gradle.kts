@@ -42,7 +42,10 @@ android {
     externalNativeBuild {
         cmake {
             path = file("CMakeLists.txt")
-            version = "3.22.1"
+            // Vulkan 后端需要 CMake ≥ 3.24（FindVulkan 的 glslc 组件语法）。
+            // ubuntu-24.04 runner 系统预装 CMake 3.31.6，CI 通过 local.properties
+            // 的 cmake.dir 指向系统预装版本；本地构建需自行安装 CMake 3.31.6。
+            version = "3.31.6"
         }
     }
 

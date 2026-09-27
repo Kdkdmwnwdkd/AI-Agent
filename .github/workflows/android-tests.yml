@@ -157,6 +157,13 @@ jobs:
         run: |
           set -euo pipefail
           echo "sdk.dir=$ANDROID_HOME" > local.properties
+          # 复用系统预装 CMake 3.31.6（≥ 3.24，支持 Vulkan FindVulkan glslc 组件），
+          # 避免 AGP 自动从 SDK Manager 下载 3.22.1（不支持 glslc 组件，Vulkan 配置会失败）。
+          CMAKE_REAL_PATH=$(readlink -f "$(command -v cmake)")
+          CMAKE_BIN_DIR=$(dirname "$CMAKE_REAL_PATH")
+          CMAKE_TOP_DIR=$(dirname "$CMAKE_BIN_DIR")
+          echo "cmake.dir=$CMAKE_TOP_DIR" >> local.properties
+          cat local.properties
 
       - name: Run JVM unit tests
         run: ./gradlew :app:testDebugUnitTest --stacktrace --no-daemon

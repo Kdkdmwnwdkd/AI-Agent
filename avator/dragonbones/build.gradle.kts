@@ -48,7 +48,9 @@ android {
     externalNativeBuild {
         cmake {
             path = file("CMakeLists.txt")
-            version = "3.22.1"
+            // CMake 版本与 llm/llama 模块对齐：Vulkan 后端要求 CMake ≥ 3.24（FindVulkan glslc 组件），
+            // CI 通过 local.properties 的 cmake.dir 复用系统预装的 3.31.6，所有 native 模块版本须一致。
+            version = "3.31.6"
         }
     }
 }

@@ -124,6 +124,16 @@ sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 sdkmanager "ndk;25.1.8937393"
 ```
 
+4. 安装项目要求的 CMake:  
+本项目 native 构建需要 CMake ≥ 3.24（Vulkan 后端 `find_package(Vulkan COMPONENTS glslc)` 的硬性要求），各 native 模块的 `build.gradle.kts` 锁定 `version = "3.31.6"`。SDK Manager 仓库不含 3.24.x / 3.31.6 精确 micro 版本，因此本地构建需要从 [cmake.org](https://cmake.org/download/) 自行安装 CMake 3.31.6，并在项目根目录的 `local.properties` 文件（该文件不入版本控制）中配置 `cmake.dir` 指向 CMake 安装目录（即包含 `bin/cmake` 的目录的父目录）：  
+```bash
+# 从 cmake.org 下载并解压 CMake 3.31.6 到 ~/cmake-3.31.6
+# 然后在项目根目录创建/编辑 local.properties
+echo "cmake.dir=$HOME/cmake-3.31.6" >> local.properties
+# 验证
+cmake --version
+```
+
 ## **附：性能优化 - 配置编译资源**
 
 对于配置较高的机器（如 16GB 内存或以上），可以通过调整 Gradle 配置来显著加快编译速度。  

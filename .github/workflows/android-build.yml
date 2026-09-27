@@ -56,7 +56,10 @@ env:
   JAVA_VERSION: '21'
   NODE_VERSION: '22'
   ANDROID_NDK_VERSION: '25.1.8937393'
-  ANDROID_CMAKE_VERSION: '3.22.1'
+  # CMake ≥ 3.24 是 Vulkan 后端 find_package(Vulkan COMPONENTS glslc) 的硬性要求。
+  # ubuntu-24.04 runner 系统预装 CMake 3.31.6，下方通过 cmake.dir 复用系统预装版本，
+  # 不再走 sdkmanager 安装（sdkmanager 仓库无 3.24.x / 3.31.6 精确 micro 版本）。
+  ANDROID_CMAKE_VERSION: '3.31.6'
   ANDROID_API_LEVEL: '26'
   RUST_VERSION: '1.88.0'
   MANUAL_DEPS_DIR: manual-deps
@@ -106,18 +109,24 @@ jobs:
         with:
           packages: ''
 
-      - name: Install Android SDK, NDK and CMake
+      - name: Install Android SDK and NDK
         shell: bash
         run: |
           set -euo pipefail
+          # CMake 不通过 sdkmanager 安装：sdkmanager 仓库无 3.24.x / 3.31.6 精确 micro 版本，
+          # 而 Vulkan 后端要求 CMake ≥ 3.24（FindVulkan glslc 组件语法）。下方 Configure 步骤
+          # 通过 local.properties 的 cmake.dir 复用 ubuntu-24.04 runner 系统预装的 CMake 3.31.6。
           sdkmanager --install \
             "platform-tools" \
             "platforms;android-34" \
             "platforms;android-36" \
             "build-tools;34.0.0" \
             "build-tools;35.0.0" \
-            "ndk;$ANDROID_NDK_VERSION" \
-            "cmake;$ANDROID_CMAKE_VERSION"
+            "ndk;$ANDROID_NDK_VERSION"
+          # 校验系统预装 CMake 版本，确保 ≥ 3.24 且与 build.gradle.kts 的 version 字段一致
+          CMAKE_REAL_PATH=$(readlink -f "$(command -v cmake)")
+          echo "Resolved system cmake: $CMAKE_REAL_PATH"
+          cmake --version | head -n 1
 
       - name: Restore Android CMake source cache
         uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
@@ -199,6 +208,13 @@ jobs:
         run: |
           set -euo pipefail
           echo "sdk.dir=$ANDROID_HOME" > local.properties
+          # 复用系统预装 CMake 3.31.6（≥ 3.24，支持 Vulkan FindVulkan glslc 组件）。
+          # cmake.dir 指向包含 bin/cmake 的目录的父目录，AGP 会优先使用它而非 SDK Manager 的版本。
+          CMAKE_REAL_PATH=$(readlink -f "$(command -v cmake)")
+          CMAKE_BIN_DIR=$(dirname "$CMAKE_REAL_PATH")
+          CMAKE_TOP_DIR=$(dirname "$CMAKE_BIN_DIR")
+          echo "cmake.dir=$CMAKE_TOP_DIR" >> local.properties
+          cat local.properties
 
       - name: Setup fixed debug keystore
         shell: bash
