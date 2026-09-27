@@ -15,20 +15,38 @@
 </div>
 
 <div align="center">
-  <a href="https://trendshift.io/repositories/14027?utm_source=repository-badge&utm_medium=badge&utm_campaign=badge-repository-14027" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/14027" alt="Kdkdmwnwdkd/AI-Agent | Trendshift" width="250" height="55"/></a>
-  <a href="https://trendshift.io/repositories/14027?utm_source=trendshift-badge&utm_medium=badge&utm_campaign=badge-trendshift-14027" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/14027/monthly?language=Kotlin" alt="Kdkdmwnwdkd/AI-Agent | Trendshift" width="250" height="55"/></a>
+  <b>🔧 OperitAI 增强版 Fork</b><br>
+  基于 <a href="https://github.com/AAswordman/Operit">AAswordman/Operit</a> 进行深度优化与改造<br>
+  <br>
+  <img src="https://img.shields.io/github/last-commit/Kdkdmwnwdkd/AI-Agent" alt="Last Commit">
+  <img src="https://img.shields.io/badge/Platform-Android_8.0%2B-brightgreen.svg" alt="Platform">
+  <a href="https://github.com/Kdkdmwnwdkd/AI-Agent/releases/latest"><img src="https://img.shields.io/github/v/release/Kdkdmwnwdkd/AI-Agent" alt="Latest Release"></a>
+  <br>
+  <img src="https://img.shields.io/badge/version-v1.13.0-blue.svg" alt="v1.13.0">
+  <img src="https://img.shields.io/badge/CI-通过-brightgreen.svg" alt="CI">
 </div>
 
-<div align="center">
-  <img src="docs/assets/readme/operit-ai-banner-zh-cn.webp" width="100%" alt="Operit AI - Android 史上最强大、功能最完整、持续迭代最久的开源 AI Agent">
-</div>
+## 关于本项目
+
+本项目是 [Operit](https://github.com/AAswordman/Operit) 的增强版 Fork，在保留原有功能基础上进行了以下优化：
+
+### 核心改动
+- **SystemPromptConfig** — 中英双语提示词合并
+- **ModelRouter** — 新增模型路由骨架
+- **AIToolHandler** — 工具调用链路追踪（traceId）+ 自动重试
+- **MemoryTier** — 三层记忆架构
+- **ConversationService** — 媒体分析接口统一
+- **SensitiveToolRegistry** — 敏感操作强制确认
+- **已清除双模式代码** — 移除代码/角色切换全部 UI 和逻辑
+
+### 构建状态
+- Android Tests #75 + Build #84 ✅ 全绿通过
 
 ## 🚀 Operit 2：Operit 的跨平台后续版本
 
 本仓库是 Operit 的 Android 版。Operit 2 是独立的第二代实现，以 Rust 共享运行时、Flutter 客户端和 `operit2` CLI/TUI 为核心，目前包含 Android、iOS、Windows、macOS、Linux 与 Web 的实现或构建路径，并持续推进 OpenHarmony 适配。想关注跨平台版本，请访问 [Operit 2](https://github.com/Kdkdmwnwdkd/AI-Agent2)。
 
 <a href="https://github.com/Kdkdmwnwdkd/AI-Agent2">
-  <img src="docs/assets/readme/operit2-matrix-cards-zh-cn.png" width="100%" alt="Operit 2 跨平台开源 AI Agent">
 </a>
 
 ## 项目简介
@@ -46,23 +64,13 @@
 
 ## 功能展示
 
-<a href="docs/assets/readme/operit-agent-task-flow-2400x1000-v3.png">
-  <img src="docs/assets/readme/operit-agent-task-flow-2400x1000-v3.png" width="100%" alt="Agent 任务执行：从需求输入、工具执行与 Diff 审查，到实时预览调试和结果交付">
 </a>
 
-<a href="docs/assets/readme/operit-android-automation-2400x1000-v2.png">
-  <img src="docs/assets/readme/operit-android-automation-2400x1000-v2.png" width="100%" alt="Android 自动化演示">
 </a>
-<a href="docs/assets/readme/operit-memory-multicharacter-chat-2400x1000-v2.png">
-  <img src="docs/assets/readme/operit-memory-multicharacter-chat-2400x1000-v2.png" width="100%" alt="记忆与多角色对话演示">
 </a>
 
-<a href="docs/assets/readme/operit-workspace-ubuntu-workflow-2400x1000.png">
-  <img src="docs/assets/readme/operit-workspace-ubuntu-workflow-2400x1000.png" width="100%" alt="工作区与 Ubuntu 工作流演示">
 </a>
 
-<a href="docs/assets/readme/operit-plugin-ecosystem-agent-creation-2400x1000-v3.png">
-  <img src="docs/assets/readme/operit-plugin-ecosystem-agent-creation-2400x1000-v3.png" width="100%" alt="插件生态与 Agent 创建演示">
 </a>
 
 ## 主要功能
