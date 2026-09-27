@@ -14,8 +14,10 @@ set(LLAMA_BUILD_SERVER OFF CACHE BOOL "" FORCE)
 set(GGML_VULKAN ON CACHE BOOL "" FORCE)
 set(LLAMA_VULKAN ON CACHE BOOL "" FORCE)
 
-# 手动指定 glslc 路径（Android NDK 自带，CMake 的 find_package(Vulkan COMPONENTS glslc) 找不到）
-# 交叉编译时需要 NO_CMAKE_FIND_ROOT_PATH 才能在宿主机路径中搜索
+# 手动指定 glslc 路径（用于 llama.cpp Vulkan 着色器编译）
+# 交叉编译时 CMAKE_FIND_ROOT_PATH_MODE_PROGRAM=ONLY 会限制搜索，需临时放宽
+set(_old_find_root_path_mode_program "${CMAKE_FIND_ROOT_PATH_MODE_PROGRAM}")
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 find_program(Vulkan_GLSLC_EXECUTABLE
     NAMES glslc
     HINTS
@@ -24,8 +26,10 @@ find_program(Vulkan_GLSLC_EXECUTABLE
         "$ENV{ANDROID_NDK_HOME}/shader-tools"
         "${ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin"
         "${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin"
-    NO_CMAKE_FIND_ROOT_PATH
+        /usr/bin
+        /usr/local/bin
 )
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM "${_old_find_root_path_mode_program}")
 if(Vulkan_GLSLC_EXECUTABLE)
     set(Vulkan_GLSLC_EXECUTABLE "${Vulkan_GLSLC_EXECUTABLE}" CACHE FILEPATH "" FORCE)
     message(STATUS "Found glslc: ${Vulkan_GLSLC_EXECUTABLE}")
