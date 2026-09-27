@@ -108,6 +108,14 @@ operit_prepare_git_source(
 
 add_subdirectory("${OPERIT_LLAMA_CPP_SOURCE_DIR}" "${OPERIT_LLAMA_CPP_BINARY_DIR}" EXCLUDE_FROM_ALL)
 
+# Android NDK 的 libvulkan.so 是 stub，不导出 Vulkan 1.1+ 的核心符号
+# （如 vkGetPhysicalDeviceFeatures2）。llama.cpp 720d7fa 的 ggml-vulkan 直接调用
+# 这些函数，链接时会报 undefined symbol。运行时设备的 Vulkan loader 会提供这些符号，
+# 因此通过 --unresolved-symbols=ignore-in-shared-libs 让链接器忽略 stub 中缺失的符号。
+if(ANDROID AND TARGET ggml-vulkan)
+    target_link_options(ggml-vulkan PRIVATE "-Wl,--unresolved-symbols=ignore-in-shared-libs")
+endif()
+
 add_library(
     LlamaWrapper
     SHARED
