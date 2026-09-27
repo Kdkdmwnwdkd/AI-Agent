@@ -10,32 +10,38 @@
 </h1>
 
 <div align="center">
-  <a href="README.zh-CN.md">中文</a> | <span>English</span>
+  <b>🔧 OperitAI 增强版 Fork</b><br>
+  基于 <a href="https://github.com/AAswordman/Operit">AAswordman/Operit</a> 进行深度优化与改造<br>
   <br>
   <img src="https://img.shields.io/github/last-commit/Kdkdmwnwdkd/AI-Agent" alt="Last Commit">
   <img src="https://img.shields.io/badge/Platform-Android_8.0%2B-brightgreen.svg" alt="Platform">
   <a href="https://github.com/Kdkdmwnwdkd/AI-Agent/releases/latest"><img src="https://img.shields.io/github/v/release/Kdkdmwnwdkd/AI-Agent" alt="Latest Release"></a>
-  <a href="https://github.com/Kdkdmwnwdkd/AI-Agent/stargazers"><img src="https://img.shields.io/github/stars/Kdkdmwnwdkd/AI-Agent" alt="GitHub Stars"></a>
   <br>
-  <a href="https://github.com/Kdkdmwnwdkd/AI-Agent/"><img src="https://img.shields.io/badge/📖-User_Guide-blue.svg" alt="User Guide"></a>
-  <a href="docs/doc-src/dev-core/CONTRIBUTING.md"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg" alt="Contributions Welcome"></a>
+  <img src="https://img.shields.io/badge/version-v1.13.0-blue.svg" alt="v1.13.0">
+  <img src="https://img.shields.io/badge/CI-passing-brightgreen.svg" alt="CI">
 </div>
 
-<div align="center">
-  <a href="https://trendshift.io/repositories/14027?utm_source=repository-badge&utm_medium=badge&utm_campaign=badge-repository-14027" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/14027" alt="Kdkdmwnwdkd/AI-Agent | Trendshift" width="250" height="55"/></a>
-  <a href="https://trendshift.io/repositories/14027?utm_source=trendshift-badge&utm_medium=badge&utm_campaign=badge-trendshift-14027" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/14027/monthly?language=Kotlin" alt="Kdkdmwnwdkd/AI-Agent | Trendshift" width="250" height="55"/></a>
-</div>
+## 关于本项目
 
-<div align="center">
-  <img src="docs/assets/readme/operit-ai-banner-en.webp" width="100%" alt="Operit AI - Android's most powerful, most feature-complete, and longest-running open-source AI Agent">
-</div>
+这是 [Operit](https://github.com/AAswordman/Operit) 的增强版 Fork，在保留原有功能的基础上进行了以下优化：
+
+### 核心改动
+- **SystemPromptConfig** — 中英双语提示词合并，减少重复代码
+- **ModelRouter** — 新增模型路由骨架，为后续智能选型做准备
+- **AIToolHandler** — 工具调用链路追踪（traceId）+ 自动重试机制
+- **MemoryTier** — 三层记忆架构：工作记忆 / 情景记忆 / 语义记忆
+- **ConversationService** — 图片/语音/视频分析接口统一合并
+- **SensitiveToolRegistry** — 敏感操作（删除/发送/支付）强制确认弹窗
+- **已清除双模式代码** — 移除代码/角色切换相关全部 UI 和逻辑
+
+### 构建状态
+- Android Tests #75 + Build #84 ✅ 全绿通过
 
 ## 🚀 Operit 2: Operit's Cross-Platform Successor
 
 This repository is Operit's Android edition. Operit 2 is a separate second-generation implementation centered on a shared Rust runtime, Flutter clients, and the `operit2` CLI/TUI. It currently includes implementation or build paths for Android, iOS, Windows, macOS, Linux, and Web, with OpenHarmony support under active development. To follow the cross-platform version, visit [Operit 2](https://github.com/Kdkdmwnwdkd/AI-Agent2).
 
 <a href="https://github.com/Kdkdmwnwdkd/AI-Agent2">
-  <img src="docs/assets/readme/operit2-matrix-cards-en.png" width="100%" alt="Operit 2 cross-platform open-source AI Agent">
 </a>
 
 ## Introduction
@@ -53,24 +59,14 @@ This repository is Operit's Android edition. Operit 2 is a separate second-gener
 
 ## Feature Showcase
 
-<a href="docs/assets/readme/operit-agent-task-flow-2400x1000-v3-en.png">
-  <img src="docs/assets/readme/operit-agent-task-flow-2400x1000-v3-en.png" width="100%" alt="Agent task execution: from request input and tool execution to live preview, debugging, and delivery">
 </a>
 
-<a href="docs/assets/readme/operit-android-automation-2400x1000-v2-en.png">
-  <img src="docs/assets/readme/operit-android-automation-2400x1000-v2-en.png" width="100%" alt="Android automation demo">
 </a>
 
-<a href="docs/assets/readme/operit-memory-multicharacter-chat-2400x1000-v2-en.png">
-  <img src="docs/assets/readme/operit-memory-multicharacter-chat-2400x1000-v2-en.png" width="100%" alt="Memory and multi-character chat demo">
 </a>
 
-<a href="docs/assets/readme/operit-workspace-ubuntu-workflow-2400x1000-en.png">
-  <img src="docs/assets/readme/operit-workspace-ubuntu-workflow-2400x1000-en.png" width="100%" alt="Workspace and Ubuntu workflow demo">
 </a>
 
-<a href="docs/assets/readme/operit-plugin-ecosystem-agent-creation-2400x1000-v3-en.png">
-  <img src="docs/assets/readme/operit-plugin-ecosystem-agent-creation-2400x1000-v3-en.png" width="100%" alt="Plugin ecosystem and agent creation demo">
 </a>
 
 ## Main Features
