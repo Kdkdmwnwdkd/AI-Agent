@@ -31,6 +31,14 @@ sdkmanager 仓库不含 3.24.x / 3.31.6 精确 micro 版本，因此 CI 不再�
 
 涉及三个 workflow：`android-build.yml`、`pr-check.yml`（含两处 Configure 步骤）、`android-tests.yml`。
 
+### NDK 版本锁定为 27.0.12077973
+
+CI runner（ubuntu-24.04）的 Android SDK 预装了 NDK 27.0.12077973。AGP 在未显式设置 `ndkVersion` 时会自动选中 SDK 里最新的 NDK（即 27），若与 `local.properties` 的 `ndk.dir` 不一致则报 `[CXX1104]`。为避免该冲突：
+
+- [app/build.gradle.kts](../../../app/build.gradle.kts) 显式设置 `ndkVersion = "27.0.12077973"`，与 SDK 预装版本一致
+- CI 不再设置 `ndk.dir`，由 AGP 自动定位 SDK 内的 NDK 27
+- CI 的 `ANDROID_NDK_VERSION` 环境变量同步改为 `27.0.12077973`
+
 ### Vulkan 后端重新启用
 
 [llm/llama/CMakeLists.txt](../../../llm/llama/CMakeLists.txt)：
@@ -44,7 +52,7 @@ sdkmanager 仓库不含 3.24.x / 3.31.6 精确 micro 版本，因此 CI 不再�
 
 ### Vulkan-Hpp C++17 兼容性
 
-调研确认 Vulkan-Hpp header 最低要求 C++11（见 [Vulkan-Hpp Building.md](https://github.com/KhronosGroup/Vulkan-Hpp/blob/main/docs/Building.md)），spaceship operator 等特性为条件编译，在 C++17（NDK 25 clang 14）下自动走 `#else` 分支，无需额外兼容宏。因此 CMakeLists.txt 不引入任何 `VULKAN_HPP_NO_*` 定义。
+调研确认 Vulkan-Hpp header 最低要求 C++11（见 [Vulkan-Hpp Building.md](https://github.com/KhronosGroup/Vulkan-Hpp/blob/main/docs/Building.md)），spaceship operator 等特性为条件编译，在 C++17（NDK 27 clang）下自动走 `#else` 分支，无需额外兼容宏。因此 CMakeLists.txt 不引入任何 `VULKAN_HPP_NO_*` 定义。
 
 ### Vulkan-Headers / Vulkan-Hpp / SPIRV-Headers tag 选择
 

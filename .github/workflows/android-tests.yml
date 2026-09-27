@@ -45,7 +45,7 @@ env:
   PYTHONDONTWRITEBYTECODE: '1'
   JAVA_VERSION: '21'
   ANDROID_BUILD_TOOLS_VERSION: '36.0.0'
-  ANDROID_NDK_VERSION: '25.1.8937393'
+  ANDROID_NDK_VERSION: '27.0.12077973'
   ANDROID_API_LEVEL: '26'
   RUST_VERSION: '1.88.0'
   MANUAL_DEPS_DIR: manual-deps
@@ -161,8 +161,8 @@ jobs:
         run: |
           set -euo pipefail
           echo "sdk.dir=$ANDROID_HOME" > local.properties
-          # 强制使用 sdkmanager 安装的 NDK 25.1.8937393，避免 AGP 选中 SDK 里预装的更新版本 NDK。
-          echo "ndk.dir=$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION" >> local.properties
+          # NDK 版本由 app/build.gradle.kts 的 ndkVersion=27.0.12077973 锁定，
+          # 与 SDK 预装版本一致，无需在 local.properties 指定 ndk.dir。
           # 复用系统预装 CMake 3.31.6（≥ 3.24，支持 Vulkan FindVulkan glslc 组件），
           # 避免 AGP 自动从 SDK Manager 下载 3.22.1（不支持 glslc 组件，Vulkan 配置会失败）。
           CMAKE_REAL_PATH=$(readlink -f "$(command -v cmake)")

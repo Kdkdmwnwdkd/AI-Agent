@@ -29,6 +29,7 @@ find_package(Vulkan COMPONENTS glslc REQUIRED)
 按 AGENTS.md 要求正面适配，不再回退：
 
 - 升级 CMake 到 3.31.6（≥ 3.24，支持 FindVulkan glslc 组件）
+- NDK 版本锁定为 27.0.12077973（与 CI runner SDK 预装版本一致，避免 [CXX1104] 冲突）
 - 重新打开 `GGML_VULKAN ON` / `LLAMA_VULKAN ON`
 - 删除违规的回退/兜底注释
 - 将 Vulkan-Headers / Vulkan-Hpp / SPIRV-Headers 三个依赖从 `main` 分支固定到对应 Vulkan SDK 1.3.275 的稳定 tag（Khronos 同步发布的配套版本，对应 VK_HEADER_VERSION 275）。注意各仓库 tag 命名不同：Vulkan-Headers / SPIRV-Headers 用 `vulkan-sdk-1.3.275.0`，Vulkan-Hpp 用 `v1.3.275`

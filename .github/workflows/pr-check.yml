@@ -17,7 +17,7 @@ env:
   JAVA_VERSION: '21'
   NODE_VERSION: '22'
   ANDROID_BUILD_TOOLS_VERSION: '36.0.0'
-  ANDROID_NDK_VERSION: '25.1.8937393'
+  ANDROID_NDK_VERSION: '27.0.12077973'
   # CMake ≥ 3.24 是 Vulkan 后端 find_package(Vulkan COMPONENTS glslc) 的硬性要求。
   # ubuntu-24.04 runner 系统预装 CMake 3.31.6，下方通过 cmake.dir 复用系统预装版本，
   # 不再走 sdkmanager 安装（sdkmanager 仓库无 3.24.x / 3.31.6 精确 micro 版本）。
@@ -417,8 +417,8 @@ jobs:
         run: |
           set -euo pipefail
           echo "sdk.dir=$ANDROID_HOME" > local.properties
-          # 强制使用 sdkmanager 安装的 NDK 25.1.8937393，避免 AGP 选中 SDK 里预装的更新版本 NDK。
-          echo "ndk.dir=$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION" >> local.properties
+          # NDK 版本由 app/build.gradle.kts 的 ndkVersion=27.0.12077973 锁定，
+          # 与 SDK 预装版本一致，无需在 local.properties 指定 ndk.dir。
           # 复用系统预装 CMake 3.31.6（≥ 3.24，支持 Vulkan FindVulkan glslc 组件）。
           # cmake.dir 指向包含 bin/cmake 的目录的父目录，AGP 会优先使用它而非 SDK Manager 的版本。
           CMAKE_REAL_PATH=$(readlink -f "$(command -v cmake)")
@@ -565,8 +565,8 @@ jobs:
         run: |
           set -euo pipefail
           echo "sdk.dir=$ANDROID_HOME" > local.properties
-          # 强制使用 sdkmanager 安装的 NDK 25.1.8937393，避免 AGP 选中 SDK 里预装的更新版本 NDK。
-          echo "ndk.dir=$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION" >> local.properties
+          # NDK 版本由 app/build.gradle.kts 的 ndkVersion=27.0.12077973 锁定，
+          # 与 SDK 预装版本一致，无需在 local.properties 指定 ndk.dir。
           # 复用系统预装 CMake 3.31.6（≥ 3.24，支持 Vulkan FindVulkan glslc 组件）。
           # cmake.dir 指向包含 bin/cmake 的目录的父目录，AGP 会优先使用它而非 SDK Manager 的版本。
           CMAKE_REAL_PATH=$(readlink -f "$(command -v cmake)")
