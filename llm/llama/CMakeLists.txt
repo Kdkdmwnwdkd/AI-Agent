@@ -10,78 +10,12 @@ set(LLAMA_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
 set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(LLAMA_BUILD_SERVER OFF CACHE BOOL "" FORCE)
 
-# 启用 Vulkan GPU 后端，支持 Adreno GPU 层 offload（魅族20/骁龙8Gen2 Adreno740）
-set(GGML_VULKAN ON CACHE BOOL "" FORCE)
-set(LLAMA_VULKAN ON CACHE BOOL "" FORCE)
-
-# 手动指定 glslc 路径（用于 llama.cpp Vulkan 着色器编译）
-# 交叉编译时 CMAKE_FIND_ROOT_PATH_MODE_PROGRAM=ONLY 会限制搜索，需临时放宽
-set(_old_find_root_path_mode_program "${CMAKE_FIND_ROOT_PATH_MODE_PROGRAM}")
-set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-find_program(Vulkan_GLSLC_EXECUTABLE
-    NAMES glslc
-    HINTS
-        "${ANDROID_NDK}/shader-tools"
-        "${CMAKE_ANDROID_NDK}/shader-tools"
-        "$ENV{ANDROID_NDK_HOME}/shader-tools"
-        "${ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin"
-        "${CMAKE_ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin"
-        /usr/bin
-        /usr/local/bin
-)
-set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM "${_old_find_root_path_mode_program}")
-if(Vulkan_GLSLC_EXECUTABLE)
-    set(Vulkan_GLSLC_EXECUTABLE "${Vulkan_GLSLC_EXECUTABLE}" CACHE FILEPATH "" FORCE)
-    message(STATUS "Found glslc: ${Vulkan_GLSLC_EXECUTABLE}")
-else()
-    message(WARNING "glslc not found, Vulkan shaders will fail to compile")
-    message(STATUS "ANDROID_NDK=${ANDROID_NDK} CMAKE_ANDROID_NDK=${CMAKE_ANDROID_NDK}")
-endif()
-
-# Vulkan 头文件：Android NDK 的 vulkan.h 版本太旧（VK_HEADER_VERSION=275），
-# 与最新 Vulkan-Hpp（期望 363）不匹配。同时拉取匹配版本的 Vulkan-Headers + Vulkan-Hpp，
-# 用 BEFORE 让它们优先于 NDK 自带的 vulkan.h
-operit_prepare_git_source(
-    OPERIT_VULKAN_HEADERS_SOURCE_DIR
-    OPERIT_VULKAN_HEADERS_BINARY_DIR
-    vulkan_headers
-    "https://github.com/KhronosGroup/Vulkan-Headers.git"
-    "main"
-)
-operit_prepare_git_source(
-    OPERIT_VULKAN_HPP_SOURCE_DIR
-    OPERIT_VULKAN_HPP_BINARY_DIR
-    vulkan_hpp
-    "https://github.com/KhronosGroup/Vulkan-Hpp.git"
-    "main"
-)
-include_directories(BEFORE "${OPERIT_VULKAN_HEADERS_SOURCE_DIR}/include")
-include_directories(BEFORE "${OPERIT_VULKAN_HPP_SOURCE_DIR}")
-
-# SPIRV-Headers：llama.cpp 的 Vulkan 后端依赖它，但 Android NDK 不提供 CMake config
-operit_prepare_git_source(
-    OPERIT_SPIRV_HEADERS_SOURCE_DIR
-    OPERIT_SPIRV_HEADERS_BINARY_DIR
-    spirv_headers
-    "https://github.com/KhronosGroup/SPIRV-Headers.git"
-    "main"
-)
-
-# 生成 SPIRV-HeadersConfig.cmake，让 find_package(SPIRV-Headers CONFIG) 能找到
-set(SPIRV_HEADERS_CONFIG_DIR "${OPERIT_SPIRV_HEADERS_BINARY_DIR}/cmake")
-file(MAKE_DIRECTORY "${SPIRV_HEADERS_CONFIG_DIR}")
-file(WRITE "${SPIRV_HEADERS_CONFIG_DIR}/SPIRV-HeadersConfig.cmake"
-"set(SPIRV-Headers_INCLUDE_DIR \"${OPERIT_SPIRV_HEADERS_SOURCE_DIR}/include\")
-set(SPIRV-Headers_INCLUDE_DIRS \"${OPERIT_SPIRV_HEADERS_SOURCE_DIR}/include\")
-if(NOT TARGET SPIRV-Headers::SPIRV-Headers)
-    add_library(SPIRV-Headers::SPIRV-Headers INTERFACE IMPORTED)
-    set_target_properties(SPIRV-Headers::SPIRV-Headers PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES \"${OPERIT_SPIRV_HEADERS_SOURCE_DIR}/include\"
-    )
-endif()
-set(SPIRV-Headers_FOUND TRUE)
-")
-set(SPIRV-Headers_DIR "${SPIRV_HEADERS_CONFIG_DIR}" CACHE PATH "" FORCE)
+# Vulkan GPU backend 暂时关闭。
+# 原因：llama.cpp 的 ggml-vulkan 要求 find_package(Vulkan COMPONENTS glslc REQUIRED)，
+# 而项目锁定的 CMake 3.22.1 的 FindVulkan 不支持 glslc 组件（需 CMake ≥ 3.24）。
+# 同时 Android 上 Vulkan-Hpp 头文件版本与 NDK loader 的兼容性需要单独验证。
+# JNI 层已有兜底：llama_supports_gpu_offload() 为 false 时自动回退 CPU，不影响运行。
+# 后续单独适配时再打开 GGML_VULKAN 并升级 CMake。
 
 operit_prepare_git_source(
     OPERIT_LLAMA_CPP_SOURCE_DIR
@@ -111,7 +45,6 @@ target_link_libraries(
     LlamaWrapper
     android
     log
-    vulkan
 )
 
 # 16KB page size support (Android 15+ requirement)
