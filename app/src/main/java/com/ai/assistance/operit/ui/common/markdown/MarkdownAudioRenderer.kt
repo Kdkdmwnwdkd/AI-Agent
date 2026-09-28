@@ -23,9 +23,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.platform.LocalContext
 import com.ai.assistance.operit.R
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.ui.StyledPlayerView
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.common.MediaItem
+import androidx.media3.ui.PlayerView
 
 private val MARKDOWN_AUDIO_EXTENSIONS =
     setOf("mp3", "wav", "ogg", "oga", "m4a", "aac", "flac", "opus", "weba")
@@ -93,7 +93,7 @@ fun MarkdownAudioRenderer(
     ) {
         AndroidView(
             factory = { ctx ->
-                StyledPlayerView(ctx).apply {
+                PlayerView(ctx).apply {
                     this.player = player
                     useController = true
                 }
