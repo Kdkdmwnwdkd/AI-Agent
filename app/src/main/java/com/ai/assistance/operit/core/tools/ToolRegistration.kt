@@ -2432,6 +2432,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
 
     handler.registerTool(
             name = "toast",
+            descriptionGenerator = { s(R.string.toolreg_toast_desc) },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { systemOperationTools.toast(tool) }
             }
@@ -2439,6 +2440,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
 
     handler.registerTool(
             name = "send_notification",
+            descriptionGenerator = { s(R.string.toolreg_send_notification_desc) },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { systemOperationTools.sendNotification(tool) }
             }
