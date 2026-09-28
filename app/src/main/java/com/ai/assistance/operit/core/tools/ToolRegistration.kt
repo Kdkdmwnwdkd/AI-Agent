@@ -776,9 +776,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
 
     handler.registerTool(
             name = "list_character_cards_settings",
-            descriptionGenerator = { _ ->
-                "List full character card settings and the active character card"
-            },
+            descriptionGenerator = { _ -> s(R.string.toolreg_list_character_cards_settings_desc) },
             executor = { tool ->
                 val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
                 runBlocking(Dispatchers.IO) { softwareSettingsTools.listCharacterCards(tool) }
@@ -789,7 +787,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "get_character_card",
             descriptionGenerator = { tool ->
                 val characterCardId = tool.parameters.find { it.name == "character_card_id" }?.value ?: ""
-                "Get character card settings: $characterCardId"
+                s(R.string.toolreg_get_character_card_desc, characterCardId.ifBlank { "(missing character_card_id)" })
             },
             executor = { tool ->
                 val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
@@ -799,10 +797,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
 
     handler.registerTool(
             name = "create_character_card",
-            descriptionGenerator = { tool ->
-                val name = tool.parameters.find { it.name == "name" }?.value ?: ""
-                "Create character card: $name"
-            },
+            descriptionGenerator = { _ -> s(R.string.toolreg_create_character_card_desc) },
             executor = { tool ->
                 val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
                 runBlocking(Dispatchers.IO) { softwareSettingsTools.createCharacterCard(tool) }
@@ -813,7 +808,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "update_character_card",
             descriptionGenerator = { tool ->
                 val characterCardId = tool.parameters.find { it.name == "character_card_id" }?.value ?: ""
-                "Update character card: $characterCardId"
+                s(R.string.toolreg_update_character_card_desc, characterCardId.ifBlank { "(missing character_card_id)" })
             },
             executor = { tool ->
                 val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
@@ -825,7 +820,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "delete_character_card",
             descriptionGenerator = { tool ->
                 val characterCardId = tool.parameters.find { it.name == "character_card_id" }?.value ?: ""
-                "Delete character card: $characterCardId"
+                s(R.string.toolreg_delete_character_card_desc, characterCardId.ifBlank { "(missing character_card_id)" })
             },
             executor = { tool ->
                 val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
@@ -837,7 +832,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "set_active_character_card",
             descriptionGenerator = { tool ->
                 val characterCardId = tool.parameters.find { it.name == "character_card_id" }?.value ?: ""
-                "Set active character card: $characterCardId"
+                s(R.string.toolreg_set_active_character_card_desc, characterCardId.ifBlank { "(missing character_card_id)" })
             },
             executor = { tool ->
                 val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
@@ -847,7 +842,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
 
     handler.registerTool(
             name = "clear_active_character_card",
-            descriptionGenerator = { _ -> "Clear the active character card" },
+            descriptionGenerator = { _ -> s(R.string.toolreg_clear_active_character_card_desc) },
             executor = { tool ->
                 val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
                 runBlocking(Dispatchers.IO) { softwareSettingsTools.clearActiveCharacterCard(tool) }
@@ -856,7 +851,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
 
     handler.registerTool(
             name = "import_character_card_from_tavern_json",
-            descriptionGenerator = { _ -> "Import one character card from Tavern JSON" },
+            descriptionGenerator = { _ -> s(R.string.toolreg_import_character_card_from_tavern_json_desc) },
             executor = { tool ->
                 val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
                 runBlocking(Dispatchers.IO) {
@@ -869,7 +864,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "export_character_card_to_tavern_json",
             descriptionGenerator = { tool ->
                 val characterCardId = tool.parameters.find { it.name == "character_card_id" }?.value ?: ""
-                "Export character card to Tavern JSON: $characterCardId"
+                s(R.string.toolreg_export_character_card_to_tavern_json_desc, characterCardId.ifBlank { "(missing character_card_id)" })
             },
             executor = { tool ->
                 val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
