@@ -527,7 +527,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "music_play",
             descriptionGenerator = { tool ->
                 val source = tool.parameters.find { it.name == "source" }?.value ?: ""
-                "Play music: $source"
+                s(R.string.toolreg_music_play_desc, source.ifBlank { "(missing source)" })
             },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { musicPlaybackTools.play(tool) }
@@ -538,7 +538,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "music_play_queue",
             descriptionGenerator = { tool ->
                 val items = tool.parameters.find { it.name == "items" }?.value ?: ""
-                "Play music queue: $items"
+                s(R.string.toolreg_music_play_queue_desc, items.ifBlank { "(missing items)" })
             },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { musicPlaybackTools.playQueue(tool) }
@@ -547,7 +547,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
 
     handler.registerTool(
             name = "music_pause",
-            descriptionGenerator = { _ -> "Pause music playback" },
+            descriptionGenerator = { _ -> s(R.string.toolreg_music_pause_desc) },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { musicPlaybackTools.pause(tool) }
             }
@@ -555,7 +555,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
 
     handler.registerTool(
             name = "music_resume",
-            descriptionGenerator = { _ -> "Resume music playback" },
+            descriptionGenerator = { _ -> s(R.string.toolreg_music_resume_desc) },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { musicPlaybackTools.resume(tool) }
             }
@@ -563,7 +563,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
 
     handler.registerTool(
             name = "music_stop",
-            descriptionGenerator = { _ -> "Stop music playback" },
+            descriptionGenerator = { _ -> s(R.string.toolreg_music_stop_desc) },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { musicPlaybackTools.stop(tool) }
             }
@@ -573,7 +573,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "music_seek",
             descriptionGenerator = { tool ->
                 val positionMs = tool.parameters.find { it.name == "position_ms" }?.value ?: ""
-                "Seek music playback to ${positionMs}ms"
+                s(R.string.toolreg_music_seek_desc, positionMs.ifBlank { "(missing position_ms)" })
             },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { musicPlaybackTools.seek(tool) }
@@ -584,7 +584,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "music_set_volume",
             descriptionGenerator = { tool ->
                 val volume = tool.parameters.find { it.name == "volume" }?.value ?: ""
-                "Set music playback volume to $volume"
+                s(R.string.toolreg_music_set_volume_desc, volume.ifBlank { "(missing volume)" })
             },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { musicPlaybackTools.setVolume(tool) }
@@ -593,7 +593,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
 
     handler.registerTool(
             name = "music_status",
-            descriptionGenerator = { _ -> "Get music playback status" },
+            descriptionGenerator = { _ -> s(R.string.toolreg_music_status_desc) },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { musicPlaybackTools.status(tool) }
             }
