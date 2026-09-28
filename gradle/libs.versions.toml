@@ -44,7 +44,7 @@ gson = "2.10.1"
 hjson = "3.0.0"
 json = "20250517"
 jieba = "1.0.2"
-hnswlib = "0.0.46"
+hnswlib = "1.2.1"
 tensorflow = "2.10.0"
 room = "2.8.4"
 junrar = "7.5.5"
@@ -137,7 +137,9 @@ android-gif = { group = "pl.droidsonroids.gif", name = "android-gif-drawable", v
 image-cropper = { group = "com.vanniktech", name = "android-image-cropper", version.ref = "image-cropper" }
 
 # Root access
-libsu = { group = "com.github.topjohnwu.libsu", name = "core", version.ref = "libsu" }
+libsu-core = { group = "com.github.topjohnwu.libsu", name = "core", version.ref = "libsu" }
+libsu-service = { group = "com.github.topjohnwu.libsu", name = "service", version.ref = "libsu" }
+libsu-nio = { group = "com.github.topjohnwu.libsu", name = "nio", version.ref = "libsu" }
 
 # Media
 media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }

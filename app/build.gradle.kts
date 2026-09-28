@@ -579,7 +579,6 @@ kotlin {
 }
 
 dependencies {
-    implementation("com.github.jelmerk:hnswlib-core:1.2.1")
     implementation(project(":dragonbones"))
     implementation(project(":terminal"))
     implementation(project(":mnn"))
@@ -637,9 +636,9 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     
     // libsu - root access library
-    implementation("com.github.topjohnwu.libsu:core:6.0.0")
-    implementation("com.github.topjohnwu.libsu:service:6.0.0")
-    implementation("com.github.topjohnwu.libsu:nio:6.0.0")
+    implementation(libs.libsu.core)
+    implementation(libs.libsu.service)
+    implementation(libs.libsu.nio)
     
     // Add missing SVG support
     implementation(libs.androidsvg)
@@ -765,10 +764,6 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.compose.bom))
 
-    // 单元测试中真实 org.json（Android 桩在 JVM 测试里会抛 Stub! 异常）；
-    // 统计 usage 归一化测试需要解析 JSONObject。
-    testImplementation("org.json:json:20240303")
-
     // Apache POI - for Document processing (DOC, DOCX, etc.)
     implementation(libs.poi)
     implementation(libs.poi.ooxml)
@@ -836,7 +831,6 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-moshi:2.9.0")
     implementation("com.squareup.moshi:moshi-kotlin:1.15.0")
     implementation(libs.okhttp.logging.interceptor)
-
 
     // Accompanist
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
