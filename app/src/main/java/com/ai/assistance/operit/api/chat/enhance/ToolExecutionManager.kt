@@ -720,7 +720,9 @@ object ToolExecutionManager {
                 toolName = displayToolName,
                 success = false,
                 result = StringResultData(""),
-                error = "The tool execution returned no results."
+                error = "The tool execution returned no results.",
+                // 没有任何步骤产出结果属于结构性异常，重试同一批调用不会改变结果
+                retryable = false
             )
         }
         val lastResult = collectedResults.last()
@@ -731,7 +733,10 @@ object ToolExecutionManager {
             toolName = displayToolName,
             success = lastResult.success,
             result = StringResultData(combinedResultString),
-            error = lastResult.error
+            error = lastResult.error,
+            // 任一步骤仍有重试价值时，整体就仍可能成功，因此取 AND 而非沿用末步：
+            // 只有全部步骤都是确定性失败，才向模型声明这一批调用不值得重试。
+            retryable = collectedResults.all { it.retryable }
         )
     }
 
