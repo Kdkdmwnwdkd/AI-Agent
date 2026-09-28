@@ -26,10 +26,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.ai.assistance.operit.R
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
-import com.google.android.exoplayer2.ui.StyledPlayerView
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.common.MediaItem
+import androidx.media3.ui.AspectRatioFrameLayout
+import androidx.media3.ui.PlayerView
 
 private val MARKDOWN_VIDEO_EXTENSIONS =
     setOf("mp4", "webm", "mkv", "mov", "m4v", "3gp", "avi", "ogv")
@@ -96,7 +96,7 @@ fun MarkdownVideoRenderer(
         ) {
             AndroidView(
                 factory = { ctx ->
-                    StyledPlayerView(ctx).apply {
+                    PlayerView(ctx).apply {
                         this.player = player
                         useController = true
                         resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
