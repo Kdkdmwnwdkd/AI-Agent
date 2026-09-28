@@ -79,6 +79,17 @@ activityKtx = "1.7.1"
  ui = "1.10.4"
  animation = "1.10.4"
 
+# Below: versions for coordinates previously hardcoded in app/build.gradle.kts
+filament = "1.69.2"
+smart-exception = "0.2.1"
+onnxruntime = "1.17.1"
+taskerplugin = "0.4.10"
+security-crypto = "1.1.0-alpha06"
+bouncycastle = "1.78"
+retrofit = "2.9.0"
+moshi = "1.15.0"
+accompanist = "0.32.0"
+
  [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -256,6 +267,21 @@ glance-material3 = { group = "androidx.glance", name = "glance-material3", versi
  androidx-activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "activityKtx" }
  androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
  androidx-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "animation" }
+
+# Vendored / hardcoded coordinates moved into the catalog
+filament-android = { group = "com.google.android.filament", name = "filament-android", version.ref = "filament" }
+gltfio-android = { group = "com.google.android.filament", name = "gltfio-android", version.ref = "filament" }
+filament-utils-android = { group = "com.google.android.filament", name = "filament-utils-android", version.ref = "filament" }
+smart-exception-common = { group = "com.arthenica", name = "smart-exception-common", version.ref = "smart-exception" }
+smart-exception-java = { group = "com.arthenica", name = "smart-exception-java", version.ref = "smart-exception" }
+onnxruntime-android = { group = "com.microsoft.onnxruntime", name = "onnxruntime-android", version.ref = "onnxruntime" }
+taskerpluginlibrary = { group = "com.joaomgcd", name = "taskerpluginlibrary", version.ref = "taskerplugin" }
+security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "security-crypto" }
+bouncycastle-bcprov = { group = "org.bouncycastle", name = "bcprov-jdk18on", version.ref = "bouncycastle" }
+retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
+retrofit-converter-moshi = { group = "com.squareup.retrofit2", name = "converter-moshi", version.ref = "retrofit" }
+moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
+accompanist-systemuicontroller = { group = "com.google.accompanist", name = "accompanist-systemuicontroller", version.ref = "accompanist" }
 
  [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

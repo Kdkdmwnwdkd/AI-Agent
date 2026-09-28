@@ -589,14 +589,14 @@ dependencies {
     implementation(project(":quickjs"))
 
     // glTF runtime rendering (Filament)
-    implementation("com.google.android.filament:filament-android:1.69.2")
-    implementation("com.google.android.filament:gltfio-android:1.69.2")
-    implementation("com.google.android.filament:filament-utils-android:1.69.2")
+    implementation(libs.filament.android)
+    implementation(libs.gltfio.android)
+    implementation(libs.filament.utils.android)
     implementation(libs.androidx.ui.graphics.android)
     // The only vendored artifact is the custom FFmpegKit AAR.
     implementation(files("libs/ffmpeg-kit-local.aar"))
-    implementation("com.arthenica:smart-exception-common:0.2.1")
-    implementation("com.arthenica:smart-exception-java:0.2.1")
+    implementation(libs.smart.exception.common)
+    implementation(libs.smart.exception.java)
     implementation(libs.androidx.runtime.android)
     implementation(libs.androidx.ui.text.android)
     implementation(libs.androidx.animation.android)
@@ -705,7 +705,7 @@ dependencies {
     implementation(libs.mediapipe.tasks.text)
     
     // ONNX Runtime for Android - 支持更强大的多语言Embedding模型
-    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.17.1")
+    implementation(libs.onnxruntime.android)
 
     // Room 数据库
     implementation(libs.room.runtime)
@@ -738,7 +738,7 @@ dependencies {
     implementation(libs.shizuku.provider)
 
     // Tasker Plugin Library
-    implementation("com.joaomgcd:taskerpluginlibrary:0.4.10")
+    implementation(libs.taskerpluginlibrary)
     
     // WorkManager for scheduled workflows
     implementation(libs.work.runtime.ktx)
@@ -821,19 +821,19 @@ dependencies {
     }
 
     // Security
-    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation(libs.security.crypto)
     
     // BouncyCastle - explicitly include jdk18on version to avoid conflicts
-    implementation("org.bouncycastle:bcprov-jdk18on:1.78")
+    implementation(libs.bouncycastle.bcprov)
 
     // Retrofit
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-moshi:2.9.0")
-    implementation("com.squareup.moshi:moshi-kotlin:1.15.0")
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.moshi)
+    implementation(libs.moshi.kotlin)
     implementation(libs.okhttp.logging.interceptor)
 
     // Accompanist
-    implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
+    implementation(libs.accompanist.systemuicontroller)
 
     // Glance for Widgets (Compose for Widgets)
     implementation(libs.glance.appwidget)
