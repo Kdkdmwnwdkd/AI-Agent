@@ -100,6 +100,14 @@ jobs:
             --base "${{ steps.plan.outputs.base_sha }}" \
             --candidate "${{ steps.plan.outputs.candidate_sha }}"
 
+      - name: Check tool descriptions
+        id: tool-descriptions
+        continue-on-error: true
+        run: |
+          python3 ci/script/check_tool_descriptions.py \
+            --base "${{ steps.plan.outputs.base_sha }}" \
+            --candidate "${{ steps.plan.outputs.candidate_sha }}"
+
       - name: Check changed YAML and Actions workflows
         id: yaml
         if: steps.plan.outputs.yaml == 'true'
@@ -157,6 +165,7 @@ jobs:
           HYGIENE_OUTCOME: ${{ steps.hygiene.outcome }}
           MARKDOWN_OUTCOME: ${{ steps.markdown.outcome }}
           LOCALIZATION_OUTCOME: ${{ steps.localization.outcome }}
+          TOOL_DESCRIPTIONS_OUTCOME: ${{ steps.tool-descriptions.outcome }}
           YAML_OUTCOME: ${{ steps.yaml.outcome }}
           LOCALIZATION_REQUIRED: ${{ steps.plan.outputs.localization }}
           YAML_REQUIRED: ${{ steps.plan.outputs.yaml }}
@@ -189,6 +198,7 @@ jobs:
           check_stage hygiene true "$HYGIENE_OUTCOME"
           check_stage markdown true "$MARKDOWN_OUTCOME"
           check_stage localization "$LOCALIZATION_REQUIRED" "$LOCALIZATION_OUTCOME"
+          check_stage tool-descriptions true "$TOOL_DESCRIPTIONS_OUTCOME"
           check_stage yaml "$YAML_REQUIRED" "$YAML_OUTCOME"
 
           if (( failures > 0 )); then
