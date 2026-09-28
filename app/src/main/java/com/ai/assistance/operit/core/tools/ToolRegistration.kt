@@ -311,7 +311,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "run_code",
             descriptionGenerator = { tool ->
                 val lang = tool.parameters.find { it.name == "language" }?.value ?: ""
-                "Run $lang code"
+                s(R.string.toolreg_run_code_desc, lang)
             },
             executor = { tool ->
                 val language = tool.parameters.find { it.name == "language" }?.value ?: ""
@@ -361,7 +361,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "file_tree",
             descriptionGenerator = { tool ->
                 val path = tool.parameters.find { it.name == "path" }?.value ?: ""
-                "Tree: $path"
+                s(R.string.toolreg_file_tree_desc, path)
             },
             executor = { tool ->
                 val path = tool.parameters.find { it.name == "path" }?.value ?: ""
@@ -603,7 +603,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "read_environment_variable",
             descriptionGenerator = { tool ->
                 val key = tool.parameters.find { it.name == "key" }?.value ?: ""
-                "Read environment variable: $key"
+                s(R.string.toolreg_read_environment_variable_desc, key)
             },
             executor = { tool ->
                 val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
@@ -617,7 +617,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                 val key = tool.parameters.find { it.name == "key" }?.value ?: ""
                 val value = tool.parameters.find { it.name == "value" }?.value
                 val mode = if (value.isNullOrBlank()) "clear" else "set"
-                "Write environment variable: $key ($mode)"
+                s(R.string.toolreg_write_environment_variable_desc, key, mode)
             },
             executor = { tool ->
                 val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
@@ -640,7 +640,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             descriptionGenerator = { tool ->
                 val packageName = tool.parameters.find { it.name == "package_name" }?.value ?: ""
                 val enabled = tool.parameters.find { it.name == "enabled" }?.value ?: ""
-                "Set sandbox package enabled state: $packageName -> $enabled"
+                s(R.string.toolreg_set_sandbox_package_enabled_desc, packageName, enabled)
             },
             executor = { tool ->
                 val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
@@ -664,7 +664,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                             hasInlineCode -> "inline code"
                             else -> "sandbox script"
                         }
-                "Execute sandbox script directly: $target"
+                s(R.string.toolreg_execute_sandbox_script_direct_desc, target)
             },
             executor = { tool ->
                 val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
@@ -676,7 +676,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "restart_mcp_with_logs",
             descriptionGenerator = { tool ->
                 val timeoutMs = tool.parameters.find { it.name == "timeout_ms" }?.value ?: "120000"
-                "Restart MCP startup and return per-plugin logs (timeout=${timeoutMs}ms)"
+                s(R.string.toolreg_restart_mcp_with_logs_desc, timeoutMs)
             },
             executor = { tool ->
                 val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
@@ -747,7 +747,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
     registerSoftwareSettingsTool(handler, context, name = "get_function_model_config",
             descriptionGenerator = { tool ->
                 val functionType = tool.parameters.find { it.name == "function_type" }?.value ?: ""
-                "Get function model config: $functionType"
+                s(R.string.toolreg_get_function_model_config_desc, functionType)
             }
     ) { t, tool -> t.getFunctionModelConfig(tool) }
 
@@ -756,7 +756,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                 val functionType = tool.parameters.find { it.name == "function_type" }?.value ?: ""
                 val configId = tool.parameters.find { it.name == "config_id" }?.value ?: ""
                 val modelIndex = tool.parameters.find { it.name == "model_index" }?.value ?: "0"
-                "Set function model config: $functionType -> $configId (model_index=$modelIndex)"
+                s(R.string.toolreg_set_function_model_config_desc, functionType, configId, modelIndex)
             }
     ) { t, tool -> t.setFunctionModelConfig(tool) }
 
@@ -764,7 +764,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             descriptionGenerator = { tool ->
                 val configId = tool.parameters.find { it.name == "config_id" }?.value ?: ""
                 val modelIndex = tool.parameters.find { it.name == "model_index" }?.value ?: "0"
-                "Test model config connection: $configId (model_index=$modelIndex)"
+                s(R.string.toolreg_test_model_config_connection_desc, configId, modelIndex)
             }
     ) { t, tool -> t.testModelConfigConnection(tool) }
 
@@ -1203,7 +1203,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "package_proxy",
             descriptionGenerator = { tool ->
                 val targetToolName = tool.parameters.find { it.name == "tool_name" }?.value ?: ""
-                "Proxy call to package tool: $targetToolName"
+                s(R.string.toolreg_package_proxy_desc, targetToolName)
             },
             executor = { tool ->
                 val (parsedInvocation, parseError) = parseProxyInvocation(
@@ -1294,7 +1294,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "web_search",
             descriptionGenerator = { tool ->
                 val query = tool.parameters.find { it.name == "query" }?.value ?: ""
-                "Search: $query"
+                s(R.string.toolreg_web_search_desc, query)
             },
             executor = { tool ->
                 val query = tool.parameters.find { it.name == "query" }?.value ?: ""
@@ -1585,7 +1585,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             descriptionGenerator = { tool ->
                 val action = tool.parameters.find { it.name == "action" }?.value
                 val preview = action?.takeIf { it.isNotBlank() } ?: "(no action)"
-                "Send broadcast: $preview"
+                s(R.string.toolreg_send_broadcast_desc, preview)
             },
             executor = { tool ->
                 val sendBroadcastTool = ToolGetter.getSendBroadcastToolExecutor(context)
@@ -2291,7 +2291,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                 val path = tool.parameters.find { it.name == "path" }?.value ?: ""
                 val environment = tool.parameters.find { it.name == "environment" }?.value
                 val envInfo = formatEnvInfo(environment)
-                "Create file $path$envInfo"
+                s(R.string.toolreg_create_file_desc, path, envInfo)
             },
             executor = { tool -> runBlocking(Dispatchers.IO) { fileSystemTools.createFile(tool) } }
     )
@@ -2539,9 +2539,9 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                 val packageName = tool.parameters.find { it.name == "package_name" }?.value.orEmpty()
                 val sinceHours = tool.parameters.find { it.name == "since_hours" }?.value ?: "24"
                 if (packageName.isNotBlank()) {
-                    "Get app usage time for $packageName in the last ${sinceHours} hours"
+                    s(R.string.toolreg_get_app_usage_time_desc, packageName, sinceHours)
                 } else {
-                    "Get app usage time ranking in the last ${sinceHours} hours"
+                    s(R.string.toolreg_get_app_usage_time_ranking_desc, sinceHours)
                 }
             },
             executor = { tool ->

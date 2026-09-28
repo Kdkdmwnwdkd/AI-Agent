@@ -8585,4 +8585,20 @@
     <string name="toolreg_update_model_config_desc">【修改模型配置】更新一份已有的模型配置，本次目标：%1$s。config_id 为必填，缺失报 "Missing required parameter: config_id"，id 不存在报 "Model config not found: 该 id"；chat_model_index 非整数报 "Invalid integer parameter: chat_model_index"；tool_access_enabled 非布尔报 "Invalid boolean parameter: tool_access_enabled"。只更新传入的字段。要查看现有配置用 list_model_configs。</string>
     <string name="toolreg_delete_model_config_desc">【删除模型配置】删除一份模型配置，本次目标：%1$s。config_id 为必填，缺失报 "Missing required parameter: config_id"，id 不存在报 "Model config not found: 该 id"；试图删除默认配置会被拒绝，报 "The default model config cannot be deleted"。删除后引用它的功能绑定会失效，需要重新用 set_function_model_config 指定。</string>
     <string name="toolreg_list_function_model_configs_desc">【列出功能绑定】只列出各功能（function）到模型配置的绑定关系，无参数。返回每项功能指向的 config_id 与 model_index。它是 list_model_configs 的子集视图，适合快速确认某个功能当前用的是哪份配置。要修改绑定请用 set_function_model_config；配置 id 失效时会报 "Model config not found: 该 id"。</string>
+    <string name="toolreg_run_code_desc">Run %1$s code</string>
+    <string name="toolreg_file_tree_desc">Tree: %1$s</string>
+    <string name="toolreg_create_file_desc">Create file %1$s%2$s</string>
+    <string name="toolreg_read_environment_variable_desc">Read environment variable: %1$s</string>
+    <string name="toolreg_write_environment_variable_desc">Write environment variable: %1$s (%2$s)</string>
+    <string name="toolreg_set_sandbox_package_enabled_desc">Set sandbox package enabled state: %1$s, enabled=%2$s</string>
+    <string name="toolreg_execute_sandbox_script_direct_desc">Execute sandbox script directly: %1$s</string>
+    <string name="toolreg_restart_mcp_with_logs_desc">Restart MCP startup and return per-plugin logs (timeout=%1$sms)</string>
+    <string name="toolreg_get_function_model_config_desc">Get function model config: %1$s</string>
+    <string name="toolreg_set_function_model_config_desc">Set function model config: %1$s, config=%2$s (model_index=%3$s)</string>
+    <string name="toolreg_test_model_config_connection_desc">Test model config connection: %1$s (model_index=%2$s)</string>
+    <string name="toolreg_package_proxy_desc">Proxy call to package tool: %1$s</string>
+    <string name="toolreg_web_search_desc">Search: %1$s</string>
+    <string name="toolreg_send_broadcast_desc">Send broadcast: %1$s</string>
+    <string name="toolreg_get_app_usage_time_desc">Get app usage time for %1$s in the last %2$s hours</string>
+    <string name="toolreg_get_app_usage_time_ranking_desc">Get app usage time ranking in the last %1$s hours</string>
 </resources>
