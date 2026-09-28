@@ -677,7 +677,6 @@ dependencies {
     implementation(libs.renderx) // RenderX library for LaTeX rendering
     
     // Base Android dependencies
-    implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.lifecycle.runtime.ktx)
@@ -717,7 +716,7 @@ dependencies {
     // ObjectBox
     implementation(libs.objectbox.kotlin)
     kapt(libs.objectbox.processor)
-    implementation(libs.commons.compress.v2)
+    // commons-compress 统一由「ZIP处理库」区块的 libs.commons.compress (1.25.0) 提供
     implementation(libs.junrar)
 
     // Compose dependencies - use BOM for version consistency
@@ -846,3 +845,4 @@ dependencies {
     implementation(libs.glance.appwidget)
     implementation(libs.glance.material3)
 }
+
