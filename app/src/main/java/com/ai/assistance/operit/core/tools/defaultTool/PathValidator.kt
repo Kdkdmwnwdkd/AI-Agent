@@ -11,7 +11,8 @@ object PathValidator {
                 toolName = toolName,
                 success = false,
                 result = StringResultData(""),
-                error = "$paramName parameter is required"
+                error = "$paramName parameter is required",
+                retryable = false
             )
         }
         if (!path.startsWith("/")) {
@@ -24,7 +25,8 @@ object PathValidator {
                     successful = false,
                     details = "Invalid path: '$path'. Path must be an absolute path starting with '/'."
                 ),
-                error = "Invalid path: '$path'. Path must be an absolute path starting with '/'."
+                error = "Invalid path: '$path'. Path must be an absolute path starting with '/'.",
+                retryable = false
             )
         }
         if (containsTraversal(path)) {
@@ -37,7 +39,8 @@ object PathValidator {
                     successful = false,
                     details = "Invalid path: '$path'. Path traversal ('..') is not allowed."
                 ),
-                error = "Invalid path: '$path'. Path traversal ('..') is not allowed."
+                error = "Invalid path: '$path'. Path traversal ('..') is not allowed.",
+                retryable = false
             )
         }
         return null
@@ -49,7 +52,8 @@ object PathValidator {
                 toolName = toolName,
                 success = false,
                 result = StringResultData(""),
-                error = "$paramName parameter is required"
+                error = "$paramName parameter is required",
+                retryable = false
             )
         }
         if (!path.startsWith("/") && !path.startsWith("~")) {
@@ -63,7 +67,8 @@ object PathValidator {
                     successful = false,
                     details = "Invalid path: '$path'. Path must start with '/' or '~'."
                 ),
-                error = "Invalid path: '$path'. Path must start with '/' or '~'."
+                error = "Invalid path: '$path'. Path must start with '/' or '~'.",
+                retryable = false
             )
         }
         if (containsTraversal(path)) {
@@ -77,7 +82,8 @@ object PathValidator {
                     successful = false,
                     details = "Invalid path: '$path'. Path traversal ('..') is not allowed."
                 ),
-                error = "Invalid path: '$path'. Path traversal ('..') is not allowed."
+                error = "Invalid path: '$path'. Path traversal ('..') is not allowed.",
+                retryable = false
             )
         }
         return null
