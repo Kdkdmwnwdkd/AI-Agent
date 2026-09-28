@@ -1,1 +1,267 @@
-IFt2ZXJzaW9uc10KYWdwID0gIjguMTMuMiIKa290bGluID0gIjIuMi4yMSIKa290bGluLXNlcmlhbGl6YXRpb24gPSAiMi4yLjIxIgpjb3JlS3R4ID0gIjEuMTguMCIKanVuaXQgPSAiNC4xMy4yIgpqdW5pdFZlcnNpb24gPSAiMS4xLjUiCmVzcHJlc3NvQ29yZSA9ICIzLjUuMSIKYXBwY29tcGF0ID0gIjEuNi4xIgptYXRlcmlhbCA9ICIxLjEwLjAiCmNvbXBvc2UtYm9tID0gIjIwMjYuMDIuMDEiCmFjdGl2aXR5LWNvbXBvc2UgPSAiMS44LjIiCmxpZmVjeWNsZS1ydW50aW1lLWt0eCA9ICIyLjcuMCIKdWlHcmFwaGljc0FuZHJvaWQgPSAiMS4xMC40IgpydW50aW1lQW5kcm9pZCA9ICIxLjEwLjQiCmRlc3VnYXIgPSAiMi4wLjQiCm1sa2l0LXRleHQgPSAiMTYuMC4wIgp6eGluZyA9ICIzLjUuMyIKZGlmZi11dGlscyA9ICI0LjEyIgphcGtzaWcgPSAiOC4xLjAiCmFway1wYXJzZXIgPSAiMi42LjEwIgpheG1sID0gIjIuMC4wIgp6aXBhbGlnbiA9ICIxLjIuMSIKY29tbW9ucy1jb21wcmVzcyA9ICIxLjI1LjAiCmNvbW1vbnMtaW8gPSAiMi4yMi4wIgpnbGlkZSA9ICI0LjE2LjAiCmxpYnN1ID0gIjYuMC4wIgphbmRyb2lkc3ZnID0gIjEuNCIKYW5kcm9pZC1naWYgPSAiMS4yLjI4IgppbWFnZS1jcm9wcGVyID0gIjQuNS4wIgptZWRpYTMgPSAiMS4xMS4xIgptYXRlcmlhbDMtd2luZG93ID0gIjEuMi4wIgp3aW5kb3cgPSAiMS4xLjAiCndlYmtpdCA9ICIxLjEyLjEiCml0ZXh0ZyA9ICI1LjUuMTAiCnBkZmJveCA9ICIyLjAuMjcuMCIKemlwNGogPSAiMi4xMS41Igpjb2lsID0gIjIuNS4wIgpqbGF0ZXhtYXRoID0gIjAuMi4wIgpyZW5kZXJ4ID0gIjEuMC4wIgprb3RsaW54LXNlcmlhbGl6YXRpb24gPSAiMS45LjAiCnV1aWQgPSAiMC44LjIiCmdzb24gPSAiMi4xMC4xIgpoanNvbiA9ICIzLjAuMCIKanNvbiA9ICIyMDI0MDMwMyIKamllYmEgPSAiMS4wLjIiCmhuc3dsaWIgPSAiMS4yLjEiCnRlbnNvcmZsb3cgPSAiMi4xMC4wIgpyb29tID0gIjIuOC40IgpqdW5yYXIgPSAiNy41LjUiCm5hdmlnYXRpb24tY29tcG9zZSA9ICIyLjcuNyIKc2hpenVrdSA9ICIxMy4xLjUiCm9raHR0cCA9ICI0LjEyLjAiCm1jcC1zZGsgPSAiMC4xMC4wIgprdG9yID0gIjMuMi4zIgpqc291cCA9ICIxLjIzLjIiCmRhdGFzdG9yZSA9ICIxLjAuMCIKcG9pID0gIjUuMi4zIgpjb2xvcnBpY2tlciA9ICIxLjAuNiIKYmFja2Ryb3AgPSAiMS4wLjYiCmxpcXVpZCA9ICIxLjEuMSIKbmFub2h0dHBkID0gIjIuMy4xIgp0ZXN0LXJ1bm5lciA9ICIxLjUuMiIKdGVzdC1ydWxlcyA9ICIxLjUuMCIKY29yb3V0aW5lcyA9ICIxLjEwLjIiCmNvcm91dGluZXMtdGVzdCA9ICIxLjcuMyIKbW9ja2l0byA9ICI1LjIuMCIKbW9ja2l0by1rb3RsaW4gPSAiNS4xLjAiCnJlb3JkZXJhYmxlID0gIjIuNS4xIgpzd2lwZSA9ICIxLjIuMCIKb2JqZWN0Ym94ID0gIjUuMy4wIgptZWRpYXBpcGUgPSAiMC4xMC4xMSIKd29yayA9ICIyLjkuMCIKdWlUZXh0QW5kcm9pZCA9ICIxLjEwLjQiCmFuaW1hdGlvbkFuZHJvaWQgPSAiMS4xMC40Igp1aUFuZHJvaWQgPSAiMS4xMC40IgpnbGFuY2UgPSAiMS4wLjAiCmFjdGl2aXR5S3R4ID0gIjEuNy4xIgoKZmlsYW1lbnQgPSAiMS42OS4yIgpzbWFydC1leGNlcHRpb24gPSAiMC4yLjEiCm9ubnhydW50aW1lID0gIjEuMTcuMSIKdGFza2VycGx1Z2lubGlicmFyeSA9ICIwLjQuMTAiCmJvdW5jeWNhc3RsZSA9ICIxLjc4IgpyZXRyb2ZpdCA9ICIyLjkuMCIKbW9zaGkgPSAiMS4xNS4wIgphY2NvbXBhbmlzdCA9ICIwLjMyLjAiCnNlY3VyaXR5LWNyeXB0byA9ICIxLjEuMC1hbHBoYTA2IgoKIFtsaWJyYXJpZXNdCmFuZHJvaWR4LWNvcmUta3R4ID0geyBncm91cCA9ICJhbmRyb2lkeC5jb3JlIiwgbmFtZSA9ICJjb3JlLWt0eCIsIHZlcnNpb24ucmVmID0gImNvcmVLdHgiIH0KanVuaXQgPSB7IGdyb3VwID0gImp1bml0IiwgbmFtZSA9ICJqdW5pdCIsIHZlcnNpb24ucmVmID0gImp1bml0IiB9CmFuZHJvaWR4LWp1bml0ID0geyBncm91cCA9ICJhbmRyb2lkeC50ZXN0LmV4dCIsIG5hbWUgPSAianVuaXQiLCB2ZXJzaW9uLnJlZiA9ICJqdW5pdFZlcnNpb24iIH0KYW5kcm9pZHgtZXNwcmVzc28tY29yZSA9IHsgZ3JvdXAgPSAiYW5kcm9pZHgudGVzdC5lc3ByZXNzbyIsIG5hbWUgPSAiZXNwcmVzc28tY29yZSIsIHZlcnNpb24ucmVmID0gImVzcHJlc3NvQ29yZSIgfQphbmRyb2lkeC1hcHBjb21wYXQgPSB7IGdyb3VwID0gImFuZHJvaWR4LmFwcGNvbXBhdCIsIG5hbWUgPSAiYXBwY29tcGF0IiwgdmVyc2lvbi5yZWYgPSAiYXBwY29tcGF0IiB9Cm1hdGVyaWFsID0geyBncm91cCA9ICJjb20uZ29vZ2xlLmFuZHJvaWQubWF0ZXJpYWwiLCBuYW1lID0gIm1hdGVyaWFsIiwgdmVyc2lvbi5yZWYgPSAibWF0ZXJpYWwiIH0KCiMgQ29tcG9zZQpjb21wb3NlLWJvbSA9IHsgZ3JvdXAgPSAiYW5kcm9pZHguY29tcG9zZSIsIG5hbWUgPSAiY29tcG9zZS1ib20iLCB2ZXJzaW9uLnJlZiA9ICJjb21wb3NlLWJvbSIgfQpjb21wb3NlLXVpID0geyBncm91cCA9ICJhbmRyb2lkeC5jb21wb3NlLnVpIiwgbmFtZSA9ICJ1aSIgfQpjb21wb3NlLXVpLWdyYXBoaWNzID0geyBncm91cCA9ICJhbmRyb2lkeC5jb21wb3NlLnVpIiwgbmFtZSA9ICJ1aS1ncmFwaGljcyIgfQpjb21wb3NlLXVpLXRvb2xpbmctcHJldmlldyA9IHsgZ3JvdXAgPSAiYW5kcm9pZHguY29tcG9zZS51aSIsIG5hbWUgPSAidWktdG9vbGluZy1wcmV2aWV3IiB9CmNvbXBvc2UtbWF0ZXJpYWwzID0geyBncm91cCA9ICJhbmRyb2lkeC5jb21wb3NlLm1hdGVyaWFsMyIsIG5hbWUgPSAibWF0ZXJpYWwzIiB9CmNvbXBvc2UtdWktdG9vbGluZyA9IHsgZ3JvdXAgPSAiYW5kcm9pZHguY29tcG9zZS51aSIsIG5hbWUgPSAidWktdG9vbGluZyIgfQpjb21wb3NlLXVpLXRlc3QtbWFuaWZlc3QgPSB7IGdyb3VwID0gImFuZHJvaWR4LmNvbXBvc2UudWkiLCBuYW1lID0gInVpLXRlc3QtbWFuaWZlc3QiIH0KY29tcG9zZS1tYXRlcmlhbC1pY29ucy1leHRlbmRlZCA9IHsgZ3JvdXAgPSAiYW5kcm9pZHguY29tcG9zZS5tYXRlcmlhbCIsIG5hbWUgPSAibWF0ZXJpYWwtaWNvbnMtZXh0ZW5kZWQiIH0KY29tcG9zZS1hbmltYXRpb24gPSB7IGdyb3VwID0gImFuZHJvaWR4LmNvbXBvc2UuYW5pbWF0aW9uIiwgbmFtZSA9ICJhbmltYXRpb24iIH0KY29tcG9zZS1hbmltYXRpb24tY29yZSA9IHsgZ3JvdXAgPSAiYW5kcm9pZHguY29tcG9zZS5hbmltYXRpb24iLCBuYW1lID0gImFuaW1hdGlvbi1jb3JlIiB9CmFjdGl2aXR5LWNvbXBvc2UgPSB7IGdyb3VwID0gImFuZHJvaWR4LmFjdGl2aXR5IiwgbmFtZSA9ICJhY3Rpdml0eS1jb21wb3NlIiwgdmVyc2lvbi5yZWYgPSAiYWN0aXZpdHktY29tcG9zZSIgfQpsaWZlY3ljbGUtcnVudGltZS1rdHggPSB7IGdyb3VwID0gImFuZHJvaWR4LmxpZmVjeWNsZSIsIG5hbWUgPSAibGlmZWN5Y2xlLXJ1bnRpbWUta3R4IiwgdmVyc2lvbi5yZWYgPSAibGlmZWN5Y2xlLXJ1bnRpbWUta3R4IiB9CmFuZHJvaWR4LWxpZmVjeWNsZS12aWV3bW9kZWwtY29tcG9zZSA9IHsgZ3JvdXAgPSAiYW5kcm9pZHgubGlmZWN5Y2xlIiwgbmFtZSA9ICJsaWZlY3ljbGUtdmlld21vZGVsLWNvbXBvc2UiLCB2ZXJzaW9uLnJlZiA9ICJsaWZlY3ljbGUtcnVudGltZS1rdHgiIH0KYW5kcm9pZHgtdWktZ3JhcGhpY3MtYW5kcm9pZCA9IHsgZ3JvdXAgPSAiYW5kcm9pZHguY29tcG9zZS51aSIsIG5hbWUgPSAidWktZ3JhcGhpY3MtYW5kcm9pZCIsIHZlcnNpb24ucmVmID0gInVpR3JhcGhpY3NBbmRyb2lkIiB9CmFuZHJvaWR4LXJ1bnRpbWUtYW5kcm9pZCA9IHsgZ3JvdXAgPSAiYW5kcm9pZHguY29tcG9zZS5ydW50aW1lIiwgbmFtZSA9ICJydW50aW1lLWFuZHJvaWQiLCB2ZXJzaW9uLnJlZiA9ICJydW50aW1lQW5kcm9pZCIgfQoKIyBEZXN1Z2FyaW5nCmRlc3VnYXItamRrID0geyBncm91cCA9ICJjb20uYW5kcm9pZC50b29scyIsIG5hbWUgPSAiZGVzdWdhcl9qZGtfbGlicyIsIHZlcnNpb24ucmVmID0gImRlc3VnYXIiIH0KCiMgTUwgS2l0Cm1sa2l0LXRleHQtcmVjb2duaXRpb24gPSB7IGdyb3VwID0gImNvbS5nb29nbGUubWxraXQiLCBuYW1lID0gInRleHQtcmVjb2duaXRpb24iLCB2ZXJzaW9uLnJlZiA9ICJtbGtpdC10ZXh0IiB9Cm1sa2l0LXRleHQtY2hpbmVzZSA9IHsgZ3JvdXAgPSAiY29tLmdvb2dsZS5tbGtpdCIsIG5hbWUgPSAidGV4dC1yZWNvZ25pdGlvbi1jaGluZXNlIiwgdmVyc2lvbi5yZWYgPSAibWxraXQtdGV4dCIgfQptbGtpdC10ZXh0LWphcGFuZXNlID0geyBncm91cCA9ICJjb20uZ29vZ2xlLm1sa2l0IiwgbmFtZSA9ICJ0ZXh0LXJlY29nbml0aW9uLWphcGFuZXNlIiwgdmVyc2lvbi5yZWYgPSAibWxraXQtdGV4dCIgfQptbGtpdC10ZXh0LWtvcmVhbiA9IHsgZ3JvdXAgPSAiY29tLmdvb2dsZS5tbGtpdCIsIG5hbWUgPSAidGV4dC1yZWNvZ25pdGlvbi1rb3JlYW4iLCB2ZXJzaW9uLnJlZiA9ICJtbGtpdC10ZXh0IiB9Cm1sa2l0LXRleHQtZGV2YW5hZ2FyaSA9IHsgZ3JvdXAgPSAiY29tLmdvb2dsZS5tbGtpdCIsIG5hbWUgPSAidGV4dC1yZWNvZ25pdGlvbi1kZXZhbmFnYXJpIiwgdmVyc2lvbi5yZWYgPSAibWxraXQtdGV4dCIgfQoKIyBaWGluZwp6eGluZy1jb3JlID0geyBncm91cCA9ICJjb20uZ29vZ2xlLnp4aW5nIiwgbmFtZSA9ICJjb3JlIiwgdmVyc2lvbi5yZWYgPSAienhpbmciIH0KCiMgRGlmZgpqYXZhLWRpZmYtdXRpbHMgPSB7IGdyb3VwID0gImlvLmdpdGh1Yi5qYXZhLWRpZmYtdXRpbHMiLCBuYW1lID0gImphdmEtZGlmZi11dGlscyIsIHZlcnNpb24ucmVmID0gImRpZmYtdXRpbHMiIH0KCiMgQVBLIHRvb2xzCmFuZHJvaWQtYXBrc2lnID0geyBncm91cCA9ICJjb20uYW5kcm9pZC50b29scy5idWlsZCIsIG5hbWUgPSAiYXBrc2lnIiwgdmVyc2lvbi5yZWYgPSAiYXBrc2lnIiB9CmFway1wYXJzZXIgPSB7IGdyb3VwID0gIm5ldC5kb25nbGl1IiwgbmFtZSA9ICJhcGstcGFyc2VyIiwgdmVyc2lvbi5yZWYgPSAiYXBrLXBhcnNlciIgfQpzYWJsZS1heG1sID0geyBncm91cCA9ICJjb20uZ2l0aHViLlNhYmxlIiwgbmFtZSA9ICJheG1sIiwgdmVyc2lvbi5yZWYgPSAiYXhtbCIgfQp6aXBhbGlnbi1qYXZhID0geyBncm91cCA9ICJjb20uZ2l0aHViLml5eGFuMjMiLCBuYW1lID0gInppcGFsaWduLWphdmEiLCB2ZXJzaW9uLnJlZiA9ICJ6aXBhbGlnbiIgfQoKIyBGaWxlIGhhbmRsaW5nCmNvbW1vbnMtY29tcHJlc3MgPSB7IGdyb3VwID0gIm9yZy5hcGFjaGUuY29tbW9ucyIsIG5hbWUgPSAiY29tbW9ucy1jb21wcmVzcyIsIHZlcnNpb24ucmVmID0gImNvbW1vbnMtY29tcHJlc3MiIH0KY29tbW9ucy1pbyA9IHsgZ3JvdXAgPSAiY29tbW9ucy1pbyIsIG5hbWUgPSAiY29tbW9ucy1pbyIsIHZlcnNpb24ucmVmID0gImNvbW1vbnMtaW8iIH0KCiMgSW1hZ2UgaGFuZGxpbmcKZ2xpZGUgPSB7IGdyb3VwID0gImNvbS5naXRodWIuYnVtcHRlY2guZ2xpZGUiLCBuYW1lID0gImdsaWRlIiwgdmVyc2lvbi5yZWYgPSAiZ2xpZGUiIH0KYW5kcm9pZHN2ZyA9IHsgZ3JvdXAgPSAiY29tLmNhdmVyb2NrIiwgbmFtZSA9ICJhbmRyb2lkc3ZnLWFhciIsIHZlcnNpb24ucmVmID0gImFuZHJvaWRzdmciIH0KYW5kcm9pZC1naWYgPSB7IGdyb3VwID0gInBsLmRyb2lkc29ucm9pZHMuZ2lmIiwgbmFtZSA9ICJhbmRyb2lkLWdpZi1kcmF3YWJsZSIsIHZlcnNpb24ucmVmID0gImFuZHJvaWQtZ2lmIiB9CmltYWdlLWNyb3BwZXIgPSB7IGdyb3VwID0gImNvbS52YW5uaWt0ZWNoIiwgbmFtZSA9ICJhbmRyb2lkLWltYWdlLWNyb3BwZXIiLCB2ZXJzaW9uLnJlZiA9ICJpbWFnZS1jcm9wcGVyIiB9CgojIFJvb3QgYWNjZXNzCmxpYnN1LWNvcmUgPSB7IGdyb3VwID0gImNvbS5naXRodWIudG9wam9obnd1LmxpYnN1IiwgbmFtZSA9ICJjb3JlIiwgdmVyc2lvbi5yZWYgPSAibGlic3UiIH0KbGlic3Utc2VydmljZSA9IHsgZ3JvdXAgPSAiY29tLmdpdGh1Yi50b3Bqb2hud3UubGlic3UiLCBuYW1lID0gInNlcnZpY2UiLCB2ZXJzaW9uLnJlZiA9ICJsaWJzdSIgfQpsaWJzdS1uaW8gPSB7IGdyb3VwID0gImNvbS5naXRodWIudG9wam9obnd1LmxpYnN1IiwgbmFtZSA9ICJuaW8iLCB2ZXJzaW9uLnJlZiA9ICJsaWJzdSIgfQoKIyBNZWRpYQptZWRpYTMtZXhvcGxheWVyID0geyBncm91cCA9ICJhbmRyb2lkeC5tZWRpYTMiLCBuYW1lID0gIm1lZGlhMy1leG9wbGF5ZXIiLCB2ZXJzaW9uLnJlZiA9ICJtZWRpYTMiIH0KbWVkaWEzLWNvbW1vbiA9IHsgZ3JvdXAgPSAiYW5kcm9pZHgubWVkaWEzIiwgbmFtZSA9ICJtZWRpYTMtY29tbW9uIiwgdmVyc2lvbi5yZWYgPSAibWVkaWEzIiB9Cm1lZGlhMy11aSA9IHsgZ3JvdXAgPSAiYW5kcm9pZHgubWVkaWEzIiwgbmFtZSA9ICJtZWRpYTMtdWkiLCB2ZXJzaW9uLnJlZiA9ICJtZWRpYTMiIH0KCiMgVUkgY29tcG9uZW50cwptYXRlcmlhbDMtd2luZG93ID0geyBncm91cCA9ICJhbmRyb2lkeC5jb21wb3NlLm1hdGVyaWFsMyIsIG5hbWUgPSAibWF0ZXJpYWwzLXdpbmRvdy1zaXplLWNsYXNzIiwgdmVyc2lvbi5yZWYgPSAibWF0ZXJpYWwzLXdpbmRvdyIgfQp3aW5kb3cgPSB7IGdyb3VwID0gImFuZHJvaWR4LndpbmRvdyIsIG5hbWUgPSAid2luZG93IiwgdmVyc2lvbi5yZWYgPSAid2luZG93IiB9CmFuZHJvaWR4LXdlYmtpdCA9IHsgZ3JvdXAgPSAiYW5kcm9pZHgud2Via2l0IiwgbmFtZSA9ICJ3ZWJraXQiLCB2ZXJzaW9uLnJlZiA9ICJ3ZWJraXQiIH0KCiMgRG9jdW1lbnQgaGFuZGxpbmcKaXRleHRnID0geyBncm91cCA9ICJjb20uaXRleHRwZGYiLCBuYW1lID0gIml0ZXh0ZyIsIHZlcnNpb24ucmVmID0gIml0ZXh0ZyIgfQpwZGZib3ggPSB7IGdyb3VwID0gImNvbS50b20tcm91c2giLCBuYW1lID0gInBkZmJveC1hbmRyb2lkIiwgdmVyc2lvbi5yZWYgPSAicGRmYm94IiB9CnppcDRqID0geyBncm91cCA9ICJuZXQubGluZ2FsYS56aXA0aiIsIG5hbWUgPSAiemlwNGoiLCB2ZXJzaW9uLnJlZiA9ICJ6aXA0aiIgfQoKIyBJbWFnZSBsb2FkaW5nCmNvaWwgPSB7IGdyb3VwID0gImlvLmNvaWwta3QiLCBuYW1lID0gImNvaWwiLCB2ZXJzaW9uLnJlZiA9ICJjb2lsIiB9CmNvaWwtY29tcG9zZSA9IHsgZ3JvdXAgPSAiaW8uY29pbC1rdCIsIG5hbWUgPSAiY29pbC1jb21wb3NlIiwgdmVyc2lvbi5yZWYgPSAiY29pbCIgfQpjb2lsLWdpZiA9IHsgZ3JvdXAgPSAiaW8uY29pbC1rdCIsIG5hbWUgPSAiY29pbC1naWYiLCB2ZXJzaW9uLnJlZiA9ICJjb2lsIiB9CgojIExhVGVYIHJlbmRlcmluZwpqbGF0ZXhtYXRoID0geyBncm91cCA9ICJydS5ub3RpZXMiLCBuYW1lID0gImpsYXRleG1hdGgtYW5kcm9pZCIsIHZlcnNpb24ucmVmID0gImpsYXRleG1hdGgiIH0KcmVuZGVyeCA9IHsgZ3JvdXAgPSAiY29tLmdpdGh1Yi50ZWNoLXB3IiwgbmFtZSA9ICJSZW5kZXJYIiwgdmVyc2lvbi5yZWYgPSAicmVuZGVyeCIgfQoKIyBTZXJpYWxpemF0aW9uCmtvdGxpbngtc2VyaWFsaXphdGlvbiA9IHsgZ3JvdXAgPSAib3JnLmpldGJyYWlucy5rb3RsaW54IiwgbmFtZSA9ICJrb3RsaW54LXNlcmlhbGl6YXRpb24tanNvbiIsIHZlcnNpb24ucmVmID0gImtvdGxpbngtc2VyaWFsaXphdGlvbiIgfQprb3RsaW4tcmVmbGVjdCA9IHsgZ3JvdXAgPSAib3JnLmpldGJyYWlucy5rb3RsaW4iLCBuYW1lID0gImtvdGxpbi1yZWZsZWN0IiwgdmVyc2lvbi5yZWYgPSAia290bGluIiB9CnV1aWQgPSB7IGdyb3VwID0gImNvbS5iZW5hc2hlcjQ0IiwgbmFtZSA9ICJ1dWlkIiwgdmVyc2lvbi5yZWYgPSAidXVpZCIgfQpnc29uID0geyBncm91cCA9ICJjb20uZ29vZ2xlLmNvZGUuZ3NvbiIsIG5hbWUgPSAiZ3NvbiIsIHZlcnNpb24ucmVmID0gImdzb24iIH0KaGpzb24gPSB7IGdyb3VwID0gIm9yZy5oanNvbiIsIG5hbWUgPSAiaGpzb24iLCB2ZXJzaW9uLnJlZiA9ICJoanNvbiIgfQpqc29uLWp2bSA9IHsgZ3JvdXAgPSAib3JnLmpzb24iLCBuYW1lID0gImpzb24iLCB2ZXJzaW9uLnJlZiA9ICJqc29uIiB9CgojIE5MUApqaWViYSA9IHsgZ3JvdXAgPSAiY29tLmh1YWJhbiIsIG5hbWUgPSAiamllYmEtYW5hbHlzaXMiLCB2ZXJzaW9uLnJlZiA9ICJqaWViYSIgfQpobnN3bGliLWNvcmUgPSB7IGdyb3VwID0gImNvbS5naXRodWIuamVsbWVyayIsIG5hbWUgPSAiaG5zd2xpYi1jb3JlIiwgdmVyc2lvbi5yZWYgPSAiaG5zd2xpYiIgfQpobnN3bGliLXV0aWxzID0geyBncm91cCA9ICJjb20uZ2l0aHViLmplbG1lcmsiLCBuYW1lID0gImhuc3dsaWItdXRpbHMiLCB2ZXJzaW9uLnJlZiA9ICJobnN3bGliIiB9CgojIE1hY2hpbmUgbGVhcm5pbmcKdGVuc29yZmxvdy1saXRlID0geyBncm91cCA9ICJvcmcudGVuc29yZmxvdyIsIG5hbWUgPSAidGVuc29yZmxvdy1saXRlIiwgdmVyc2lvbi5yZWYgPSAidGVuc29yZmxvdyIgfQptZWRpYXBpcGUtdGFza3MtdGV4dCA9IHsgZ3JvdXAgPSAiY29tLmdvb2dsZS5tZWRpYXBpcGUiLCBuYW1lID0gInRhc2tzLXRleHQiLCB2ZXJzaW9uLnJlZiA9ICJtZWRpYXBpcGUiIH0KCiMgRGF0YWJhc2UKcm9vbS1ydW50aW1lID0geyBncm91cCA9ICJhbmRyb2lkeC5yb29tIiwgbmFtZSA9ICJyb29tLXJ1bnRpbWUiLCB2ZXJzaW9uLnJlZiA9ICJyb29tIiB9CnJvb20ta3R4ID0geyBncm91cCA9ICJhbmRyb2lkeC5yb29tIiwgbmFtZSA9ICJyb29tLWt0eCIsIHZlcnNpb24ucmVmID0gInJvb20iIH0Kcm9vbS1jb21waWxlciA9IHsgZ3JvdXAgPSAiYW5kcm9pZHgucm9vbSIsIG5hbWUgPSAicm9vbS1jb21waWxlciIsIHZlcnNpb24ucmVmID0gInJvb20iIH0KCiMgQXJjaGl2ZQpqdW5yYXIgPSB7IGdyb3VwID0gImNvbS5naXRodWIuanVucmFyIiwgbmFtZSA9ICJqdW5yYXIiLCB2ZXJzaW9uLnJlZiA9ICJqdW5yYXIiIH0KCiMgTmF2aWdhdGlvbgpuYXZpZ2F0aW9uLWNvbXBvc2UgPSB7IGdyb3VwID0gImFuZHJvaWR4Lm5hdmlnYXRpb24iLCBuYW1lID0gIm5hdmlnYXRpb24tY29tcG9zZSIsIHZlcnNpb24ucmVmID0gIm5hdmlnYXRpb24tY29tcG9zZSIgfQoKIyBTaGl6dWt1CnNoaXp1a3UtYXBpID0geyBncm91cCA9ICJkZXYucmlra2Euc2hpenVrdSIsIG5hbWUgPSAiYXBpIiwgdmVyc2lvbi5yZWYgPSAic2hpenVrdSIgfQpzaGl6dWt1LXByb3ZpZGVyID0geyBncm91cCA9ICJkZXYucmlra2Euc2hpenVrdSIsIG5hbWUgPSAicHJvdmlkZXIiLCB2ZXJzaW9uLnJlZiA9ICJzaGl6dWt1IiB9CgojIE5ldHdvcmsKb2todHRwID0geyBncm91cCA9ICJjb20uc3F1YXJldXAub2todHRwMyIsIG5hbWUgPSAib2todHRwIiwgdmVyc2lvbi5yZWYgPSAib2todHRwIiB9Cm9raHR0cC1zc2UgPSB7IGdyb3VwID0gImNvbS5zcXVhcmV1cC5va2h0dHAzIiwgbmFtZSA9ICJva2h0dHAtc3NlIiwgdmVyc2lvbi5yZWYgPSAib2todHRwIiB9Cm9raHR0cC1sb2dnaW5nLWludGVyY2VwdG9yID0geyBncm91cCA9ICJjb20uc3F1YXJldXAub2todHRwMyIsIG5hbWUgPSAibG9nZ2luZy1pbnRlcmNlcHRvciIsIHZlcnNpb24ucmVmID0gIm9raHR0cCIgfQptY3Atc2RrLWNsaWVudCA9IHsgZ3JvdXAgPSAiaW8ubW9kZWxjb250ZXh0cHJvdG9jb2wiLCBuYW1lID0gImtvdGxpbi1zZGstY2xpZW50IiwgdmVyc2lvbi5yZWYgPSAibWNwLXNkayIgfQprdG9yLWNsaWVudC1va2h0dHAgPSB7IGdyb3VwID0gImlvLmt0b3IiLCBuYW1lID0gImt0b3ItY2xpZW50LW9raHR0cCIsIHZlcnNpb24ucmVmID0gImt0b3IiIH0KanNvdXAgPSB7IGdyb3VwID0gIm9yZy5qc291cCIsIG5hbWUgPSAianNvdXAiLCB2ZXJzaW9uLnJlZiA9ICJqc291cCIgfQoKIyBEYXRhU3RvcmUKZGF0YXN0b3JlLXByZWZlcmVuY2VzID0geyBncm91cCA9ICJhbmRyb2lkeC5kYXRhc3RvcmUiLCBuYW1lID0gImRhdGFzdG9yZS1wcmVmZXJlbmNlcyIsIHZlcnNpb24ucmVmID0gImRhdGFzdG9yZSIgfQpkYXRhc3RvcmUtcHJlZmVyZW5jZXMtY29yZSA9IHsgZ3JvdXAgPSAiYW5kcm9pZHguZGF0YXN0b3JlIiwgbmFtZSA9ICJkYXRhc3RvcmUtcHJlZmVyZW5jZXMtY29yZSIsIHZlcnNpb24ucmVmID0gImRhdGFzdG9yZSIgfQoKIyBEb2N1bWVudCBwcm9jZXNzaW5nCnBvaSA9IHsgZ3JvdXAgPSAib3JnLmFwYWNoZS5wb2kiLCBuYW1lID0gInBvaSIsIHZlcnNpb24ucmVmID0gInBvaSIgfQpwb2ktb294bWwgPSB7IGdyb3VwID0gIm9yZy5hcGFjaGUucG9pIiwgbmFtZSA9ICJwb2ktb294bWwiLCB2ZXJzaW9uLnJlZiA9ICJwb2kiIH0KcG9pLXNjcmF0Y2hwYWQgPSB7IGdyb3VwID0gIm9yZy5hcGFjaGUucG9pIiwgbmFtZSA9ICJwb2ktc2NyYXRjaHBhZCIsIHZlcnNpb24ucmVmID0gInBvaSIgfQoKIyBVSSBjb21wb25lbnRzCmNvbG9ycGlja2VyID0geyBncm91cCA9ICJjb20uZ2l0aHViLnNreWRvdmVzIiwgbmFtZSA9ICJjb2xvcnBpY2tlci1jb21wb3NlIiwgdmVyc2lvbi5yZWYgPSAiY29sb3JwaWNrZXIiIH0KYmFja2Ryb3AgPSB7IGdyb3VwID0gImlvLmdpdGh1Yi5reWFudDAiLCBuYW1lID0gImJhY2tkcm9wIiwgdmVyc2lvbi5yZWYgPSAiYmFja2Ryb3AiIH0KbGlxdWlkID0geyBncm91cCA9ICJpby5naXRodWIuZmxldGNobWNrZWUubGlxdWlkIiwgbmFtZSA9ICJsaXF1aWQiLCB2ZXJzaW9uLnJlZiA9ICJsaXF1aWQiIH0KbmFub2h0dHBkID0geyBncm91cCA9ICJvcmcubmFub2h0dHBkIiwgbmFtZSA9ICJuYW5vaHR0cGQiLCB2ZXJzaW9uLnJlZiA9ICJuYW5vaHR0cGQiIH0KCiMgVGVzdGluZwp0ZXN0LXJ1bm5lciA9IHsgZ3JvdXAgPSAiYW5kcm9pZHgudGVzdCIsIG5hbWUgPSAicnVubmVyIiwgdmVyc2lvbi5yZWYgPSAidGVzdC1ydW5uZXIiIH0KdGVzdC1ydWxlcyA9IHsgZ3JvdXAgPSAiYW5kcm9pZHgudGVzdCIsIG5hbWUgPSAicnVsZXMiLCB2ZXJzaW9uLnJlZiA9ICJ0ZXN0LXJ1bGVzIiB9CnVpLXRlc3QtanVuaXQ0ID0geyBncm91cCA9ICJhbmRyb2lkeC5jb21wb3NlLnVpIiwgbmFtZSA9ICJ1aS10ZXN0LWp1bml0NCIgfQoKIyBDb3JvdXRpbmVzCmNvcm91dGluZXMtY29yZSA9IHsgZ3JvdXAgPSAib3JnLmpldGJyYWlucy5rb3RsaW54IiwgbmFtZSA9ICJrb3RsaW54LWNvcm91dGluZXMtY29yZSIsIHZlcnNpb24ucmVmID0gImNvcm91dGluZXMiIH0KY29yb3V0aW5lcy1hbmRyb2lkID0geyBncm91cCA9ICJvcmcuamV0YnJhaW5zLmtvdGxpbngiLCBuYW1lID0gImtvdGxpbngtY29yb3V0aW5lcy1hbmRyb2lkIiwgdmVyc2lvbi5yZWYgPSAiY29yb3V0aW5lcyIgfQpjb3JvdXRpbmVzLXRlc3QgPSB7IGdyb3VwID0gIm9yZy5qZXRicmFpbnMua290bGlueCIsIG5hbWUgPSAia290bGlueC1jb3JvdXRpbmVzLXRlc3QiLCB2ZXJzaW9uLnJlZiA9ICJjb3JvdXRpbmVzLXRlc3QiIH0KCiMgTW9ja3MKbW9ja2l0by1jb3JlID0geyBncm91cCA9ICJvcmcubW9ja2l0byIsIG5hbWUgPSAibW9ja2l0by1jb3JlIiwgdmVyc2lvbi5yZWYgPSAibW9ja2l0byIgfQptb2NraXRvLWtvdGxpbiA9IHsgZ3JvdXAgPSAib3JnLm1vY2tpdG8ua290bGluIiwgbmFtZSA9ICJtb2NraXRvLWtvdGxpbiIsIHZlcnNpb24ucmVmID0gIm1vY2tpdG8ta290bGluIiB9Cm1vY2tpdG8tYW5kcm9pZCA9IHsgZ3JvdXAgPSAib3JnLm1vY2tpdG8iLCBuYW1lID0gIm1vY2tpdG8tYW5kcm9pZCIsIHZlcnNpb24ucmVmID0gIm1vY2tpdG8iIH0KCiMgVUkgY29tcG9uZW50cwpyZW9yZGVyYWJsZSA9IHsgZ3JvdXAgPSAic2guY2FsdmluLnJlb3JkZXJhYmxlIiwgbmFtZSA9ICJyZW9yZGVyYWJsZSIsIHZlcnNpb24ucmVmID0gInJlb3JkZXJhYmxlIiB9CnN3aXBlID0geyBncm91cCA9ICJtZS5zYWtldC5zd2lwZSIsIG5hbWUgPSAic3dpcGUiLCB2ZXJzaW9uLnJlZiA9ICJzd2lwZSIgfQojIE9iamVjdEJveApvYmplY3Rib3gta290bGluID0geyBncm91cCA9ICJpby5vYmplY3Rib3giLCBuYW1lID0gIm9iamVjdGJveC1rb3RsaW4iLCB2ZXJzaW9uLnJlZiA9ICJvYmplY3Rib3giIH0Kb2JqZWN0Ym94LXByb2Nlc3NvciA9IHsgZ3JvdXAgPSAiaW8ub2JqZWN0Ym94IiwgbmFtZSA9ICJvYmplY3Rib3gtcHJvY2Vzc29yIiwgdmVyc2lvbi5yZWYgPSAib2JqZWN0Ym94IiB9CgojIFdvcmtNYW5hZ2VyCndvcmstcnVudGltZS1rdHggPSB7IGdyb3VwID0gImFuZHJvaWR4LndvcmsiLCBuYW1lID0gIndvcmstcnVudGltZS1rdHgiLCB2ZXJzaW9uLnJlZiA9ICJ3b3JrIiB9CgoKIGFuZHJvaWR4LXVpLXRleHQtYW5kcm9pZCA9IHsgZ3JvdXAgPSAiYW5kcm9pZHguY29tcG9zZS51aSIsIG5hbWUgPSAidWktdGV4dC1hbmRyb2lkIiwgdmVyc2lvbi5yZWYgPSAidWlUZXh0QW5kcm9pZCIgfQogYW5kcm9pZHgtYW5pbWF0aW9uLWFuZHJvaWQgPSB7IGdyb3VwID0gImFuZHJvaWR4LmNvbXBvc2UuYW5pbWF0aW9uIiwgbmFtZSA9ICJhbmltYXRpb24tYW5kcm9pZCIsIHZlcnNpb24ucmVmID0gImFuaW1hdGlvbkFuZHJvaWQiIH0KIGFuZHJvaWR4LXVpLWFuZHJvaWQgPSB7IGdyb3VwID0gImFuZHJvaWR4LmNvbXBvc2UudWkiLCBuYW1lID0gInVpLWFuZHJvaWQiLCB2ZXJzaW9uLnJlZiA9ICJ1aUFuZHJvaWQiIH0KCiMgR2xhbmNlIChDb21wb3NlIGZvciBXaWRnZXRzKQpnbGFuY2UtYXBwd2lkZ2V0ID0geyBncm91cCA9ICJhbmRyb2lkeC5nbGFuY2UiLCBuYW1lID0gImdsYW5jZS1hcHB3aWRnZXQiLCB2ZXJzaW9uLnJlZiA9ICJnbGFuY2UiIH0KZ2xhbmNlLW1hdGVyaWFsMyA9IHsgZ3JvdXAgPSAiYW5kcm9pZHguZ2xhbmNlIiwgbmFtZSA9ICJnbGFuY2UtbWF0ZXJpYWwzIiwgdmVyc2lvbi5yZWYgPSAiZ2xhbmNlIiB9CiBhbmRyb2lkeC1hY3Rpdml0eS1rdHggPSB7IGdyb3VwID0gImFuZHJvaWR4LmFjdGl2aXR5IiwgbmFtZSA9ICJhY3Rpdml0eS1rdHgiLCB2ZXJzaW9uLnJlZiA9ICJhY3Rpdml0eUt0eCIgfQoKCiMgRmlsYW1lbnQgKDNEIOa4suafkykKZmlsYW1lbnQtYW5kcm9pZCA9IHsgZ3JvdXAgPSAiY29tLmdvb2dsZS5hbmRyb2lkLmZpbGFtZW50IiwgbmFtZSA9ICJmaWxhbWVudC1hbmRyb2lkIiwgdmVyc2lvbi5yZWYgPSAiZmlsYW1lbnQiIH0KZ2x0ZmlvLWFuZHJvaWQgPSB7IGdyb3VwID0gImNvbS5nb29nbGUuYW5kcm9pZC5maWxhbWVudCIsIG5hbWUgPSAiZ2x0ZmlvLWFuZHJvaWQiLCB2ZXJzaW9uLnJlZiA9ICJmaWxhbWVudCIgfQpmaWxhbWVudC11dGlscy1hbmRyb2lkID0geyBncm91cCA9ICJjb20uZ29vZ2xlLmFuZHJvaWQuZmlsYW1lbnQiLCBuYW1lID0gImZpbGFtZW50LXV0aWxzLWFuZHJvaWQiLCB2ZXJzaW9uLnJlZiA9ICJmaWxhbWVudCIgfQoKIyBGRm1wZWdLaXQg5L6d6LWW55qEIHNtYXJ0LWV4Y2VwdGlvbgpzbWFydC1leGNlcHRpb24tY29tbW9uID0geyBncm91cCA9ICJjb20uYXJ0aGVuaWNhIiwgbmFtZSA9ICJzbWFydC1leGNlcHRpb24tY29tbW9uIiwgdmVyc2lvbi5yZWYgPSAic21hcnQtZXhjZXB0aW9uIiB9CnNtYXJ0LWV4Y2VwdGlvbi1qYXZhID0geyBncm91cCA9ICJjb20uYXJ0aGVuaWNhIiwgbmFtZSA9ICJzbWFydC1leGNlcHRpb24tamF2YSIsIHZlcnNpb24ucmVmID0gInNtYXJ0LWV4Y2VwdGlvbiIgfQoKIyBPTk5YIFJ1bnRpbWUKb25ueHJ1bnRpbWUtYW5kcm9pZCA9IHsgZ3JvdXAgPSAiY29tLm1pY3Jvc29mdC5vbm54cnVudGltZSIsIG5hbWUgPSAib25ueHJ1bnRpbWUtYW5kcm9pZCIsIHZlcnNpb24ucmVmID0gIm9ubnhydW50aW1lIiB9CgojIFRhc2tlciDmj5Lku7YKdGFza2VycGx1Z2lubGlicmFyeSA9IHsgZ3JvdXAgPSAiY29tLmpvYW9tZ2NkIiwgbmFtZSA9ICJ0YXNrZXJwbHVnaW5saWJyYXJ5IiwgdmVyc2lvbi5yZWYgPSAidGFza2VycGx1Z2lubGlicmFyeSIgfQoKIyDliqDlr4YKc2VjdXJpdHktY3J5cHRvID0geyBncm91cCA9ICJhbmRyb2lkeC5zZWN1cml0eSIsIG5hbWUgPSAic2VjdXJpdHktY3J5cHRvIiwgdmVyc2lvbi5yZWYgPSAic2VjdXJpdHktY3J5cHRvIiB9CmJvdW5jeWNhc3RsZSA9IHsgZ3JvdXAgPSAib3JnLmJvdW5jeWNhc3RsZSIsIG5hbWUgPSAiYmNwcm92LWpkazE4b24iLCB2ZXJzaW9uLnJlZiA9ICJib3VuY3ljYXN0bGUiIH0KCiMg572R57ucIC8gSlNPTgpyZXRyb2ZpdCA9IHsgZ3JvdXAgPSAiY29tLnNxdWFyZXVwLnJldHJvZml0MiIsIG5hbWUgPSAicmV0cm9maXQiLCB2ZXJzaW9uLnJlZiA9ICJyZXRyb2ZpdCIgfQpyZXRyb2ZpdC1jb252ZXJ0ZXItbW9zaGkgPSB7IGdyb3VwID0gImNvbS5zcXVhcmV1cC5yZXRyb2ZpdDIiLCBuYW1lID0gImNvbnZlcnRlci1tb3NoaSIsIHZlcnNpb24ucmVmID0gInJldHJvZml0IiB9Cm1vc2hpLWtvdGxpbiA9IHsgZ3JvdXAgPSAiY29tLnNxdWFyZXVwLm1vc2hpIiwgbmFtZSA9ICJtb3NoaS1rb3RsaW4iLCB2ZXJzaW9uLnJlZiA9ICJtb3NoaSIgfQoKIyBBY2NvbXBhbmlzdAphY2NvbXBhbmlzdC1zeXN0ZW11aWNvbnRyb2xsZXIgPSB7IGdyb3VwID0gImNvbS5nb29nbGUuYWNjb21wYW5pc3QiLCBuYW1lID0gImFjY29tcGFuaXN0LXN5c3RlbXVpY29udHJvbGxlciIsIHZlcnNpb24ucmVmID0gImFjY29tcGFuaXN0IiB9CgogW3BsdWdpbnNdCmFuZHJvaWQtYXBwbGljYXRpb24gPSB7IGlkID0gImNvbS5hbmRyb2lkLmFwcGxpY2F0aW9uIiwgdmVyc2lvbi5yZWYgPSAiYWdwIiB9CmFuZHJvaWQtbGlicmFyeSA9IHsgaWQgPSAiY29tLmFuZHJvaWQubGlicmFyeSIsIHZlcnNpb24ucmVmID0gImFncCIgfQprb3RsaW4tYW5kcm9pZCA9IHsgaWQgPSAib3JnLmpldGJyYWlucy5rb3RsaW4uYW5kcm9pZCIsIHZlcnNpb24ucmVmID0gImtvdGxpbiIgfQprb3RsaW4tY29tcG9zZSA9IHsgaWQgPSAib3JnLmpldGJyYWlucy5rb3RsaW4ucGx1Z2luLmNvbXBvc2UiLCB2ZXJzaW9uLnJlZiA9ICJrb3RsaW4iIH0Ka290bGluLXNlcmlhbGl6YXRpb24gPSB7IGlkID0gIm9yZy5qZXRicmFpbnMua290bGluLnBsdWdpbi5zZXJpYWxpemF0aW9uIiwgdmVyc2lvbi5yZWYgPSAia290bGluLXNlcmlhbGl6YXRpb24iIH0Kb2JqZWN0Ym94ID0geyBpZCA9ICJpby5vYmplY3Rib3giLCB2ZXJzaW9uLnJlZiA9ICJvYmplY3Rib3giIH0Ka290bGluLWthcHQgPSB7IGlkID0gIm9yZy5qZXRicmFpbnMua290bGluLmthcHQiLCB2ZXJzaW9uLnJlZiA9ICJrb3RsaW4iIH0Ka290bGluLXBhcmNlbGl6ZSA9IHsgaWQgPSAib3JnLmpldGJyYWlucy5rb3RsaW4ucGx1Z2luLnBhcmNlbGl6ZSIsIHZlcnNpb24ucmVmID0gImtvdGxpbiIgfQoK
+ [versions]
+agp = "8.13.2"
+kotlin = "2.2.21"
+kotlin-serialization = "2.2.21"
+coreKtx = "1.18.0"
+junit = "4.13.2"
+junitVersion = "1.1.5"
+espressoCore = "3.5.1"
+appcompat = "1.6.1"
+material = "1.10.0"
+compose-bom = "2026.02.01"
+activity-compose = "1.8.2"
+lifecycle-runtime-ktx = "2.7.0"
+uiGraphicsAndroid = "1.10.4"
+runtimeAndroid = "1.10.4"
+desugar = "2.0.4"
+mlkit-text = "16.0.0"
+zxing = "3.5.3"
+diff-utils = "4.12"
+apksig = "8.1.0"
+apk-parser = "2.6.10"
+axml = "2.0.0"
+zipalign = "1.2.1"
+commons-compress = "1.25.0"
+commons-io = "2.13.0"
+glide = "4.16.0"
+libsu = "6.0.0"
+androidsvg = "1.4"
+android-gif = "1.2.28"
+image-cropper = "4.5.0"
+media3 = "1.11.1"
+material3-window = "1.2.0"
+window = "1.1.0"
+webkit = "1.12.1"
+itextg = "5.5.10"
+pdfbox = "2.0.27.0"
+zip4j = "2.11.5"
+coil = "2.5.0"
+jlatexmath = "0.2.0"
+renderx = "1.0.0"
+kotlinx-serialization = "1.9.0"
+uuid = "0.8.2"
+gson = "2.10.1"
+hjson = "3.0.0"
+json = "20250517"
+jieba = "1.0.2"
+hnswlib = "0.0.46"
+tensorflow = "2.10.0"
+room = "2.8.4"
+junrar = "7.5.5"
+navigation-compose = "2.7.7"
+shizuku = "13.1.5"
+okhttp = "4.12.0"
+mcp-sdk = "0.10.0"
+ktor = "3.2.3"
+jsoup = "1.16.2"
+datastore = "1.0.0"
+poi = "5.2.3"
+colorpicker = "1.0.6"
+backdrop = "1.0.6"
+liquid = "1.1.1"
+nanohttpd = "2.3.1"
+test-runner = "1.5.2"
+test-rules = "1.5.0"
+coroutines = "1.10.2"
+coroutines-test = "1.7.3"
+mockito = "5.2.0"
+mockito-kotlin = "5.1.0"
+reorderable = "2.5.1"
+swipe = "1.2.0"
+objectbox = "5.3.0"
+mediapipe = "0.10.11"
+work = "2.9.0"
+uiTextAndroid = "1.10.4"
+animationAndroid = "1.10.4"
+uiAndroid = "1.10.4"
+glance = "1.0.0"
+activityKtx = "1.7.1"
+ ui = "1.10.4"
+ animation = "1.10.4"
+
+ [libraries]
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+
+# Compose
+compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
+compose-ui = { group = "androidx.compose.ui", name = "ui" }
+compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
+compose-animation = { group = "androidx.compose.animation", name = "animation" }
+compose-animation-core = { group = "androidx.compose.animation", name = "animation-core" }
+activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
+lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle-runtime-ktx" }
+androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycle-runtime-ktx" }
+androidx-ui-graphics-android = { group = "androidx.compose.ui", name = "ui-graphics-android", version.ref = "uiGraphicsAndroid" }
+androidx-runtime-android = { group = "androidx.compose.runtime", name = "runtime-android", version.ref = "runtimeAndroid" }
+
+# Desugaring
+desugar-jdk = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "desugar" }
+
+# ML Kit
+mlkit-text-recognition = { group = "com.google.mlkit", name = "text-recognition", version.ref = "mlkit-text" }
+mlkit-text-chinese = { group = "com.google.mlkit", name = "text-recognition-chinese", version.ref = "mlkit-text" }
+mlkit-text-japanese = { group = "com.google.mlkit", name = "text-recognition-japanese", version.ref = "mlkit-text" }
+mlkit-text-korean = { group = "com.google.mlkit", name = "text-recognition-korean", version.ref = "mlkit-text" }
+mlkit-text-devanagari = { group = "com.google.mlkit", name = "text-recognition-devanagari", version.ref = "mlkit-text" }
+
+# ZXing
+zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
+
+# Diff
+java-diff-utils = { group = "io.github.java-diff-utils", name = "java-diff-utils", version.ref = "diff-utils" }
+
+# APK tools
+android-apksig = { group = "com.android.tools.build", name = "apksig", version.ref = "apksig" }
+apk-parser = { group = "net.dongliu", name = "apk-parser", version.ref = "apk-parser" }
+sable-axml = { group = "com.github.Sable", name = "axml", version.ref = "axml" }
+zipalign-java = { group = "com.github.iyxan23", name = "zipalign-java", version.ref = "zipalign" }
+
+# File handling
+commons-compress = { group = "org.apache.commons", name = "commons-compress", version.ref = "commons-compress" }
+commons-io = { group = "commons-io", name = "commons-io", version.ref = "commons-io" }
+
+# Image handling
+glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }
+androidsvg = { group = "com.caverock", name = "androidsvg-aar", version.ref = "androidsvg" }
+android-gif = { group = "pl.droidsonroids.gif", name = "android-gif-drawable", version.ref = "android-gif" }
+image-cropper = { group = "com.vanniktech", name = "android-image-cropper", version.ref = "image-cropper" }
+
+# Root access
+libsu = { group = "com.github.topjohnwu.libsu", name = "core", version.ref = "libsu" }
+
+# Media
+media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }
+media3-common = { group = "androidx.media3", name = "media3-common", version.ref = "media3" }
+media3-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "media3" }
+
+# UI components
+material3-window = { group = "androidx.compose.material3", name = "material3-window-size-class", version.ref = "material3-window" }
+window = { group = "androidx.window", name = "window", version.ref = "window" }
+androidx-webkit = { group = "androidx.webkit", name = "webkit", version.ref = "webkit" }
+
+# Document handling
+itextg = { group = "com.itextpdf", name = "itextg", version.ref = "itextg" }
+pdfbox = { group = "com.tom-roush", name = "pdfbox-android", version.ref = "pdfbox" }
+zip4j = { group = "net.lingala.zip4j", name = "zip4j", version.ref = "zip4j" }
+
+# Image loading
+coil = { group = "io.coil-kt", name = "coil", version.ref = "coil" }
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+coil-gif = { group = "io.coil-kt", name = "coil-gif", version.ref = "coil" }
+
+# LaTeX rendering
+jlatexmath = { group = "ru.noties", name = "jlatexmath-android", version.ref = "jlatexmath" }
+renderx = { group = "com.github.tech-pw", name = "RenderX", version.ref = "renderx" }
+
+# Serialization
+kotlinx-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlin" }
+uuid = { group = "com.benasher44", name = "uuid", version.ref = "uuid" }
+gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+hjson = { group = "org.hjson", name = "hjson", version.ref = "hjson" }
+json-jvm = { group = "org.json", name = "json", version.ref = "json" }
+
+# NLP
+jieba = { group = "com.huaban", name = "jieba-analysis", version.ref = "jieba" }
+hnswlib-core = { group = "com.github.jelmerk", name = "hnswlib-core", version.ref = "hnswlib" }
+hnswlib-utils = { group = "com.github.jelmerk", name = "hnswlib-utils", version.ref = "hnswlib" }
+
+# Machine learning
+tensorflow-lite = { group = "org.tensorflow", name = "tensorflow-lite", version.ref = "tensorflow" }
+mediapipe-tasks-text = { group = "com.google.mediapipe", name = "tasks-text", version.ref = "mediapipe" }
+
+# Database
+room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+
+# Archive
+junrar = { group = "com.github.junrar", name = "junrar", version.ref = "junrar" }
+
+# Navigation
+navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation-compose" }
+
+# Shizuku
+shizuku-api = { group = "dev.rikka.shizuku", name = "api", version.ref = "shizuku" }
+shizuku-provider = { group = "dev.rikka.shizuku", name = "provider", version.ref = "shizuku" }
+
+# Network
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+okhttp-sse = { group = "com.squareup.okhttp3", name = "okhttp-sse", version.ref = "okhttp" }
+okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
+mcp-sdk-client = { group = "io.modelcontextprotocol", name = "kotlin-sdk-client", version.ref = "mcp-sdk" }
+ktor-client-okhttp = { group = "io.ktor", name = "ktor-client-okhttp", version.ref = "ktor" }
+jsoup = { group = "org.jsoup", name = "jsoup", version.ref = "jsoup" }
+
+# DataStore
+datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+datastore-preferences-core = { group = "androidx.datastore", name = "datastore-preferences-core", version.ref = "datastore" }
+
+# Document processing
+poi = { group = "org.apache.poi", name = "poi", version.ref = "poi" }
+poi-ooxml = { group = "org.apache.poi", name = "poi-ooxml", version.ref = "poi" }
+poi-scratchpad = { group = "org.apache.poi", name = "poi-scratchpad", version.ref = "poi" }
+
+# UI components
+colorpicker = { group = "com.github.skydoves", name = "colorpicker-compose", version.ref = "colorpicker" }
+backdrop = { group = "io.github.kyant0", name = "backdrop", version.ref = "backdrop" }
+liquid = { group = "io.github.fletchmckee.liquid", name = "liquid", version.ref = "liquid" }
+nanohttpd = { group = "org.nanohttpd", name = "nanohttpd", version.ref = "nanohttpd" }
+
+# Testing
+test-runner = { group = "androidx.test", name = "runner", version.ref = "test-runner" }
+test-rules = { group = "androidx.test", name = "rules", version.ref = "test-rules" }
+ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+
+# Coroutines
+coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
+coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines-test" }
+
+# Mocks
+mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
+mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version.ref = "mockito-kotlin" }
+mockito-android = { group = "org.mockito", name = "mockito-android", version.ref = "mockito" }
+
+# UI components
+reorderable = { group = "sh.calvin.reorderable", name = "reorderable", version.ref = "reorderable" }
+swipe = { group = "me.saket.swipe", name = "swipe", version.ref = "swipe" }
+# ObjectBox
+objectbox-kotlin = { group = "io.objectbox", name = "objectbox-kotlin", version.ref = "objectbox" }
+objectbox-processor = { group = "io.objectbox", name = "objectbox-processor", version.ref = "objectbox" }
+
+# WorkManager
+work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
+
+
+ androidx-ui-text-android = { group = "androidx.compose.ui", name = "ui-text-android", version.ref = "uiTextAndroid" }
+ androidx-animation-android = { group = "androidx.compose.animation", name = "animation-android", version.ref = "animationAndroid" }
+ androidx-ui-android = { group = "androidx.compose.ui", name = "ui-android", version.ref = "uiAndroid" }
+
+# Glance (Compose for Widgets)
+glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance" }
+glance-material3 = { group = "androidx.glance", name = "glance-material3", version.ref = "glance" }
+ androidx-activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "activityKtx" }
+ androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
+ androidx-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "animation" }
+
+ [plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin-serialization" }
+objectbox = { id = "io.objectbox", version.ref = "objectbox" }
+kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
+
