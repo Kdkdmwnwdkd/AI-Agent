@@ -31,8 +31,21 @@ data class ToolResult(
         val success: Boolean,
         val result: ToolResultData,
         val error: String? = null,
-        val traceId: String = ""
+        val traceId: String = "",
+        /**
+         * Whether retrying the same invocation could plausibly succeed.
+         *
+         * Only meaningful when [success] is false. Defaults to true so that existing constructions
+         * keep meaning "no opinion" and the model retains its prior freedom to retry.
+         *
+         * Set to false for failures that are deterministic given the same arguments, so a retry
+         * cannot possibly help: missing/invalid parameters, path not found, permission denied,
+         * unsupported format, and similar. This is surfaced to the model as a `retryable` attribute
+         * on the tool-result element, which stops whole categories of pointless retry loops.
+         */
+        val retryable: Boolean = true
 )
 
 /** Represents the validation result for tool parameters */
 @Serializable data class ToolValidationResult(val valid: Boolean, val errorMessage: String = "")
+
