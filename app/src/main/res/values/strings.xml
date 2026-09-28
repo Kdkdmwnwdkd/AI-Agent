@@ -6258,13 +6258,6 @@
     <string name="toolreg_query_memory_desc">查询记忆库: %1$s</string>
     <string name="toolreg_get_memory_by_title_desc">根据标题获取记忆: %1$s</string>
 
-    <string name="toolreg_user_pref_birth_date">生日</string>
-    <string name="toolreg_user_pref_gender">性别</string>
-    <string name="toolreg_user_pref_personality">性格</string>
-    <string name="toolreg_user_pref_identity">身份</string>
-    <string name="toolreg_user_pref_occupation">职业</string>
-    <string name="toolreg_user_pref_ai_style">AI风格</string>
-    <string name="toolreg_list_separator">、</string>
     <string name="toolreg_update_user_profile_desc">更新用户资料文件：%1$s</string>
     <string name="toolreg_create_memory_desc">创建记忆: %1$s</string>
     <string name="toolreg_update_memory_desc">更新记忆: %1$s -&gt; %2$s</string>
