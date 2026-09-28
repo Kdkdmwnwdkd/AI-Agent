@@ -969,15 +969,14 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                 val sourceFolder = tool.parameters.find { it.name == "source_folder_path" }?.value
                 val targetFolder = tool.parameters.find { it.name == "target_folder_path" }?.value ?: ""
                 val titles = tool.parameters.find { it.name == "titles" }?.value
-                when {
+                val scope = when {
                     !titles.isNullOrBlank() && !sourceFolder.isNullOrBlank() ->
-                        "Move selected memories from '$sourceFolder' to '$targetFolder'"
-                    !titles.isNullOrBlank() ->
-                        "Move selected memories to '$targetFolder'"
-                    !sourceFolder.isNullOrBlank() ->
-                        "Move memories from '$sourceFolder' to '$targetFolder'"
-                    else -> "Move memories to '$targetFolder'"
+                        "selected memories from '$sourceFolder' to '$targetFolder'"
+                    !titles.isNullOrBlank() -> "selected memories to '$targetFolder'"
+                    !sourceFolder.isNullOrBlank() -> "memories from '$sourceFolder' to '$targetFolder'"
+                    else -> "memories to '$targetFolder'"
                 }
+                s(R.string.toolreg_move_memory_desc, scope)
             },
             executor = { tool ->
                 val memoryTool = ToolGetter.getMemoryQueryToolExecutor(context)
@@ -1013,7 +1012,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                     !sourceTitle.isNullOrBlank() || !targetTitle.isNullOrBlank() -> "${sourceTitle ?: "*"} -> ${targetTitle ?: "*"}"
                     else -> "all links"
                 }
-                "Query memory links: $locator${if (!linkType.isNullOrBlank()) ", type=$linkType" else ""}"
+                s(R.string.toolreg_query_memory_links_desc, locator, linkType ?: "any")
             },
             executor = { tool ->
                 val memoryTool = ToolGetter.getMemoryQueryToolExecutor(context)
@@ -1033,7 +1032,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                     !sourceTitle.isNullOrBlank() && !targetTitle.isNullOrBlank() -> "$sourceTitle -> $targetTitle"
                     else -> "unknown link"
                 }
-                "Update memory link: $locator"
+                s(R.string.toolreg_update_memory_link_desc, locator)
             },
             executor = { tool ->
                 val memoryTool = ToolGetter.getMemoryQueryToolExecutor(context)
@@ -1053,7 +1052,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                     !sourceTitle.isNullOrBlank() && !targetTitle.isNullOrBlank() -> "$sourceTitle -> $targetTitle"
                     else -> "unknown link"
                 }
-                "Delete memory link: $locator"
+                s(R.string.toolreg_delete_memory_link_desc, locator)
             },
             executor = { tool ->
                 val memoryTool = ToolGetter.getMemoryQueryToolExecutor(context)
