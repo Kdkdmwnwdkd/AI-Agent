@@ -6355,6 +6355,8 @@
     <string name="toolreg_manage_cookies_clear_all_desc">清除所有Cookie</string>
     <string name="toolreg_manage_cookies_clear_domain_desc">清除域名 %1$s 的Cookie</string>
     <string name="toolreg_manage_cookies_desc">管理Cookie: %1$s</string>
+    <string name="toolreg_toast_desc">在设备屏幕上弹出一条短暂的 Toast 提示，仅本地可见、几秒后自动消失，不会进入通知栏。用于向用户即时反馈当前动作（如"已复制""已保存"）。message 为必填；留空时调用失败并返回 "Must provide message parameter"。需要用户稍后仍能看到的通知请改用 send_notification。</string>
+    <string name="toolreg_send_notification_desc">向系统通知栏发送一条常驻通知（高优先级、带默认提示音与振动、点击可回到本应用），用户可在通知栏查看并在稍后点击。title 可省略，省略时使用默认标题 "Notification"；message 为必填，留空时调用失败并返回 "Must provide message parameter"。仅需屏幕上的瞬时提示请改用 toast。</string>
     <string name="toolreg_modify_system_setting_desc">修改系统设置: %1$s = %2$s</string>
     <string name="toolreg_get_system_setting_desc">获取系统设置: %1$s</string>
     <string name="toolreg_install_app_desc">安装应用: %1$s</string>
