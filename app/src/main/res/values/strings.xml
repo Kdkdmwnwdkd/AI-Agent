@@ -6319,7 +6319,7 @@
     <string name="toolreg_read_file_binary_desc">以 Base64 读取二进制文件 %1$s%2$s（图片、压缩包、可执行文件等）。返回值模型无法直接理解，读取文本请用 read_file。</string>
     <string name="toolreg_write_file_append_operation">追加内容到文件</string>
     <string name="toolreg_write_file_overwrite_operation">写入内容到文件</string>
-    <string name="toolreg_write_file_desc">%1$s: %2$s%3$s</string>
+    <string name="toolreg_write_file_desc">【整文件写入】%1$s 文件 %2$s%3$s。默认覆盖原有全部内容；append=true 时改为在文件末尾追加。content 为必填，缺失或为空将写入空内容。只想改动文件中某几处、保留其余内容时，请改用 edit_file —— 用本工具重写全文件容易误删未注意到的既有代码。</string>
     <string name="toolreg_write_file_binary_desc">将Base64内容写入二进制文件: %1$s%2$s</string>
     <string name="toolreg_delete_file_recursive_operation">递归删除</string>
     <string name="toolreg_delete_file_operation">删除文件</string>
@@ -6328,9 +6328,10 @@
     <string name="toolreg_move_file_desc">移动文件: %1$s -&gt; %2$s%3$s</string>
     <string name="toolreg_copy_file_desc">复制文件: %1$s -&gt; %2$s%3$s</string>
     <string name="toolreg_make_directory_desc">创建目录: %1$s%2$s</string>
-    <string name="toolreg_find_files_desc">搜索文件: 在 %1$s 中查找 %2$s%3$s</string>
+    <string name="toolreg_find_files_desc">【按文件名找】在 %1$s 中查找名称匹配 %2$s 的文件或目录%3$s，返回路径列表。pattern 支持通配符（如 "*.kt"）。需要目录的层级全貌请用 file_tree；需要按文件内容检索请用 grep_code 或 grep_context —— 本工具只匹配名称，不看内容。</string>
     <string name="toolreg_file_info_desc">获取文件信息: %1$s%2$s</string>
-    <string name="toolreg_apply_file_desc">智能合并AI代码到文件: %1$s%2$s</string>
+    <string name="toolreg_edit_file_desc">【改代码首选】把文件 %1$s 中出现的 `old` 原样替换为 `new`%2$s。old 与 new 均为必填，且必须是文件中已存在的确切文本；任一为空会失败并返回 "Both 'old' and 'new' are required for type=replace"。本工具等价于 apply_file 且 type=replace，做精确文本替换，不会重排或格式化其它内容。若只想整体覆盖文件或追加内容，请改用 write_file。</string>
+    <string name="toolreg_apply_file_desc">按 type 对文件 %1$s 做结构化编辑%2$s。type=replace 需同时提供 old 与 new，用 new 精确替换 old；type=delete 只需 old，删除该段文本；type=create 只需 new，在文件不存在时创建。上述三类参数缺一即报错（replace 报 "Both 'old' and 'new' are required"，delete 报 "Parameter 'old' is required"）。日常逐处改动建议直接用更简洁的 edit_file。</string>
     <string name="toolreg_zip_files_desc">压缩文件: %1$s -&gt; %2$s%3$s</string>
     <string name="toolreg_unzip_files_desc">解压文件: %1$s -&gt; %2$s%3$s</string>
     <string name="toolreg_open_file_desc">打开文件: %1$s%2$s</string>
