@@ -2580,7 +2580,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
 
     handler.registerTool(
             name = "request_bluetooth_permission",
-            descriptionGenerator = { _ -> "Request Bluetooth nearby devices permission" },
+            descriptionGenerator = { _ -> s(R.string.toolreg_request_bluetooth_permission_desc) },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { systemOperationTools.requestBluetoothPermission(tool) }
             }
@@ -2588,7 +2588,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
 
     handler.registerTool(
             name = "get_bluetooth_state",
-            descriptionGenerator = { _ -> "Get Bluetooth adapter state" },
+            descriptionGenerator = { _ -> s(R.string.toolreg_get_bluetooth_state_desc) },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { systemOperationTools.getBluetoothState(tool) }
             }
@@ -2596,7 +2596,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
 
     handler.registerTool(
             name = "request_enable_bluetooth",
-            descriptionGenerator = { _ -> "Open the system dialog to enable Bluetooth" },
+            descriptionGenerator = { _ -> s(R.string.toolreg_request_enable_bluetooth_desc) },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { systemOperationTools.requestEnableBluetooth(tool) }
             }
@@ -2604,7 +2604,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
 
     handler.registerTool(
             name = "list_bluetooth_bonded_devices",
-            descriptionGenerator = { _ -> "List bonded Bluetooth devices" },
+            descriptionGenerator = { _ -> s(R.string.toolreg_list_bluetooth_bonded_devices_desc) },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { systemOperationTools.listBluetoothBondedDevices(tool) }
             }
@@ -2612,7 +2612,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
 
     handler.registerTool(
             name = "scan_bluetooth_devices",
-            descriptionGenerator = { _ -> "Scan nearby Bluetooth classic and BLE devices" },
+            descriptionGenerator = { _ -> s(R.string.toolreg_scan_bluetooth_devices_desc) },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { systemOperationTools.scanBluetoothDevices(tool) }
             }
@@ -2622,7 +2622,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "bluetooth_connect",
             descriptionGenerator = { tool ->
                 val address = tool.parameters.find { it.name == "address" }?.value ?: ""
-                "Connect to Bluetooth classic device $address"
+                s(R.string.toolreg_bluetooth_connect_desc, address.ifBlank { "(missing address)" })
             },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { systemOperationTools.connectBluetooth(tool) }
@@ -2631,7 +2631,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
 
     handler.registerTool(
             name = "bluetooth_listen",
-            descriptionGenerator = { _ -> "Listen for an incoming Bluetooth classic connection" },
+            descriptionGenerator = { _ -> s(R.string.toolreg_bluetooth_listen_desc) },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { systemOperationTools.listenBluetooth(tool) }
             }
@@ -2640,8 +2640,8 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
     handler.registerTool(
             name = "bluetooth_accept",
             descriptionGenerator = { tool ->
-                val listenerId = tool.parameters.find { it.name == "listener_session_id" }?.value ?: ""
-                "Accept an incoming Bluetooth classic connection from listener $listenerId"
+                val listenerSessionId = tool.parameters.find { it.name == "listener_session_id" }?.value ?: ""
+                s(R.string.toolreg_bluetooth_accept_desc, listenerSessionId.ifBlank { "(missing listener_session_id)" })
             },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { systemOperationTools.acceptBluetooth(tool) }
@@ -2652,7 +2652,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "bluetooth_send",
             descriptionGenerator = { tool ->
                 val sessionId = tool.parameters.find { it.name == "session_id" }?.value ?: ""
-                "Send data to Bluetooth session $sessionId"
+                s(R.string.toolreg_bluetooth_send_desc, sessionId.ifBlank { "(missing session_id)" })
             },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { systemOperationTools.sendBluetooth(tool) }
@@ -2663,7 +2663,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "bluetooth_read",
             descriptionGenerator = { tool ->
                 val sessionId = tool.parameters.find { it.name == "session_id" }?.value ?: ""
-                "Read data from Bluetooth session $sessionId"
+                s(R.string.toolreg_bluetooth_read_desc, sessionId.ifBlank { "(missing session_id)" })
             },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { systemOperationTools.readBluetooth(tool) }
@@ -2674,7 +2674,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "bluetooth_send_and_read",
             descriptionGenerator = { tool ->
                 val sessionId = tool.parameters.find { it.name == "session_id" }?.value ?: ""
-                "Send data and read response from Bluetooth session $sessionId"
+                s(R.string.toolreg_bluetooth_send_and_read_desc, sessionId.ifBlank { "(missing session_id)" })
             },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { systemOperationTools.sendAndReadBluetooth(tool) }
@@ -2685,7 +2685,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "bluetooth_close",
             descriptionGenerator = { tool ->
                 val sessionId = tool.parameters.find { it.name == "session_id" }?.value ?: ""
-                "Close Bluetooth session $sessionId"
+                s(R.string.toolreg_bluetooth_close_desc, sessionId.ifBlank { "(missing session_id)" })
             },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { systemOperationTools.closeBluetooth(tool) }
@@ -2696,7 +2696,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "bluetooth_ble_connect",
             descriptionGenerator = { tool ->
                 val address = tool.parameters.find { it.name == "address" }?.value ?: ""
-                "Connect to BLE device $address"
+                s(R.string.toolreg_bluetooth_ble_connect_desc, address.ifBlank { "(missing address)" })
             },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { systemOperationTools.connectBle(tool) }
@@ -2707,7 +2707,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "bluetooth_ble_discover_services",
             descriptionGenerator = { tool ->
                 val sessionId = tool.parameters.find { it.name == "session_id" }?.value ?: ""
-                "Discover BLE services for session $sessionId"
+                s(R.string.toolreg_bluetooth_ble_discover_services_desc, sessionId.ifBlank { "(missing session_id)" })
             },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { systemOperationTools.discoverBleServices(tool) }
@@ -2718,7 +2718,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "bluetooth_ble_read_characteristic",
             descriptionGenerator = { tool ->
                 val characteristicUuid = tool.parameters.find { it.name == "characteristic_uuid" }?.value ?: ""
-                "Read BLE characteristic $characteristicUuid"
+                s(R.string.toolreg_bluetooth_ble_read_characteristic_desc, characteristicUuid.ifBlank { "(missing characteristic_uuid)" })
             },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { systemOperationTools.readBleCharacteristic(tool) }
@@ -2729,7 +2729,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "bluetooth_ble_write_characteristic",
             descriptionGenerator = { tool ->
                 val characteristicUuid = tool.parameters.find { it.name == "characteristic_uuid" }?.value ?: ""
-                "Write BLE characteristic $characteristicUuid"
+                s(R.string.toolreg_bluetooth_ble_write_characteristic_desc, characteristicUuid.ifBlank { "(missing characteristic_uuid)" })
             },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { systemOperationTools.writeBleCharacteristic(tool) }
@@ -2741,7 +2741,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             descriptionGenerator = { tool ->
                 val writeCharacteristicUuid = tool.parameters.find { it.name == "write_characteristic_uuid" }?.value ?: ""
                 val readCharacteristicUuid = tool.parameters.find { it.name == "read_characteristic_uuid" }?.value ?: ""
-                "Write BLE characteristic $writeCharacteristicUuid and read $readCharacteristicUuid"
+                s(R.string.toolreg_bluetooth_ble_write_and_read_characteristic_desc, writeCharacteristicUuid.ifBlank { "(missing write_characteristic_uuid)" }, readCharacteristicUuid.ifBlank { "(missing read_characteristic_uuid)" })
             },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { systemOperationTools.writeAndReadBleCharacteristic(tool) }
@@ -2752,7 +2752,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "bluetooth_ble_subscribe_characteristic",
             descriptionGenerator = { tool ->
                 val characteristicUuid = tool.parameters.find { it.name == "characteristic_uuid" }?.value ?: ""
-                "Subscribe BLE characteristic $characteristicUuid"
+                s(R.string.toolreg_bluetooth_ble_subscribe_characteristic_desc, characteristicUuid.ifBlank { "(missing characteristic_uuid)" })
             },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { systemOperationTools.subscribeBleCharacteristic(tool) }
@@ -2763,7 +2763,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "bluetooth_ble_read_notifications",
             descriptionGenerator = { tool ->
                 val sessionId = tool.parameters.find { it.name == "session_id" }?.value ?: ""
-                "Read BLE notifications from session $sessionId"
+                s(R.string.toolreg_bluetooth_ble_read_notifications_desc, sessionId.ifBlank { "(missing session_id)" })
             },
             executor = { tool ->
                 runBlocking(Dispatchers.IO) { systemOperationTools.readBleNotifications(tool) }
