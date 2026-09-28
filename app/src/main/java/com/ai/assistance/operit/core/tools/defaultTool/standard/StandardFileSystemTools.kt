@@ -1770,10 +1770,41 @@ open class StandardFileSystemTools(protected val context: Context) {
                     truncatedPartContent = truncatedPartContent.substring(0, maxFileSizeBytes)
                 }
 
+                // 已返回的实际行范围（1-based，闭区间）
+                val returnedStartLine = startIndex + 1
+                val returnedEndLine = minOf(endIndex, totalLines)
+
                 var contentWithLineNumbers = addLineNumbers(truncatedPartContent, startIndex, totalLines)
                 if (isTruncated) {
                     contentWithLineNumbers += "\n\n... (file content truncated) ..."
                 }
+
+                // 续读提示：明确告知剩余行数与下一步该传什么参数，避免模型反复重读整个文件
+                val remainingLines = (totalLines - returnedEndLine).coerceAtLeast(0)
+                contentWithLineNumbers +=
+                    buildString {
+                        append("\n\n---\n")
+                        if (totalLines <= 0) {
+                            append("[文件为空]")
+                        } else {
+                            append("[已读 $returnedStartLine-$returnedEndLine 行，共 $totalLines 行")
+                            if (remainingLines > 0) {
+                                append("，剩余 $remainingLines 行")
+                            }
+                            append("]")
+                        }
+                        if (remainingLines > 0) {
+                            val nextStart = returnedEndLine + 1
+                            val nextEnd = (nextStart + ToolExecutionLimits.DEFAULT_FILE_READ_PART_LINES - 1)
+                                .coerceAtMost(totalLines)
+                            append(
+                                "\n[续读请再次调用 read_file_part，参数 path=\"$path\", " +
+                                    "start_line=$nextStart, end_line=$nextEnd]"
+                            )
+                        } else {
+                            append("\n[已读到文件末尾，无需续读]")
+                        }
+                    }
 
                 ToolResult(
                     toolName = tool.name,
@@ -1784,7 +1815,7 @@ open class StandardFileSystemTools(protected val context: Context) {
                         partIndex = 0, // 保留兼容性，但不再使用
                         totalParts = 1, // 保留兼容性，但不再使用
                         startLine = startIndex,
-                        endLine = minOf(endIndex, totalLines),
+                        endLine = returnedEndLine,
                         totalLines = totalLines
                     ),
                     error = ""
