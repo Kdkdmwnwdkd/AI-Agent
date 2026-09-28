@@ -18,12 +18,12 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.ai.assistance.operit.core.avatar.common.control.AvatarController
 import com.ai.assistance.operit.core.avatar.impl.mp4.control.Mp4AvatarController
 import com.ai.assistance.operit.core.avatar.impl.mp4.model.Mp4AvatarModel
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.PlaybackException
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
-import com.google.android.exoplayer2.ui.StyledPlayerView
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
+import androidx.media3.ui.AspectRatioFrameLayout
+import androidx.media3.ui.PlayerView
 import java.io.File
 
 @Composable
@@ -108,7 +108,7 @@ fun Mp4Renderer(
             .scale(scale)
             .offset(x = translateX.dp, y = translateY.dp),
         factory = { ctx ->
-            StyledPlayerView(ctx).apply {
+            PlayerView(ctx).apply {
                 player = exoPlayer
                 useController = false
                 resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
