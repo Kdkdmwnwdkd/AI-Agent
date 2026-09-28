@@ -1,0 +1,28 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "labels": [
+    "dependencies"
+  ],
+  "prConcurrentLimit": 5,
+  "packageRules": [
+    {
+      "description": "Group all Gradle dependencies into a single PR to reduce notification noise",
+      "matchManagers": [
+        "gradle"
+      ],
+      "groupName": "gradle-dependencies"
+    },
+    {
+      "description": "Never automerge; require human review and green CI (project rule: updates must not break functionality)",
+      "matchUpdateTypes": [
+        "major",
+        "minor",
+        "patch"
+      ],
+      "automerge": false
+    }
+  ]
+}
