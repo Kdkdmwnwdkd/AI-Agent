@@ -627,9 +627,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
 
     handler.registerTool(
             name = "list_sandbox_packages",
-            descriptionGenerator = { _ ->
-                "List sandbox packages and their enabled states"
-            },
+            descriptionGenerator = { _ -> s(R.string.toolreg_list_sandbox_packages_desc) },
             executor = { tool ->
                 val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
                 val packageManager = handler.getOrCreatePackageManager()
@@ -688,9 +686,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
 
     handler.registerTool(
             name = "get_speech_services_config",
-            descriptionGenerator = { _ ->
-                "Get current TTS/STT speech services configuration"
-            },
+            descriptionGenerator = { _ -> s(R.string.toolreg_get_speech_services_config_desc) },
             executor = { tool ->
                 val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
                 runBlocking(Dispatchers.IO) { softwareSettingsTools.getSpeechServicesConfig(tool) }
@@ -699,9 +695,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
 
     handler.registerTool(
             name = "set_speech_services_config",
-            descriptionGenerator = { _ ->
-                "Update TTS/STT speech services configuration"
-            },
+            descriptionGenerator = { _ -> s(R.string.toolreg_set_speech_services_config_desc) },
             executor = { tool ->
                 val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
                 runBlocking(Dispatchers.IO) { softwareSettingsTools.setSpeechServicesConfig(tool) }
@@ -713,7 +707,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             descriptionGenerator = { tool ->
                 val text = tool.parameters.find { it.name == "text" }?.value.orEmpty()
                 val preview = text.take(24).replace('\n', ' ')
-                "Play one TTS test utterance using current speech settings: $preview"
+                s(R.string.toolreg_test_tts_playback_desc, preview)
             },
             executor = { tool ->
                 val softwareSettingsTools = ToolGetter.getSoftwareSettingsModifyTools(context)
@@ -722,32 +716,32 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
     )
 
     registerSoftwareSettingsTool(handler, context, name = "list_model_configs",
-            descriptionGenerator = { "List all model configs and current function-to-config mappings" }
+            descriptionGenerator = { s(R.string.toolreg_list_model_configs_desc) }
     ) { t, tool -> t.listModelConfigs(tool) }
 
     registerSoftwareSettingsTool(handler, context, name = "create_model_config",
             descriptionGenerator = { tool ->
                 val name = tool.parameters.find { it.name == "name" }?.value ?: "New Model Config"
-                "Create model config: $name"
+                s(R.string.toolreg_create_model_config_desc, name)
             }
     ) { t, tool -> t.createModelConfig(tool) }
 
     registerSoftwareSettingsTool(handler, context, name = "update_model_config",
             descriptionGenerator = { tool ->
                 val configId = tool.parameters.find { it.name == "config_id" }?.value ?: ""
-                "Update model config: $configId"
+                s(R.string.toolreg_update_model_config_desc, configId)
             }
     ) { t, tool -> t.updateModelConfig(tool) }
 
     registerSoftwareSettingsTool(handler, context, name = "delete_model_config",
             descriptionGenerator = { tool ->
                 val configId = tool.parameters.find { it.name == "config_id" }?.value ?: ""
-                "Delete model config: $configId"
+                s(R.string.toolreg_delete_model_config_desc, configId)
             }
     ) { t, tool -> t.deleteModelConfig(tool) }
 
     registerSoftwareSettingsTool(handler, context, name = "list_function_model_configs",
-            descriptionGenerator = { "List function model bindings only (function -> config_id + model_index)" }
+            descriptionGenerator = { s(R.string.toolreg_list_function_model_configs_desc) }
     ) { t, tool -> t.listFunctionModelConfigs(tool) }
 
     registerSoftwareSettingsTool(handler, context, name = "get_function_model_config",
@@ -975,14 +969,15 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                 val sourceFolder = tool.parameters.find { it.name == "source_folder_path" }?.value
                 val targetFolder = tool.parameters.find { it.name == "target_folder_path" }?.value ?: ""
                 val titles = tool.parameters.find { it.name == "titles" }?.value
-                val scope = when {
+                when {
                     !titles.isNullOrBlank() && !sourceFolder.isNullOrBlank() ->
-                        "selected memories from '$sourceFolder' to '$targetFolder'"
-                    !titles.isNullOrBlank() -> "selected memories to '$targetFolder'"
-                    !sourceFolder.isNullOrBlank() -> "memories from '$sourceFolder' to '$targetFolder'"
-                    else -> "memories to '$targetFolder'"
+                        "Move selected memories from '$sourceFolder' to '$targetFolder'"
+                    !titles.isNullOrBlank() ->
+                        "Move selected memories to '$targetFolder'"
+                    !sourceFolder.isNullOrBlank() ->
+                        "Move memories from '$sourceFolder' to '$targetFolder'"
+                    else -> "Move memories to '$targetFolder'"
                 }
-                s(R.string.toolreg_move_memory_desc, scope)
             },
             executor = { tool ->
                 val memoryTool = ToolGetter.getMemoryQueryToolExecutor(context)
@@ -1018,7 +1013,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                     !sourceTitle.isNullOrBlank() || !targetTitle.isNullOrBlank() -> "${sourceTitle ?: "*"} -> ${targetTitle ?: "*"}"
                     else -> "all links"
                 }
-                s(R.string.toolreg_query_memory_links_desc, locator, linkType ?: "any")
+                "Query memory links: $locator${if (!linkType.isNullOrBlank()) ", type=$linkType" else ""}"
             },
             executor = { tool ->
                 val memoryTool = ToolGetter.getMemoryQueryToolExecutor(context)
@@ -1038,7 +1033,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                     !sourceTitle.isNullOrBlank() && !targetTitle.isNullOrBlank() -> "$sourceTitle -> $targetTitle"
                     else -> "unknown link"
                 }
-                s(R.string.toolreg_update_memory_link_desc, locator)
+                "Update memory link: $locator"
             },
             executor = { tool ->
                 val memoryTool = ToolGetter.getMemoryQueryToolExecutor(context)
@@ -1058,7 +1053,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                     !sourceTitle.isNullOrBlank() && !targetTitle.isNullOrBlank() -> "$sourceTitle -> $targetTitle"
                     else -> "unknown link"
                 }
-                s(R.string.toolreg_delete_memory_link_desc, locator)
+                "Delete memory link: $locator"
             },
             executor = { tool ->
                 val memoryTool = ToolGetter.getMemoryQueryToolExecutor(context)
