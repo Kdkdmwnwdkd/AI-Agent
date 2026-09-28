@@ -1391,9 +1391,9 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                 val ref = tool.parameters.find { it.name == "ref" }?.value ?: ""
                 val selector = tool.parameters.find { it.name == "selector" }?.value ?: ""
                 when {
-                    ref.isNotBlank() -> "Click browser element ref $ref from browser_snapshot"
-                    selector.isNotBlank() -> "Click browser element by selector $selector"
-                    else -> "Click browser element (missing ref/selector)"
+                    ref.isNotBlank() -> s(R.string.toolreg_browser_click_desc, ref)
+                    selector.isNotBlank() -> s(R.string.toolreg_browser_click_desc, selector)
+                    else -> s(R.string.toolreg_browser_click_desc, "")
                 }
             },
             executor = { tool -> ToolGetter.getBrowserSessionTools(context).invoke(tool) }
@@ -1401,55 +1401,55 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
 
     handler.registerTool(
             name = "browser_close",
-            descriptionGenerator = { "Close the current browser tab" },
+            descriptionGenerator = { s(R.string.toolreg_browser_close_desc) },
             executor = { tool -> ToolGetter.getBrowserSessionTools(context).invoke(tool) }
     )
 
     handler.registerTool(
             name = "browser_close_all",
-            descriptionGenerator = { "Close all browser tabs" },
+            descriptionGenerator = { s(R.string.toolreg_browser_close_all_desc) },
             executor = { tool -> ToolGetter.getBrowserSessionTools(context).invoke(tool) }
     )
 
     handler.registerTool(
             name = "browser_console_messages",
-            descriptionGenerator = { "Read browser console messages" },
+            descriptionGenerator = { s(R.string.toolreg_browser_console_messages_desc) },
             executor = { tool -> ToolGetter.getBrowserSessionTools(context).invoke(tool) }
     )
 
     handler.registerTool(
             name = "browser_drag",
-            descriptionGenerator = { "Drag between browser element refs" },
+            descriptionGenerator = { s(R.string.toolreg_browser_drag_desc) },
             executor = { tool -> ToolGetter.getBrowserSessionTools(context).invoke(tool) }
     )
 
     handler.registerTool(
             name = "browser_evaluate",
-            descriptionGenerator = { "Evaluate JavaScript against the current browser page" },
+            descriptionGenerator = { s(R.string.toolreg_browser_evaluate_desc) },
             executor = { tool -> ToolGetter.getBrowserSessionTools(context).invoke(tool) }
     )
 
     handler.registerTool(
             name = "browser_file_upload",
-            descriptionGenerator = { "Resolve the active browser file chooser" },
+            descriptionGenerator = { s(R.string.toolreg_browser_file_upload_desc) },
             executor = { tool -> ToolGetter.getBrowserSessionTools(context).invoke(tool) }
     )
 
     handler.registerTool(
             name = "browser_fill_form",
-            descriptionGenerator = { "Fill multiple browser form fields" },
+            descriptionGenerator = { s(R.string.toolreg_browser_fill_form_desc) },
             executor = { tool -> ToolGetter.getBrowserSessionTools(context).invoke(tool) }
     )
 
     handler.registerTool(
             name = "browser_handle_dialog",
-            descriptionGenerator = { "Handle the current browser dialog" },
+            descriptionGenerator = { s(R.string.toolreg_browser_handle_dialog_desc) },
             executor = { tool -> ToolGetter.getBrowserSessionTools(context).invoke(tool) }
     )
 
     handler.registerTool(
             name = "browser_hover",
-            descriptionGenerator = { "Hover a browser element by ref" },
+            descriptionGenerator = { s(R.string.toolreg_browser_hover_desc) },
             executor = { tool -> ToolGetter.getBrowserSessionTools(context).invoke(tool) }
     )
 
@@ -1457,20 +1457,20 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "browser_navigate",
             descriptionGenerator = { tool ->
                 val url = tool.parameters.find { it.name == "url" }?.value ?: ""
-                "Navigate browser to ${url.ifBlank { "(missing url)" }}"
+                s(R.string.toolreg_browser_navigate_desc, url.ifBlank { "(missing url)" })
             },
             executor = { tool -> ToolGetter.getBrowserSessionTools(context).invoke(tool) }
     )
 
     handler.registerTool(
             name = "browser_navigate_back",
-            descriptionGenerator = { "Navigate browser back" },
+            descriptionGenerator = { s(R.string.toolreg_browser_navigate_back_desc) },
             executor = { tool -> ToolGetter.getBrowserSessionTools(context).invoke(tool) }
     )
 
     handler.registerTool(
             name = "browser_network_requests",
-            descriptionGenerator = { "Read browser network requests" },
+            descriptionGenerator = { s(R.string.toolreg_browser_network_requests_desc) },
             executor = { tool -> ToolGetter.getBrowserSessionTools(context).invoke(tool) }
     )
 
@@ -1478,59 +1478,56 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = "browser_press_key",
             descriptionGenerator = { tool ->
                 val key = tool.parameters.find { it.name == "key" }?.value ?: ""
-                "Press browser key ${key.ifBlank { "(missing key)" }}"
+                s(R.string.toolreg_browser_press_key_desc, key.ifBlank { "(missing key)" })
             },
             executor = { tool -> ToolGetter.getBrowserSessionTools(context).invoke(tool) }
     )
 
     handler.registerTool(
             name = "browser_resize",
-            descriptionGenerator = { "Resize browser viewport" },
+            descriptionGenerator = { s(R.string.toolreg_browser_resize_desc) },
             executor = { tool -> ToolGetter.getBrowserSessionTools(context).invoke(tool) }
     )
 
     handler.registerTool(
             name = "browser_run_code",
-            descriptionGenerator = { "Run Playwright-like browser code" },
+            descriptionGenerator = { s(R.string.toolreg_browser_run_code_desc) },
             executor = { tool -> ToolGetter.getBrowserSessionTools(context).invoke(tool) }
     )
 
     handler.registerTool(
             name = "browser_select_option",
-            descriptionGenerator = { "Select options in a browser control" },
+            descriptionGenerator = { s(R.string.toolreg_browser_select_option_desc) },
             executor = { tool -> ToolGetter.getBrowserSessionTools(context).invoke(tool) }
     )
 
     handler.registerTool(
             name = "browser_snapshot",
-            descriptionGenerator = { "Capture a browser accessibility snapshot, including same-origin iframe content" },
+            descriptionGenerator = { s(R.string.toolreg_browser_snapshot_desc) },
             executor = { tool -> ToolGetter.getBrowserSessionTools(context).invoke(tool) }
     )
 
     handler.registerTool(
             name = "browser_take_screenshot",
-            descriptionGenerator = { "Take a browser screenshot" },
+            descriptionGenerator = { s(R.string.toolreg_browser_take_screenshot_desc) },
             executor = { tool -> ToolGetter.getBrowserSessionTools(context).invoke(tool) }
     )
 
     handler.registerTool(
             name = "browser_tabs",
-            descriptionGenerator = { tool ->
-                val action = tool.parameters.find { it.name == "action" }?.value ?: ""
-                "Manage browser tabs with action ${action.ifBlank { "(missing action)" }}"
-            },
+            descriptionGenerator = { s(R.string.toolreg_browser_tabs_desc) },
             executor = { tool -> ToolGetter.getBrowserSessionTools(context).invoke(tool) }
     )
 
     handler.registerTool(
             name = "browser_type",
-            descriptionGenerator = { "Type into a browser element by ref" },
+            descriptionGenerator = { s(R.string.toolreg_browser_type_desc) },
             executor = { tool -> ToolGetter.getBrowserSessionTools(context).invoke(tool) }
     )
 
     handler.registerTool(
             name = "browser_wait_for",
-            descriptionGenerator = { "Wait for browser text or time conditions" },
+            descriptionGenerator = { s(R.string.toolreg_browser_wait_for_desc) },
             executor = { tool -> ToolGetter.getBrowserSessionTools(context).invoke(tool) }
     )
 
