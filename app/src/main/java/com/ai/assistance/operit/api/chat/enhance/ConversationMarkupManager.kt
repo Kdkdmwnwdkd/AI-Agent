@@ -58,6 +58,7 @@ class ConversationMarkupManager {
                     createBoundedToolResultXml(
                         toolName = result.toolName,
                         status = "success",
+                        retryable = true,
                         rawPayload = toolPayload
                     ) { payload ->
                         "<content>$payload</content>"
@@ -79,6 +80,7 @@ class ConversationMarkupManager {
                 createBoundedToolResultXml(
                     toolName = result.toolName,
                     status = "error",
+                    retryable = result.retryable,
                     rawPayload = errorPayload
                 ) { payload ->
                     "<content><error>$payload</error></content>"
@@ -142,14 +144,24 @@ class ConversationMarkupManager {
             return createToolErrorStatus(toolName, errorMessage)
         }
 
-        private fun createToolResultXml(toolName: String, status: String, content: String): String {
+        private fun createToolResultXml(
+                toolName: String,
+                status: String,
+                content: String,
+                retryable: Boolean = true
+        ): String {
             val tagName = ChatMarkupRegex.generateRandomToolResultTagName()
-            return """<$tagName name="$toolName" status="$status">$content</$tagName>""".trimIndent()
+            // retryable 仅在失败时对模型有意义，成功结果不输出该属性，避免噪音
+            val retryableAttr =
+                    if (status == "error") " retryable=\"$retryable\"" else ""
+            return """<$tagName name="$toolName" status="$status"$retryableAttr>$content</$tagName>"""
+                    .trimIndent()
         }
 
         private fun createBoundedToolResultXml(
             toolName: String,
             status: String,
+            retryable: Boolean = true,
             rawPayload: String,
             bodyBuilder: (String) -> String
         ): String {
@@ -157,7 +169,8 @@ class ConversationMarkupManager {
                 createToolResultXml(
                     toolName = toolName,
                     status = status,
-                    content = bodyBuilder("")
+                    content = bodyBuilder(""),
+                    retryable = retryable
                 )
             val maxPayloadChars =
                 (ToolExecutionLimits.MAX_SINGLE_TOOL_RESULT_MESSAGE_CHARS - emptyXml.length)
@@ -166,7 +179,8 @@ class ConversationMarkupManager {
             return createToolResultXml(
                 toolName = toolName,
                 status = status,
-                content = bodyBuilder(boundedPayload)
+                content = bodyBuilder(boundedPayload),
+                retryable = retryable
             )
         }
 
@@ -222,3 +236,4 @@ class ConversationMarkupManager {
 
     }
 }
+
