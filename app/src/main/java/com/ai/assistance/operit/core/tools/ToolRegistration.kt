@@ -2317,7 +2317,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
                 val path = tool.parameters.find { it.name == "path" }?.value ?: ""
                 val environment = tool.parameters.find { it.name == "environment" }?.value
                 val envInfo = formatEnvInfo(environment)
-                "Edit file $path$envInfo"
+                s(R.string.toolreg_edit_file_desc, path, envInfo)
             },
             executor = { tool -> runBlocking(Dispatchers.IO) { fileSystemTools.editFile(tool) } }
     )
