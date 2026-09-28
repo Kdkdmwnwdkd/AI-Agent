@@ -63,6 +63,14 @@ env:
   ANDROID_API_LEVEL: '26'
   RUST_VERSION: '1.88.0'
   MANUAL_DEPS_DIR: manual-deps
+  # GitHub ubuntu-24.04 runner 提供 16GB 内存。gradle.properties 中的
+  # -Xmx8192m + parallel + workers.max=16 是为开发机（大内存）调优的，
+  # 在 16GB runner 上叠加 KAPT(Room/ObjectBox) 与 CMake native 编译会突破
+  # 内存上限，被 runner 的 OOM 看门狗 SIGTERM 终止（进程退出码 143，
+  # 表现即上一轮的 "Run Gradle build" 失败——错误信息为空，因为没有构建错误）。
+  # 故在此为 CI 单独收紧内存与并发参数，不改动 gradle.properties 以免影响本地开发。
+  GRADLE_BUILD_JVMARGS: '-Xmx4g -XX:MaxMetaspaceSize=1g -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8'
+  GRADLE_BUILD_WORKERS: '2'
 
 jobs:
   build:
@@ -246,7 +254,17 @@ jobs:
             *) echo "Unsupported workflow event: $EVENT_NAME" >&2; exit 2 ;;
           esac
           chmod +x ./gradlew
-          ./gradlew "$gradle_task" --stacktrace --no-daemon
+          # 内存与并发参数覆盖说明（均已本地实证）：
+          #   -Dorg.gradle.jvmargs    -> 实际堆上限 8192m 降至 4096m（Runtime.maxMemory 实测）
+          #   -Dorg.gradle.workers.max-> 实际并行度 16 降至 2（startParameter.maxWorkerCount 实测）
+          #   --no-parallel           -> 官方开关，关闭跨项目并行（优先级高于 gradle.properties）
+          # 命令行参数优先级高于 gradle.properties，因此不修改该文件，避免影响本地开发。
+          ./gradlew "$gradle_task" \
+            --stacktrace \
+            --no-daemon \
+            --no-parallel \
+            -Dorg.gradle.jvmargs="$GRADLE_BUILD_JVMARGS" \
+            -Dorg.gradle.workers.max="$GRADLE_BUILD_WORKERS"
 
       - name: Upload Android reports
         if: always()
