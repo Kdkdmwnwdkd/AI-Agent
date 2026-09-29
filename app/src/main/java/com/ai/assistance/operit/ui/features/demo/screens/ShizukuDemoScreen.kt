@@ -266,8 +266,24 @@ fun ShizukuDemoScreen(
                 }
         )
 
-        // 组合向导卡片到一个专门的设置区域 - 现在检查NodeJS和Python环境
-        val needOperitTerminalSetupGuide = !viewModel.isNodejsPythonEnvironmentReady.value
+        // 终端环境配置入口【恒为显示】。
+        //
+        // 原实现：needOperitTerminalSetupGuide = !isNodejsPythonEnvironmentReady
+        // 也就是"环境已就绪 → 入口消失"。这条设计有两个致命问题：
+        //
+        // 1) 状态判定一旦不准（历史上就是靠裸子串匹配，把没装判成装了），
+        //    入口直接消失，用户既看不到"其实没配好"，也进不去配置页；
+        // 2) 就算判定完全正确，环境真配好了、入口也随之消失 ——
+        //    此后用户想追加安装软件包（git / ffmpeg 等）、或环境损坏需重修，
+        //    都没有任何路径可达配置页。
+        //
+        // 而 TerminalSetup 页面没有独立入口，这张卡片是唯一入口，
+        // 所以上面任一情况都会把用户彻底锁死。
+        //
+        // 现在恒为 true：任何状态下都能进配置页。
+        // 环境是否就绪仍通过 isEnvironmentReady 传入，只影响卡片里显示
+        // "已就绪/待配置"的文案与按钮样式，不再控制入口显隐。
+        val needOperitTerminalSetupGuide = true
 
         // 检查Shizuku版本状态 - 使用remember缓存结果，避免每次重组时重复调用
         val (installedVersion, bundledVersion, isUpdateNeeded) =
