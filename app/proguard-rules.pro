@@ -88,9 +88,6 @@
 # xmlbeans
 -dontwarn org.apache.xmlbeans.**
 
-# GIF handling
--dontwarn pl.droidsonroids.gif.**
-
 # Reactor BlockHound integration with Netty
 -dontwarn reactor.blockhound.integration.BlockHoundIntegration
 -dontwarn io.netty.util.internal.Hidden$NettyBlockHoundIntegration
