@@ -420,10 +420,15 @@ fun SetupScreen(
                     if (selectedCustomCommands.isNotEmpty()) {
                         commands.addAll(selectedCustomCommands)
 
-                        // 如果安装了 uv，则需要确保 pipx 路径可用
+                        // 如果安装了 uv，则需要确保 pipx 路径可用。
+                        //
+                        // pipx ensurepath 只会把 ~/.local/bin 写进 shell 配置文件，
+                        // 对"当前已经启动的这个会话"不生效，因此紧接着补一条 export，
+                        // 让本次配置流程中后续的命令（uv / uvx）立即可用。
                         if (selectedPackages.getOrDefault("uv", false)) {
                             commands.add("pipx ensurepath")
                             commands.add("source ~/.profile")
+                            commands.add("export PATH=\"${'$'}HOME/.local/bin:${'$'}PATH\"")
                         }
                     }
                     
@@ -447,17 +452,38 @@ fun SetupScreen(
                                 "echo '[!] pnpm 安装失败，请手动重试: npm install -g --allow-scripts=pnpm pnpm'"
                         )
                         // 初始化 pnpm 全局目录并写入 PATH。
+                        //
                         // 不做这一步，`pnpm add -g` 会报：
                         //   ERR_PNPM_GLOBAL_BIN_DIR_NOT_IN_PATH
-                        //   全局 bin 目录 ~/.local/share/pnpm/bin 不在 PATH 中
-                        // pnpm setup 会把该目录写入 shell 配置，这里再对当前会话立即生效。
+                        //   The configured global bin directory
+                        //   "/root/.local/share/pnpm/bin" is not in PATH
+                        //
+                        // 原因是 pnpm 的全局 bin 目录与 npm 完全不同：
+                        //   npm  -> $(npm prefix -g)/bin
+                        //   pnpm -> $PNPM_HOME/bin，即 ~/.local/share/pnpm/bin
+                        // 且该目录默认不在 PATH 中，导致所有全局包都装不上。
+                        //
+                        // 分两步处理，缺一不可：
+                        //   1) pnpm setup —— 写入 shell 配置文件，持久化，重启后仍有效
+                        //   2) export     —— 让"当前这个已启动的会话"立即生效
+                        //      （本终端会话在配置开始前就已启动，读不到刚写入的配置，
+                        //        不补 export 的话，下面这条 pnpm add -g 依旧会失败）
                         //
                         // 注意 Kotlin 字符串模板：`"$HOME"` 会被当成模板变量插值；
                         // 而 `"\$HOME"` 虽然能编译，但输出的字符串里会多一个字面反斜杠。
-                        // 正确写法用模板表达式产出一个字面 $，即 美元符 大括号 单引号 美元符 单引号 大括号。
+                        // 正确写法是用模板表达式产出一个字面 $。
                         commands.add("pnpm setup >/dev/null 2>&1 || true")
                         commands.add("export PNPM_HOME=\"${'$'}HOME/.local/share/pnpm\"")
                         commands.add("export PATH=\"${'$'}PNPM_HOME/bin:${'$'}PATH\"")
+                        // 校验全局 bin 目录确实已进入 PATH，避免下游再次出现
+                        // ERR_PNPM_GLOBAL_BIN_DIR_NOT_IN_PATH 而无人察觉。
+                        // 这里用 grep 做子串匹配，避免 case/in 语法在 Kotlin 字符串中
+                        // 因转义产生括号不匹配。
+                        commands.add(
+                            "echo \"${'$'}PATH\" | grep -q \"${'$'}PNPM_HOME/bin\" && " +
+                                "echo '[OK] pnpm 全局目录已加入 PATH' || " +
+                                "echo '[!] pnpm 全局目录未加入 PATH，请手动执行: pnpm setup'"
+                        )
                         // 使用 pnpm 安装其他包（失败不中断后续安装步骤）
                         commands.add(
                             "pnpm add -g ${selectedNpmPackages.joinToString(" ")} || " +
