@@ -621,16 +621,12 @@ dependencies {
     
     // APK解析和修改库
     implementation(libs.android.apksig) // APK签名工具
-    implementation(libs.apk.parser) // 用于解析和处理AndroidManifest.xml
     implementation(libs.sable.axml) // 用于Android二进制XML的读写
     implementation(libs.zipalign.java) // 用于处理ZIP文件对齐
     
     // ZIP处理库 - 用于APK解压和重打包
     implementation(libs.commons.compress)
     implementation(libs.commons.io) // 添加Apache Commons IO
-    
-    // 图片处理库
-    implementation(libs.glide) // 用于处理图像
     
     // XML处理
     implementation(libs.androidx.core.ktx)
@@ -644,7 +640,6 @@ dependencies {
     implementation(libs.androidsvg)
     
     // Add missing GIF support for Markwon
-    implementation(libs.android.gif)
     
     // Image Cropper for background image cropping
     implementation(libs.image.cropper)
@@ -657,14 +652,11 @@ dependencies {
     // Material 3 Window Size Class
     implementation(libs.material3.window)
     
-    // Window metrics library for foldables and adaptive layouts
-    implementation(libs.window)
     implementation(libs.androidx.webkit)
 
     // Document conversion libraries
     implementation(libs.itextg)
     implementation(libs.pdfbox)
-    implementation(libs.zip4j)
     
     // 图片加载库
     implementation(libs.coil)
@@ -676,7 +668,6 @@ dependencies {
     
     // LaTeX rendering libraries
     implementation(libs.jlatexmath)
-    implementation(libs.renderx) // RenderX library for LaTeX rendering
     
     // Base Android dependencies
     implementation(libs.androidx.appcompat)
@@ -688,7 +679,6 @@ dependencies {
     implementation(libs.kotlin.reflect)
     
     // UUID dependencies
-    implementation(libs.uuid)
     
     // Gson for JSON parsing
     implementation(libs.gson)
@@ -704,8 +694,6 @@ dependencies {
     implementation(libs.hnswlib.utils)
     
     // 用于向量嵌入的TF Lite (如果需要自定义嵌入)
-    implementation(libs.tensorflow.lite)
-    implementation(libs.mediapipe.tasks.text)
     
     // ONNX Runtime for Android - 支持更强大的多语言Embedding模型
     implementation(libs.onnxruntime.android)
@@ -829,14 +817,7 @@ dependencies {
     // BouncyCastle - explicitly include jdk18on version to avoid conflicts
     implementation(libs.bouncycastle.bcprov)
 
-    // Retrofit
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.converter.moshi)
-    implementation(libs.moshi.kotlin)
     implementation(libs.okhttp.logging.interceptor)
-
-    // Accompanist
-    implementation(libs.accompanist.systemuicontroller)
 
     // Glance for Widgets (Compose for Widgets)
     implementation(libs.glance.appwidget)
