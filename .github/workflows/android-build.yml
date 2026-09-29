@@ -255,7 +255,11 @@ jobs:
             echo "::error::缺失它会使用随机 debug key，导致 APK 无法覆盖安装。" >&2
             exit 1
           fi
-          base64 -d "$KEYSTORE_SRC" > ~/.android/debug.keystore
+          # 先剥离所有空白再解码：无论文件是 76 字符换行还是单行，
+          # 都能得到相同结果。CI #196 曾因单行超长 base64 被 runner 的
+          # base64 -d 以 "invalid input" 拒绝（本地 GNU coreutils 却可解析），
+          # 归一化可彻底消除这类跨实现差异。
+          tr -d '\n\r' < "$KEYSTORE_SRC" | base64 -d > ~/.android/debug.keystore
           if [ ! -s ~/.android/debug.keystore ]; then
             echo "::error::解码后的 debug.keystore 为空，$KEYSTORE_SRC 内容可能损坏。" >&2
             exit 1
