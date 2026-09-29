@@ -256,10 +256,13 @@ jobs:
             echo "::error::缺失它会使用随机 debug key，导致 APK 无法覆盖安装。" >&2
             exit 1
           fi
-          # 先剥离所有空白再解码：无论文件是 76 字符换行还是单行，
-          # 都能得到相同结果。CI #196 曾因单行超长 base64 被 runner 的
-          # base64 -d 以 "invalid input" 拒绝（本地 GNU coreutils 却可解析），
-          # 归一化可彻底消除这类跨实现差异。
+          # 先剥离所有空白再解码，使 76 字符换行与单行两种写法结果一致。
+          #
+          # CI #196~#198 连续三次在此报 "base64: invalid input"，
+          # 当时的判断是"单行超长被拒"，事后证明是误判。真因见 README：
+          # 本文件里混入了 README 说明文字与 markdown 反引号，
+          # tr -d 把说明文字一并拼入后必然解码失败。
+          # 结论：本文件必须保持纯 base64，不得附加任何文字。
           tr -d '\n\r' < "$KEYSTORE_SRC" | base64 -d > ~/.android/debug.keystore
           if [ ! -s ~/.android/debug.keystore ]; then
             echo "::error::解码后的 debug.keystore 为空，$KEYSTORE_SRC 内容可能损坏。" >&2
