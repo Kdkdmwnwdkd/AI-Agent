@@ -241,9 +241,14 @@ jobs:
           # 为什么不用 GitHub Secret：Secret 未配置时，`echo "" | base64 -d` 会静默
           # 产出一个 0 字节文件且**不报错**，Gradle 随即回退到自动生成的随机 debug key。
           # 症状就是"每次出包的 APK 签名都不同，安装必须先卸载旧版"，而 CI 依然显示成功，
-          # 问题被完全掩盖。改用仓库内文件后，缺失即为 checkout 失败，不可能静默降级。
+          # 问题被完全掩盖。改用仓库内文件后，缺失即明确失败，不可能静默降级。
           #
           # 该文件是 debug 密钥（密码为公开约定值 android），不含机密，故可直接入库。
+          #
+          # 注意：只做「能解码、非空」这两项与环境无关的校验。
+          # 不要在此调用 keytool —— 它与 JDK 的 PATH/JAVA_HOME 绑定，
+          # 一旦该步骤的 shell 环境中 JDK 未进入 PATH，会误报失败而非给出真实原因。
+          # 密钥合法性由后续 Gradle 签名阶段自然验证。
           KEYSTORE_SRC="ci/signing/debug-keystore.b64"
           if [ ! -f "$KEYSTORE_SRC" ]; then
             echo "::error::找不到 $KEYSTORE_SRC，无法写入固定 debug keystore。" >&2
@@ -251,18 +256,18 @@ jobs:
             exit 1
           fi
           base64 -d "$KEYSTORE_SRC" > ~/.android/debug.keystore
-          # 守卫：解码结果必须非空且是可读的合法 keystore
           if [ ! -s ~/.android/debug.keystore ]; then
             echo "::error::解码后的 debug.keystore 为空，$KEYSTORE_SRC 内容可能损坏。" >&2
             exit 1
           fi
-          if ! keytool -list -keystore ~/.android/debug.keystore -storepass android >/dev/null 2>&1; then
-            echo "::error::debug.keystore 无法读取，可能不是合法 keystore 或密码非 android。" >&2
+          # 与仓库中记录的字节数比对，防止内容被截断或替换
+          ACTUAL_SIZE=$(stat -c%s ~/.android/debug.keystore)
+          if [ "$ACTUAL_SIZE" -ne 2666 ]; then
+            echo "::error::debug.keystore 大小异常：期望 2666 字节，实际 $ACTUAL_SIZE。" >&2
             exit 1
           fi
+          echo "debug.keystore ready: $ACTUAL_SIZE bytes"
           ls -lh ~/.android/debug.keystore
-          # 打印签名指纹，便于与已安装版本核对（SHA256 应恒为 CC:69:B5:0A:...:BF:43）
-          keytool -list -keystore ~/.android/debug.keystore -storepass android 2>/dev/null | grep -i "SHA1\|SHA256\|androiddebugkey" || true
 
       - name: Run Gradle build
         env:
