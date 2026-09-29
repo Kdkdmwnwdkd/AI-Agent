@@ -17,6 +17,7 @@ on:
     branches: [main]
     paths:
       - .github/workflows/android-build.yml
+      - ci/signing/**
       - .gitmodules
       - .npmrc
       - app/**
