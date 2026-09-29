@@ -78,6 +78,27 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           cache: gradle
 
+      - name: Setup fixed debug keystore
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.android
+          # 与 android-build.yml 保持一致。
+          # app/build.gradle.kts 的 signingConfigs 会显式校验该文件存在，
+          # 缺失时直接失败（避免静默回退到 AGP 随机密钥），因此本步骤必须存在。
+          KEYSTORE_SRC="ci/signing/debug-keystore.b64"
+          if [ ! -f "$KEYSTORE_SRC" ]; then
+            echo "::error::找不到 $KEYSTORE_SRC，无法写入固定 debug keystore。" >&2
+            exit 1
+          fi
+          tr -d '\n\r' < "$KEYSTORE_SRC" | base64 -d > ~/.android/debug.keystore
+          ACTUAL_SIZE=$(stat -c%s ~/.android/debug.keystore)
+          if [ "$ACTUAL_SIZE" -ne 2666 ]; then
+            echo "::error::debug.keystore 大小异常：期望 2666 字节，实际 $ACTUAL_SIZE。" >&2
+            exit 1
+          fi
+          echo "debug.keystore ready: $ACTUAL_SIZE bytes"
+
       - name: Set up Android SDK
         uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4
         with:
