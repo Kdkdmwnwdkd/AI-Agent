@@ -446,10 +446,18 @@ fun SetupScreen(
                             "command -v pnpm >/dev/null 2>&1 && echo '[OK] pnpm 安装成功' || " +
                                 "echo '[!] pnpm 安装失败，请手动重试: npm install -g --allow-scripts=pnpm pnpm'"
                         )
+                        // 初始化 pnpm 全局目录并写入 PATH。
+                        // 不做这一步，`pnpm add -g` 会报：
+                        //   ERR_PNPM_GLOBAL_BIN_DIR_NOT_IN_PATH
+                        //   全局 bin 目录 ~/.local/share/pnpm/bin 不在 PATH 中
+                        // pnpm setup 会把该目录写入 shell 配置，这里再对当前会话立即生效。
+                        commands.add("pnpm setup >/dev/null 2>&1 || true")
+                        commands.add("export PNPM_HOME=\"\\$HOME/.local/share/pnpm\"")
+                        commands.add("export PATH=\"\\$PNPM_HOME/bin:\\$PATH\"")
                         // 使用 pnpm 安装其他包（失败不中断后续安装步骤）
                         commands.add(
                             "pnpm add -g ${selectedNpmPackages.joinToString(" ")} || " +
-                                "echo '[!] pnpm 全局包安装失败，请在终端手动重试'"
+                                "echo '[!] pnpm 全局包安装失败，请在终端手动重试: pnpm add -g ...'"
                         )
                     }
                     
