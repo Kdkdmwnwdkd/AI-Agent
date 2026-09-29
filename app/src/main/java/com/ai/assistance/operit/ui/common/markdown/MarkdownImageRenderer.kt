@@ -54,9 +54,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import coil.compose.SubcomposeAsyncImage
-import coil.request.ImageRequest
+import coil3.compose.SubcomposeAsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.ai.assistance.operit.R
+import com.ai.assistance.operit.ui.theme.rememberCoilImageLoader
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
@@ -174,6 +176,9 @@ fun MarkdownImageRenderer(
                                     .crossfade(true)
                                     .build(),
                     contentDescription = null,
+                    // 使用当前作用域的 ImageLoader：截图渲染时为软件 Bitmap loader，
+                    // 正常界面下为全局单例。
+                    imageLoader = rememberCoilImageLoader(),
                     modifier =
                             Modifier.clip(RoundedCornerShape(12.dp))
                                 .align(Alignment.Center)

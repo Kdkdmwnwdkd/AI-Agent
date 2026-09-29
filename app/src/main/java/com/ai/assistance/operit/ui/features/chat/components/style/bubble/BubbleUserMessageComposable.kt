@@ -44,7 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import coil.compose.rememberAsyncImagePainter
+import com.ai.assistance.operit.ui.theme.operitRememberAsyncImagePainter
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.data.model.ChatMessage
 import com.ai.assistance.operit.data.model.ChatMessageDisplayMode
@@ -372,7 +372,7 @@ fun BubbleUserMessageComposable(
 
                         if (!avatarUri.isNullOrEmpty()) {
                             Image(
-                                painter = rememberAsyncImagePainter(model = Uri.parse(avatarUri)),
+                                painter = operitRememberAsyncImagePainter(model = Uri.parse(avatarUri)),
                                 contentDescription = "User Avatar",
                                 modifier = Modifier
                                     .size(32.dp)
@@ -653,7 +653,7 @@ fun BubbleUserMessageComposable(
                 // Avatar
                 if (!avatarUri.isNullOrEmpty()) {
                     Image(
-                        painter = rememberAsyncImagePainter(model = Uri.parse(avatarUri)),
+                        painter = operitRememberAsyncImagePainter(model = Uri.parse(avatarUri)),
                         contentDescription = "User Avatar",
                         modifier = Modifier
                             .size(32.dp)

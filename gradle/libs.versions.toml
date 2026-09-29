@@ -35,7 +35,7 @@ webkit = "1.12.1"
 itextg = "5.5.10"
 pdfbox = "2.0.27.0"
 zip4j = "2.11.5"
-coil = "2.5.0"
+coil = "3.3.0"
 jlatexmath = "0.2.0"
 renderx = "1.0.0"
 kotlinx-serialization = "1.9.0"
@@ -168,9 +168,13 @@ pdfbox = { group = "com.tom-roush", name = "pdfbox-android", version.ref = "pdfb
 zip4j = { group = "net.lingala.zip4j", name = "zip4j", version.ref = "zip4j" }
 
 # Image loading
-coil = { group = "io.coil-kt", name = "coil", version.ref = "coil" }
-coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
-coil-gif = { group = "io.coil-kt", name = "coil-gif", version.ref = "coil" }
+# Coil 3.x 起 groupId 由 io.coil-kt 迁移到 io.coil-kt.coil3，
+# 且网络加载器/缓存策略拆为独立 artifact（不再内置 OkHttp 实现）。
+coil = { group = "io.coil-kt.coil3", name = "coil", version.ref = "coil" }
+coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
+coil-gif = { group = "io.coil-kt.coil3", name = "coil-gif", version.ref = "coil" }
+coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
+coil-network-cache-control = { group = "io.coil-kt.coil3", name = "coil-network-cache-control", version.ref = "coil" }
 
 # LaTeX rendering
 jlatexmath = { group = "ru.noties", name = "jlatexmath-android", version.ref = "jlatexmath" }

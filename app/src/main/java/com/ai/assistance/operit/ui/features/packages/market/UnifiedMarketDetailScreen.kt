@@ -76,7 +76,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.rememberAsyncImagePainter
+import coil3.compose.rememberAsyncImagePainter
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.data.api.MarketV2Comment
 import com.ai.assistance.operit.ui.common.icons.rememberRemoteLogoPainter

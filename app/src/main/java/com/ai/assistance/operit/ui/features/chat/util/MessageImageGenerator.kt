@@ -33,16 +33,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.CompositionLocalProvider
-import coil.ImageLoader
-import coil.compose.LocalImageLoader
-import coil.request.CachePolicy
 import com.ai.assistance.operit.data.model.ChatMessage
 import com.ai.assistance.operit.data.preferences.ActivePromptManager
 import com.ai.assistance.operit.ui.features.chat.components.ChatStyle
 import com.ai.assistance.operit.ui.features.chat.components.style.bubble.BubbleStyleChatMessage
 import com.ai.assistance.operit.ui.features.chat.components.style.cursor.CursorStyleChatMessage
 import com.ai.assistance.operit.ui.theme.AppBackgroundLayer
+import com.ai.assistance.operit.ui.theme.LocalCoilImageLoader
 import com.ai.assistance.operit.ui.theme.LocalThemePreferenceSnapshot
+import com.ai.assistance.operit.ui.theme.rememberSoftwareBitmapImageLoader
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -138,15 +137,15 @@ object MessageImageGenerator {
                     setBackgroundColor(AndroidColor.TRANSPARENT)
                     setContent {
                         // 为截图渲染提供只使用软件 Bitmap 的 ImageLoader，避免
-                        // "Software rendering doesn't support hardware bitmaps" 崩溃
-                        val softwareImageLoader = ImageLoader.Builder(context)
-                            .allowHardware(false)
-                            .diskCachePolicy(CachePolicy.ENABLED)
-                            .memoryCachePolicy(CachePolicy.ENABLED)
-                            .build()
+                        // "Software rendering doesn't support hardware bitmaps" 崩溃。
+                        //
+                        // Coil 3 移除了 coil.compose.LocalImageLoader，改为由下面的
+                        // LocalCoilImageLoader 提供作用域覆盖；该 loader 从全局单例派生，
+                        // 完整继承其缓存/超时/解码器配置，仅额外关闭硬件 Bitmap。
+                        val softwareImageLoader = rememberSoftwareBitmapImageLoader()
 
                         CompositionLocalProvider(
-                            LocalImageLoader provides softwareImageLoader,
+                            LocalCoilImageLoader provides softwareImageLoader,
                             LocalThemePreferenceSnapshot provides themeSnapshot,
                         ) {
                             MaterialTheme(colorScheme = colorScheme) {

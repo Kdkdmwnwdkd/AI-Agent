@@ -23,7 +23,7 @@ import com.ai.assistance.operit.R
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.ui.layout.ContentScale
-import coil.compose.rememberAsyncImagePainter
+import coil3.compose.rememberAsyncImagePainter
 
 private const val CHAT_HEADER_CHARACTER_NAME_MAX_LENGTH = 12
 

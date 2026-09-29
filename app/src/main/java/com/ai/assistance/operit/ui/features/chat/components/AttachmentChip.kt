@@ -32,7 +32,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
+import com.ai.assistance.operit.ui.theme.rememberCoilImageLoader
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.data.model.AttachmentInfo
 import java.io.File
@@ -61,6 +62,8 @@ fun AttachmentChip(attachmentInfo: AttachmentInfo, onRemove: () -> Unit, onInser
             AsyncImage(
                 model = imageModel,
                 contentDescription = attachmentInfo.fileName,
+                // 截图分享时需使用软件 Bitmap loader，避免软件渲染崩溃
+                imageLoader = rememberCoilImageLoader(),
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
             )

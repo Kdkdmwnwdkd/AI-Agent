@@ -40,7 +40,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.viewinterop.AndroidView
-import coil.compose.SubcomposeAsyncImage
+import coil3.compose.SubcomposeAsyncImage
+import com.ai.assistance.operit.ui.theme.rememberCoilImageLoader
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.ui.common.animations.SimpleAnimatedVisibility
 import com.ai.assistance.operit.ui.common.markdown.DefaultXmlRenderer
@@ -437,6 +438,7 @@ class CustomXmlRenderer(
                     SubcomposeAsyncImage(
                         model = source.faviconUrl,
                         contentDescription = null,
+                        imageLoader = rememberCoilImageLoader(),
                         modifier = Modifier.size(18.dp).clip(RoundedCornerShape(4.dp)),
                         loading = {
                             Icon(
@@ -491,6 +493,7 @@ class CustomXmlRenderer(
                     SubcomposeAsyncImage(
                         model = source.faviconUrl,
                         contentDescription = null,
+                        imageLoader = rememberCoilImageLoader(),
                         modifier = Modifier.size(32.dp).clip(RoundedCornerShape(7.dp)),
                         loading = { Icon(Icons.Default.Web, contentDescription = null) },
                         error = { Icon(Icons.Default.Web, contentDescription = null) },

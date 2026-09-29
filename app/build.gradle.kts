@@ -670,6 +670,9 @@ dependencies {
     implementation(libs.coil)
     implementation(libs.coil.compose)
     implementation(libs.coil.gif)
+    // Coil 3 起 OkHttp 网络栈与 HTTP 缓存头策略改为独立 artifact
+    implementation(libs.coil.network.okhttp)
+    implementation(libs.coil.network.cache.control)
     
     // LaTeX rendering libraries
     implementation(libs.jlatexmath)

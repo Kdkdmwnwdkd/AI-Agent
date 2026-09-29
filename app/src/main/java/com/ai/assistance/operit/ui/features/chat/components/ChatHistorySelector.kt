@@ -128,7 +128,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.layout.ContentScale
-import coil.compose.rememberAsyncImagePainter
+import coil3.compose.rememberAsyncImagePainter
 import com.ai.assistance.operit.data.preferences.UserPreferencesManager
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.flowOf

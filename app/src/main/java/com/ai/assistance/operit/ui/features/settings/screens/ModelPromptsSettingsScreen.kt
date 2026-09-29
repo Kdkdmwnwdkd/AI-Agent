@@ -81,7 +81,7 @@ import androidx.compose.ui.graphics.toArgb
 import com.ai.assistance.operit.ui.features.settings.components.CharacterCardDialog
 import com.ai.assistance.operit.ui.features.settings.components.CompactAvatarPicker
 import com.ai.assistance.operit.ui.features.settings.components.CompactTextFieldWithExpand
-import coil.compose.rememberAsyncImagePainter
+import coil3.compose.rememberAsyncImagePainter
 import com.ai.assistance.operit.ui.common.rememberLocal
 import com.ai.assistance.operit.util.ColorQrCodeUtil
 import com.ai.assistance.operit.util.AppLogger
@@ -99,7 +99,7 @@ import java.nio.ByteOrder
 import kotlinx.coroutines.flow.first
 import org.json.JSONArray
 import org.json.JSONObject
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class, ExperimentalLayoutApi::class)
 @Composable

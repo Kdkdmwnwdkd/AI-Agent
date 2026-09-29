@@ -39,7 +39,7 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import coil.compose.rememberAsyncImagePainter
+import coil3.compose.rememberAsyncImagePainter
 import com.ai.assistance.operit.ui.common.WaveVisualizer
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.math.cos

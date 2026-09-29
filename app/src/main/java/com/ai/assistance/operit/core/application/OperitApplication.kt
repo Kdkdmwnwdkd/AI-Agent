@@ -10,12 +10,19 @@ import com.ai.assistance.operit.util.AppLogger
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.work.Configuration as WorkConfiguration
 import androidx.work.WorkManager
-import coil.decode.GifDecoder
-import coil.decode.ImageDecoderDecoder
-import coil.ImageLoader
-import coil.ImageLoaderFactory
-import coil.disk.DiskCache
-import coil.request.CachePolicy
+import coil3.ImageLoader
+import coil3.SingletonImageLoader
+import coil3.annotation.ExperimentalCoilApi
+import coil3.disk.DiskCache
+import coil3.disk.directory
+import coil3.gif.AnimatedImageDecoder
+import coil3.gif.GifDecoder
+import coil3.memory.MemoryCache
+import coil3.network.cachecontrol.CacheControlCacheStrategy
+import coil3.network.okhttp.OkHttpNetworkFetcher
+import coil3.request.CachePolicy
+import coil3.request.allowHardware
+import coil3.request.crossfade
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 import com.ai.assistance.operit.BuildConfig
@@ -73,7 +80,10 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
 /** Application class for Operit */
-class OperitApplication : Application(), ImageLoaderFactory, WorkConfiguration.Provider {
+class OperitApplication :
+    Application(),
+    SingletonImageLoader.Factory,
+    WorkConfiguration.Provider {
 
     companion object {
         /** Global JSON instance with custom serializers */
@@ -149,6 +159,7 @@ class OperitApplication : Application(), ImageLoaderFactory, WorkConfiguration.P
         }
     }
 
+    @OptIn(ExperimentalCoilApi::class)
     private fun initializeMainApplicationLocked() {
         val startTime = System.currentTimeMillis()
 
@@ -306,18 +317,27 @@ class OperitApplication : Application(), ImageLoaderFactory, WorkConfiguration.P
         
         globalImageLoader =
                 ImageLoader.Builder(this)
-                        .okHttpClient(imageOkHttpClient) // 使用自定义 OkHttp 客户端
                         .components {
+                            // Coil 3 不再内置 OkHttp 网络栈，需显式注册网络 Fetcher。
+                            // 这里挂上自定义 OkHttp 客户端（加长超时以支持慢速图片服务器），
+                            // 并用 CacheControlCacheStrategy 替代 2.x 的 respectCacheHeaders(true)。
+                            // 两者都以 lambda 传入，以便延迟到真正需要时再求值。
+                            add(
+                                    OkHttpNetworkFetcher.factory(
+                                            { imageOkHttpClient },
+                                            { CacheControlCacheStrategy() },
+                                    )
+                            )
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                                add(ImageDecoderDecoder.Factory())
+                                add(AnimatedImageDecoder.Factory())
                             } else {
                                 add(GifDecoder.Factory())
                             }
                         }
                         .crossfade(true)
-                        .respectCacheHeaders(true)
                         .memoryCachePolicy(CachePolicy.ENABLED)
                         .diskCachePolicy(CachePolicy.ENABLED)
+                        .networkCachePolicy(CachePolicy.ENABLED)
                         .diskCache {
                             DiskCache.Builder()
                                     .directory(filesDir.resolve("image_cache"))
@@ -326,7 +346,7 @@ class OperitApplication : Application(), ImageLoaderFactory, WorkConfiguration.P
                         }
                         .memoryCache {
                             // 设置内存缓存最大大小为应用可用内存的15%
-                            coil.memory.MemoryCache.Builder(this).maxSizePercent(0.15).build()
+                            MemoryCache.Builder().maxSizePercent(this@OperitApplication, 0.15).build()
                         }
                         .build()
         AppLogger.d(TAG, "【启动计时】全局图片加载器初始化完成（超时配置：连接30s/读取60s） - ${System.currentTimeMillis() - startTime}ms")
@@ -397,10 +417,12 @@ class OperitApplication : Application(), ImageLoaderFactory, WorkConfiguration.P
     }
 
     /**
-     * 实现 ImageLoaderFactory 接口
+     * 实现 SingletonImageLoader.Factory 接口
      * 让 Coil 使用我们配置的全局 ImageLoader（带有自定义超时设置）
+     *
+     * 注意：Coil 3 起该接口方法签名新增了 Context 参数。
      */
-    override fun newImageLoader(): ImageLoader {
+    override fun newImageLoader(context: Context): ImageLoader {
         return globalImageLoader
     }
 

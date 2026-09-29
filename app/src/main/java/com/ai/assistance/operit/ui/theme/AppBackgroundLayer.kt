@@ -20,8 +20,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import coil.compose.AsyncImagePainter
-import coil.compose.rememberAsyncImagePainter
+import coil3.compose.AsyncImagePainter
+import coil3.compose.rememberAsyncImagePainter
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.data.preferences.UserPreferencesManager
 import com.ai.assistance.operit.util.AppLogger
@@ -117,7 +117,7 @@ fun AppBackgroundLayer(
             val uri = Uri.parse(backgroundImageUri)
 
             if (backgroundMediaType == UserPreferencesManager.MEDIA_TYPE_IMAGE) {
-                val painter = rememberAsyncImagePainter(model = uri)
+                val painter = operitRememberAsyncImagePainter(model = uri)
 
                 LaunchedEffect(painter.state) {
                     if (painter.state is AsyncImagePainter.State.Error) {

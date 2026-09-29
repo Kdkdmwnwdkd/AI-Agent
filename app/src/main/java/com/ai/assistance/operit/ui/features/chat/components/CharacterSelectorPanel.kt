@@ -45,7 +45,7 @@ import com.ai.assistance.operit.ui.common.rememberLocal
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.ui.layout.ContentScale
-import coil.compose.rememberAsyncImagePainter
+import coil3.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.flow.flowOf
 
 private enum class CharacterSelectorSortOption {
