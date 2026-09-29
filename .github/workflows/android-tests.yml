@@ -71,14 +71,6 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Initialize terminal submodule
-        shell: bash
-        run: |
-          set -euo pipefail
-          git submodule sync -- terminal
-          git submodule update --init --recursive --depth 1 terminal
-          git submodule status -- terminal
-
       - name: Set up JDK
         uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
         with:
