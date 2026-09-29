@@ -8,6 +8,7 @@ import com.ai.assistance.operit.core.tools.mcp.McpRuntimeDescriptor
 import com.ai.assistance.operit.data.mcp.MCPLocalServer
 import com.ai.assistance.operit.data.mcp.MCPRepository
 import com.ai.assistance.operit.core.tools.system.Terminal
+import com.ai.assistance.operit.core.tools.system.TerminalProbe
 import com.google.gson.Gson
 import com.google.gson.JsonParser
 import kotlinx.coroutines.CoroutineScope
@@ -78,8 +79,9 @@ class MCPStarter(private val context: Context) {
         }
 
         try {
-            val result = terminal.executeCommand(sessionId, "command -v pnpm")
-            val installed = result != null && result.contains("pnpm")
+            // 必须判断命令真的能跑：终端回显与 `xxx: not found` 报错文本里都带 "pnpm"，
+            // 用 contains 判定会把"没装"认成"装了"。详见 TerminalProbe。
+            val installed = TerminalProbe.isRunnable(terminal, sessionId, "pnpm")
             pnpmInstalled = installed
             return installed
         } catch (e: Exception) {
