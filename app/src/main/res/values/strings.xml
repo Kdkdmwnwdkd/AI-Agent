@@ -8590,6 +8590,9 @@
     <string name="toolreg_set_function_model_config_desc">Set function model config: %1$s, config=%2$s (model_index=%3$s)</string>
     <string name="toolreg_test_model_config_connection_desc">Test model config connection: %1$s (model_index=%2$s)</string>
     <string name="toolreg_package_proxy_desc">Proxy call to package tool: %1$s</string>
+    <string name="toolreg_package_proxy_prompt_desc">【仅用于「包」提供的工具，不要用它调用内置工具】转调通过 use_package 激活的包工具。tool_name 必须写成 packageName:toolName 格式。内置工具（如 music_play、read_file、edit_file、execute_shell 等）请直接调用，不要经过本工具 —— 它们不属于任何包，填进来会报 tool_name must use packageName:toolName format。</string>
+    <string name="toolreg_package_proxy_tool_name_hint">【必须含包名前缀】目标包工具名，格式为 packageName:toolName（例如 mymusic:play）。注意：内置工具不适用 —— 请直接调用它们，不要经过本工具。</string>
+    <string name="toolreg_package_proxy_params_hint">要转发给目标包工具的 JSON 参数对象</string>
     <string name="toolreg_web_search_desc">Search: %1$s</string>
     <string name="toolreg_send_broadcast_desc">Send broadcast: %1$s</string>
     <string name="toolreg_get_app_usage_time_desc">Get app usage time for %1$s in the last %2$s hours</string>

@@ -3021,21 +3021,27 @@ class EnhancedAIService private constructor(private val context: Context) {
                     "CLI Tool Mode已启用，提供 ${selectedTools.size} 个工具 (provider=${config.apiProviderType})"
                 )
             } else if (config.enableToolCall) {
+                // 注意：FULL 模式下的 183 个内置工具是【直接暴露】的，模型可以直接调用。
+                // 这里的 package_proxy 只负责转调「包」（use_package 激活的插件）提供的工具，
+                // 与内置工具无关。若不把这条边界说清楚，模型会把内置工具（如 music_play）
+                // 也塞进 package_proxy，然后因为缺少 packageName: 前缀而报错。
                 selectedTools.add(
                     ToolPrompt(
                         name = "package_proxy",
-                        description = "Proxy tool for package tools activated by use_package.",
+                        description = context.getString(R.string.toolreg_package_proxy_prompt_desc),
                         parametersStructured = listOf(
                             ToolParameterSchema(
                                 name = "tool_name",
                                 type = "string",
-                                description = "Target tool name from an activated package (for example: packageName:toolName)",
+                                description =
+                                    context.getString(R.string.toolreg_package_proxy_tool_name_hint),
                                 required = true
                             ),
                             ToolParameterSchema(
                                 name = "params",
                                 type = "object",
-                                description = "JSON object of parameters to forward to the target tool",
+                                description =
+                                    context.getString(R.string.toolreg_package_proxy_params_hint),
                                 required = true
                             )
                         )

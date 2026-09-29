@@ -8518,4 +8518,8 @@
     <string name="market_version_too_low_message">Current client version %1$s is lower than the minimum required version %2$s for this resource. Please update the client before downloading.</string>
     <string name="market_version_too_high_message">Current client version %1$s is higher than the maximum supported version %2$s for this resource. Please use a supported client version.</string>
     <string name="thinking_config_invalid_json">Invalid Thinking Configuration</string>
+    <string name="toolreg_package_proxy_desc">Proxy call to package tool: %1$s</string>
+    <string name="toolreg_package_proxy_prompt_desc">[Package tools only — do NOT use this for built-in tools] Proxies a tool provided by a package activated via use_package. tool_name must use the packageName:toolName format. Built-in tools (such as music_play, read_file, edit_file, execute_shell) should be called directly instead — they belong to no package, and passing them here fails with "tool_name must use packageName:toolName format".</string>
+    <string name="toolreg_package_proxy_tool_name_hint">[Package name prefix required] Target package tool name in packageName:toolName format (e.g. mymusic:play). Not applicable to built-in tools — call those directly instead.</string>
+    <string name="toolreg_package_proxy_params_hint">JSON object of parameters to forward to the target package tool</string>
 </resources>

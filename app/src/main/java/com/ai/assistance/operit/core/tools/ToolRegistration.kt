@@ -157,10 +157,21 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
         }
 
         if (requireQualifiedTarget && !targetToolName.contains(':')) {
-            return null to buildToolErrorResult(
-                tool,
-                "tool_name must use packageName:toolName format"
-            )
+            // 走到这里说明模型把「内置工具」当成「包工具」塞了进来。
+            // 只报格式要求不够 —— 必须告诉它正确的做法（直接调用内置工具），
+            // 否则模型会反复尝试给内置工具编造一个包名前缀。
+            val hint =
+                if (isEnglishLanguage()) {
+                    " If '$targetToolName' is a built-in or internal tool, call it directly " +
+                        "instead of going through package_proxy."
+                } else {
+                    " 如果 '$targetToolName' 是内置工具，请直接调用它，不要经过 package_proxy。"
+                }
+            return null to
+                buildToolErrorResult(
+                    tool,
+                    "tool_name must use packageName:toolName format" + hint
+                )
         }
 
         val paramsParams = tool.parameters.filter { it.name == "params" }
