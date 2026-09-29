@@ -370,6 +370,33 @@ android {
     }
 
     signingConfigs {
+        // 显式声明 debug 签名配置。
+        //
+        // 为什么必须显式声明：不声明时 AGP 使用它内置的 debug 签名配置，
+        // 其 storeFile 并非 ~/.android/debug.keystore，而是 AGP 自己管理的
+        // 路径，并在缺失时**自动生成一把随机密钥**。
+        // 后果：每次 CI 出包的 APK 签名都不同，安装新包必须先卸载旧版
+        // （报 "安装包无效或不兼容"），且该问题不会让构建失败，完全被掩盖。
+        //
+        // 固定后：CI 把仓库内 ci/signing/debug-keystore.b64 解码写入
+        // ~/.android/debug.keystore，这里显式指向它，所有构建签名一致。
+        create("debug") {
+            val debugKeystore = File(System.getProperty("user.home"), ".android/debug.keystore")
+            // 文件不存在时直接失败，而不是静默回退到 AGP 的随机密钥。
+            // 静默回退会导致"构建成功但签名不对"，是本问题最难排查的地方。
+            if (!debugKeystore.exists()) {
+                throw GradleException(
+                    "找不到固定的 debug keystore: ${debugKeystore.absolutePath}\n" +
+                    "签名不固定会导致 APK 无法覆盖安装。\n" +
+                    "CI 环境请确认 `Setup fixed debug keystore` 步骤已成功执行。"
+                )
+            }
+            storeFile = debugKeystore
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+
         val releaseKeystorePath = localProperties.getProperty("RELEASE_STORE_FILE")
         val releaseStorePassword = localProperties.getProperty("RELEASE_STORE_PASSWORD")
         val releaseKeyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS")
