@@ -237,9 +237,29 @@ jobs:
           set -euo pipefail
           mkdir -p ~/.android
           # ★ v1.0.1g: 使用固定的 debug keystore，避免每次编译签名变化导致需重装 APK
-          # 从 GitHub Secrets 读取 base64 编码的 keystore 并解码
+          # 从 GitHub Secrets 读取 base64 编码的 keystore 并解码。
+          # 守卫：Secret 未配置时，下方 base64 -d 会产出一个 0 字节文件且不报错，
+          # Gradle 会静默回退到自动生成的随机 debug key——
+          # 表现就是“每次出包签名都不一样，装包必须先卸载”。
+          # 故此处显式拒绝空值，宁可直接失败也不允许静默降级。
+          if [ -z "${{ secrets.DEBUG_KEYSTORE_B64 }}" ]; then
+            echo "::error::DEBUG_KEYSTORE_B64 未配置或为空，无法写入固定 debug keystore。" >&2
+            echo "::error::缺失它会使 Gradle 回退到随机 debug key，导致 APK 签名每次不同、无法覆盖安装。" >&2
+            echo "::error::请在仓库 Settings → Secrets and variables → Actions 中配置该 Secret（base64 -w0 debug.keystore）。" >&2
+            exit 1
+          fi
           echo "${{ secrets.DEBUG_KEYSTORE_B64 }}" | base64 -d > ~/.android/debug.keystore
+          # 守卡 2：解码后必须是合法 keystore，避免 base64 内容损坏或被截断
+          if [ ! -s ~/.android/debug.keystore ]; then
+            echo "::error::解码后的 debug.keystore 为空，Secret 内容可能损坏。" >&2
+            exit 1
+          fi
+          if ! keytool -list -keystore ~/.android/debug.keystore -storepass android >/dev/null 2>&1; then
+            echo "::error::debug.keystore 无法读取，可能不是合法 keystore 或密码非 android。" >&2
+            exit 1
+          fi
           ls -lh ~/.android/debug.keystore
+          keytool -list -keystore ~/.android/debug.keystore -storepass android 2>/dev/null | grep -i "SHA1\|SHA256\|androiddebugkey" || true
 
       - name: Run Gradle build
         env:
