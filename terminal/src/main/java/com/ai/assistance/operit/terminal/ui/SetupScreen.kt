@@ -451,9 +451,13 @@ fun SetupScreen(
                         //   ERR_PNPM_GLOBAL_BIN_DIR_NOT_IN_PATH
                         //   全局 bin 目录 ~/.local/share/pnpm/bin 不在 PATH 中
                         // pnpm setup 会把该目录写入 shell 配置，这里再对当前会话立即生效。
+                        //
+                        // 注意 Kotlin 字符串模板：`"$HOME"` 会被当成模板变量插值；
+                        // 而 `"\$HOME"` 虽然能编译，但输出的字符串里会多一个字面反斜杠。
+                        // 正确写法用模板表达式产出一个字面 $，即 美元符 大括号 单引号 美元符 单引号 大括号。
                         commands.add("pnpm setup >/dev/null 2>&1 || true")
-                        commands.add("export PNPM_HOME=\"\\$HOME/.local/share/pnpm\"")
-                        commands.add("export PATH=\"\\$PNPM_HOME/bin:\\$PATH\"")
+                        commands.add("export PNPM_HOME=\"${'$'}HOME/.local/share/pnpm\"")
+                        commands.add("export PATH=\"${'$'}PNPM_HOME/bin:${'$'}PATH\"")
                         // 使用 pnpm 安装其他包（失败不中断后续安装步骤）
                         commands.add(
                             "pnpm add -g ${selectedNpmPackages.joinToString(" ")} || " +
