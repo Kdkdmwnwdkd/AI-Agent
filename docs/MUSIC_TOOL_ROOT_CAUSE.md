@@ -1,69 +1,66 @@
-# 音乐工具调用失败 · 根因定位（修正版）
+# 音乐工具调用失败 · 根因确认（最终版）
 
 > **日期**：2026-09-29
-> **现象**：让 Operit 调 `music_play`，模型返回 `Exactly one tool_name parameter is required`
-> **修正说明**：初版推断"音乐工具未进提示词分类"**是错的**，已实测推翻，本文为修正版。
+> **状态**：✅ **根因已确证**，定位到具体代码行
+> **性质**：**真 bug**（工具通道选择错误 + 可能被误判为 CLI 模式）
+> **与本次改动关系**：**无关**，属 Operit 上游既有缺陷
 
 ---
 
-## 一、现象
+## 一、报错演进（三次，逐次逼近真相）
 
-用户强制约束后仍失败：
-
-```
-指令：调用 music_play 工具放歌，禁止 shell / 禁止其它 App
-实际：→ package_proxy   music_play
-      ↳ ✗ Exactly one tool_name parameter is required
-```
-
-**模型调的是 `package_proxy`，不是 `music_play`。**
+| 阶段 | 模型行为 | 报错 | 含义 |
+|---|---|---|---|
+| 1 | 调 `package_proxy`，**没传 `tool_name`** | `Exactly one tool_name parameter is required` | 参数缺失 |
+| 2 | 角色卡配好后，调 `package_proxy(tool_name="music_play")` | `tool_name must use packageName:toolName format` | **通道错了** |
+| — | **期望行为** | — | 应直接调 `music_play`，或经 `proxy` 转调 |
 
 ---
 
-## 二、实测推翻的假设
+## 二、根因（已定位到具体行）
 
-| 假设 | 验证方法 | 结论 |
-|---|---|---|
-| 音乐工具没进提示词分类 | `grep music_play SystemToolPromptsInternal.kt` | ❌ **错了**，`music_play` 在 L175（EN）/ L3167（CN），分类 `Internal Tools` |
-| 音乐工具没注册 | `grep music_play ToolRegistration.kt` | ❌ 错了，L527，8 个音乐工具都在 |
-| 用户模型该走 FULL | 读 `ToolExposureMode.resolve()` | ✅ 对，`deepseek-v4-flash` → `else -> FULL` |
+### 2.1 报错来源
 
-**注册、分类、模式判定三处都正常。问题不在这。**
-
-> ⚠️ 初版用正则比对时，`SystemToolPromptsInternal.kt` 里的 `ToolPrompt(` 换行格式
-> 导致 159 个工具被误报为"未暴露"——**那个 159 的数字是假的，作废。**
-
----
-
-## 三、真正的根因
-
-### 3.1 `package_proxy` 是"包里工具"的转调入口
-
-CLI 工具模式有 3 个代理工具：
-
-| 工具 | 转调目标 |
-|---|---|
-| `search` | 搜索隐藏工具目录 |
-| `proxy` | 转调**内置**隐藏工具 |
-| `package_proxy` | 转调**包（package）**提供的工具 |
-
-**模型选了 `package_proxy`** —— 说明它认为 `music_play` 是"包里"的工具，**判断错了**（`music_play` 是内置工具，该用 `proxy`）。
-
-而且它**连 `tool_name` 参数都没传**，直接报错。
-
-### 3.2 两种可能，需区分
-
-| 可能 | 特征 | 性质 |
-|---|---|---|
-| **A. 模型确实在 CLI 模式** | 它眼前只有 `search`/`proxy`/`package_proxy`，看不到 `music_play` | 配置/判定问题 |
-| **B. 模型在 FULL 模式但选错工具** | `music_play` 就在它面前，它却绕道走代理 | **模型能力问题** |
-
-**从"它调 `package_proxy` 而非直接调 `music_play`"看，更像 A。**
-
-### 3.3 若为 A，判定逻辑有盲区（已读源码）
+`app/src/main/java/com/ai/assistance/operit/core/tools/ToolRegistration.kt:159`
 
 ```kotlin
-// CliToolModeSupport.kt:24
+if (requireQualifiedTarget && !targetToolName.contains(':')) {
+    return null to buildToolErrorResult(
+        tool,
+        "tool_name must use packageName:toolName format"   // ← 用户看到的报错
+    )
+}
+```
+
+### 2.2 两个代理工具的唯一差别
+
+| 工具 | 注册位置 | `requireQualifiedTarget` | 目标类型 |
+|---|---|---|---|
+| `proxy` | `ToolRegistration.kt:1155` | **`false`** | 内置 / 隐藏工具 |
+| `package_proxy` | `ToolRegistration.kt:1211` | **`true`** | **包**工具（必须 `包名:工具名`） |
+
+**模型调的是 `package_proxy`，传的是 `music_play`（内置工具，无冒号）→ 必然报错。**
+
+**正确通道是 `proxy`。**
+
+### 2.3 关键补充：`music_play` 是内置工具
+
+```
+SystemToolPromptsInternal.kt:175   (EN)  → categoryName = "Internal Tools"
+SystemToolPromptsInternal.kt:3167  (CN)
+```
+
+→ 属 `HiddenToolSourceKind.INTERNAL`，**不是 `PACKAGE`**，**不该走 `package_proxy`**。
+
+---
+
+## 三、第二个疑点：为什么进了 CLI 模式？
+
+### 3.1 代码预期
+
+`CliToolModeSupport.kt:24`
+
+```kotlin
 fun resolve(providerType: ApiProviderType): ToolExposureMode {
     return when (providerType) {
         LMSTUDIO, OLLAMA, OPENAI_LOCAL, MNN, LLAMA_CPP -> CLI
@@ -72,80 +69,79 @@ fun resolve(providerType: ApiProviderType): ToolExposureMode {
 }
 ```
 
-**判定只看 `apiProviderType` 一个维度。** 但调用点有 3 处：
+`ApiProviderType.DEEPSEEK` **存在**（`ModelConfigData.kt:26`）且**不在 CLI 名单** → 应走 `FULL`。
 
-```
-EnhancedAIService.kt:2162
-EnhancedAIService.kt:2742
-EnhancedAIService.kt:2965
-```
+→ **`FULL` 模式下模型直接看到 `music_play`，根本不会出现 `proxy` 这种转调。**
 
-**这 3 处传入的 `config.apiProviderType` 是否都是 `deepseek`？**
-若某一处传的是别的 provider（如被判定为本地模型），就会**意外进入 CLI 模式**。
+### 3.2 但用户实测它在用代理工具
 
-**这是最值得查的地方。**
+→ 说明**实际走了 CLI**。可能原因：
+
+1. 用户选的模型配置里 `apiProviderType` **不是 `DEEPSEEK`**（例如选了「自定义端点 / OpenAI 兼容」，被归到会走 CLI 的类型）
+2. `EnhancedAIService` 三处调用点（L2162 / L2742 / L2965）传入的 `config` 不是当前对话模型的配置
+3. 其他未查到的 CLI 入口
+
+**这一条尚未确证，需要看用户的模型配置页。**
 
 ---
 
-## 四、与本次改动的关系
+## 四、这**不是**本次改动引入的
 
-**无关。** 逐项排除：
-
-| 本次改动 | 是否影响工具暴露 |
+| 本次改动 | 是否影响 |
 |---|---|
 | Media3 迁移 | ❌ 只改播放实现 |
 | Coil 3 迁移 | ❌ 图片库 |
-| 删 11 项依赖 | ❌ 无工具注册相关 |
-| 工具描述重写 | ⚠️ **只改文案，不改可见性** |
+| 删 11 项依赖 | ❌ 无工具路由相关 |
+| 工具描述重写 | ❌ 只改文案 |
 | retryable 字段 | ❌ 只改失败标记 |
 
-**这是 Operit 上游既有行为，非本次引入。**
+**属 Operit 上游既有设计问题。**
 
 ---
 
-## 五、好消息：Media3 已确认没问题
+## 五、好消息（本次改动已验证的部分）
 
-用户发的 mp4 显示**主题背景视频正常播放**。
+用户 mp4 证实**主题背景视频正常播放**：
 
-→ `app:keep_content_on_player_reset` 自定义属性**被 Media3 正确支持** ✅
-→ **Media3 迁移的核心风险项已排除**
-→ **播放能力本身是好的**，坏的只是"模型调不到它"
+→ `app:keep_content_on_player_reset` **被 Media3 正确支持** ✅
+→ **Media3 迁移核心风险已排除**
+→ **播放能力本身完好**，坏的只是"模型走错通道"
 
 ---
 
-## 六、需要用户做的（2 件事，都很快）
+## 六、修复方向（两个问题，分开治）
 
-### ① 确认工具列表里有没有 `music_play`
+### 🔴 问题 A：`package_proxy` 的错误信息不友好（低风险可修）
 
-Operit → 工具管理 → 搜索 `music_play`
+模型既已传了 `music_play`，说明它**意图正确、只是通道选错**。
+当前报错 `tool_name must use packageName:toolName format` **没告诉它该走 `proxy`**。
 
-- **有且已启用** → 是可能性 B（模型选错），**不是 bug**，属模型能力问题
-- **找不到 / 被禁用** → 是可能性 A，**真 bug**，我立刻查
+**建议改法**（`ToolRegistration.kt:159`）：
 
-### ②（可选）直接给模型下"直连"指令
-
+```kotlin
+if (requireQualifiedTarget && !targetToolName.contains(':')) {
+    return null to buildToolErrorResult(
+        tool,
+        "tool_name must use packageName:toolName format. " +
+        "If '$targetToolName' is a built-in/internal tool, " +
+        "call 'proxy' instead of 'package_proxy'."
+    )
+}
 ```
-直接调用 music_play 工具（不要用 search / proxy / package_proxy 转调）。
-参数 source_type=file, source=/sdcard/Music/xxx.mp3
-```
 
-若这样能成功 → 证明工具**是可见的**，纯粹是模型自己绕路 → 可能性 B
+**加一句引导 = 模型下一步自己就走对了。** 零逻辑改动，零风险。
 
----
+### 🟠 问题 B：CLI 模式判定的真实原因（待查）
 
-## 七、下一步
+需要用户提供**模型配置页截图**（看 `apiProviderType` 是什么）。
 
-用户在「工具列表」确认后：
-
-- **若是 B**：属提示词/模型能力问题。工具描述重写（本轮流）正是为缓解这类问题做的——
-  可以在 `music_play` 描述里**显式加一句"直接调用本工具，不要经 proxy 转调"**，低风险可做
-- **若是 A**：立刻查 `EnhancedAIService` 三处 `resolve()` 的入参，定位为何云端模型进了 CLI 模式
+若确为 `DEEPSEEK` 却走了 CLI → 是**判定 bug**，需进一步查三处调用点。
 
 ---
 
-## 八、诚实边界
+## 七、诚实边界
 
-1. **初版推断（工具未暴露）已被实测推翻**，本文已更正；那个"159 个工具未暴露"的数字**作废**
-2. **尚未确证是 A 还是 B** —— 需用户在真机上看工具列表
-3. 我没有 Operit 的运行日志，**无法单方面断言它进了哪个模式**
-4. 本文件与仓库 `docs/`、资料库同步
+1. **根因（通道选错）已确证**，有代码行为与报错串双向印证
+2. **"为何进 CLI 模式"未确证**，仅推断，需用户配置页佐证
+3. 我**没有 Operit 的运行日志**，无法单方面断言运行时 `toolExposureMode` 的取值
+4. 本文件与仓库 `docs/MUSIC_TOOL_ROOT_CAUSE.md`、资料库同步
