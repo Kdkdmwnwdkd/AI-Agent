@@ -19,7 +19,10 @@ import coil3.gif.AnimatedImageDecoder
 import coil3.gif.GifDecoder
 import coil3.memory.MemoryCache
 import coil3.network.cachecontrol.CacheControlCacheStrategy
-import coil3.network.okhttp.OkHttpNetworkFetcher
+// 注意：Coil 用 @file:JvmName("OkHttpNetworkFetcher") + @JvmName("factory") 做了双重改名，
+// javap 看到的 OkHttpNetworkFetcher.factory(...) 是 JVM 视图；
+// Kotlin 源码侧符号名是顶层工厂函数 OkHttpNetworkFetcherFactory(...)。
+import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.CachePolicy
 import coil3.request.allowHardware
 import coil3.request.crossfade
@@ -159,7 +162,9 @@ class OperitApplication :
         }
     }
 
-    @OptIn(ExperimentalCoilApi::class)
+    // CacheControlCacheStrategy 的构造函数使用 kotlin.time.Instant，
+    // 同时带 @ExperimentalCoilApi 与 @OptIn(ExperimentalTime::class) 两项要求。
+    @OptIn(ExperimentalCoilApi::class, kotlin.time.ExperimentalTime::class)
     private fun initializeMainApplicationLocked() {
         val startTime = System.currentTimeMillis()
 
@@ -322,10 +327,13 @@ class OperitApplication :
                             // 这里挂上自定义 OkHttp 客户端（加长超时以支持慢速图片服务器），
                             // 并用 CacheControlCacheStrategy 替代 2.x 的 respectCacheHeaders(true)。
                             // 两者都以 lambda 传入，以便延迟到真正需要时再求值。
+                            //
+                            // 必须使用具名参数：该函数存在多个带默认值的重载，
+                            // 位置传参会产生重载歧义，无法通过编译。
                             add(
-                                    OkHttpNetworkFetcher.factory(
-                                            { imageOkHttpClient },
-                                            { CacheControlCacheStrategy() },
+                                    OkHttpNetworkFetcherFactory(
+                                            callFactory = { imageOkHttpClient },
+                                            cacheStrategy = { CacheControlCacheStrategy() },
                                     )
                             )
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
