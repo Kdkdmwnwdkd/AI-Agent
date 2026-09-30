@@ -9,6 +9,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import com.ai.assistance.operit.core.tools.AIToolHandler
 import com.ai.assistance.operit.core.tools.DirectoryListingData
 import com.ai.assistance.operit.core.tools.FileInfoData
@@ -310,9 +313,11 @@ class FileManagerViewModel(private val context: Context) : ViewModel() {
                                             withEnvParams(listOf(
                                                     ToolParameter("path", searchRootPath),
                                                     ToolParameter("pattern", searchPattern),
+                                                    // 官方参数名为 case_insensitive（见 SystemToolPrompts），
+                                                    // 这里取反传；此前误传 case_sensitive 导致开关完全失效
                                                     ToolParameter(
-                                                            "case_sensitive",
-                                                            isCaseSensitive.toString()
+                                                            "case_insensitive",
+                                                            (!isCaseSensitive).toString()
                                                     )
                                             ))
                             )
@@ -323,45 +328,52 @@ class FileManagerViewModel(private val context: Context) : ViewModel() {
                     if (result.success) {
                         // 使用正确的FindFilesResultData类型解析结果
                         val findResult = result.result as FindFilesResultData
+                        // 并发查询每个结果的类型，避免全局搜索时逐条串行调用卡顿
                         val fileList =
-                                findResult.files.map { filePath ->
-                                    // 从完整路径中提取文件名
-                                    val fileName = filePath.substringAfterLast("/")
-                                    // 检查是否为目录
-                                    val isDir =
-                                            try {
-                                                val fileInfoTool =
-                                                        AITool(
-                                                                name = "file_info",
-                                                                parameters =
-                                                                        withEnvParams(listOf(
-                                                                                ToolParameter(
-                                                                                        "path",
-                                                                                        filePath
-                                                                                )
-                                                                        ))
-                                                        )
-                                                val fileInfoResult =
-                                                        toolHandler.executeTool(fileInfoTool)
-                                                if (fileInfoResult.success) {
-                                                    val fileInfo =
-                                                            fileInfoResult.result as FileInfoData
-                                                    fileInfo.fileType == "directory"
-                                                } else {
-                                                    false
-                                                }
-                                            } catch (e: Exception) {
-                                                false
-                                            }
+                                coroutineScope {
+                                    findResult.files
+                                            .map { filePath ->
+                                                async {
+                                                    // 从完整路径中提取文件名
+                                                    val fileName =
+                                                            filePath.substringAfterLast("/").ifEmpty { filePath }
+                                                    // 检查是否为目录
+                                                    val isDir =
+                                                            try {
+                                                                val fileInfoTool =
+                                                                        AITool(
+                                                                                name = "file_info",
+                                                                                parameters =
+                                                                                        withEnvParams(listOf(
+                                                                                                ToolParameter(
+                                                                                                        "path",
+                                                                                                        filePath
+                                                                                                )
+                                                                                        ))
+                                                                        )
+                                                                val fileInfoResult =
+                                                                        toolHandler.executeTool(fileInfoTool)
+                                                                if (fileInfoResult.success) {
+                                                                    val fileInfo =
+                                                                            fileInfoResult.result as FileInfoData
+                                                                    fileInfo.fileType == "directory"
+                                                                } else {
+                                                                    false
+                                                                }
+                                                            } catch (e: Exception) {
+                                                                false
+                                                            }
 
-                                    // 创建FileItem，保存完整路径
-                                    FileItem(
-                                            name = fileName,
-                                            isDirectory = isDir,
-                                            size = 0, // 大小信息暂时不获取
-                                            lastModified = 0, // 修改时间暂时不获取
-                                            fullPath = filePath // 保存完整路径
-                                    )
+                                                    FileItem(
+                                                            name = fileName,
+                                                            isDirectory = isDir,
+                                                            size = 0, // 大小信息暂时不获取
+                                                            lastModified = 0, // 修改时间暂时不获取
+                                                            fullPath = filePath // 保存完整路径
+                                                    )
+                                                }
+                                            }
+                                            .awaitAll()
                                 }
 
                         withContext(Dispatchers.Main) {
@@ -387,8 +399,13 @@ class FileManagerViewModel(private val context: Context) : ViewModel() {
     }
 
     // 导航到文件所在目录
-    fun navigateToFileDirectory(filePath: String) {
-        val directoryPath = filePath.substringBeforeLast("/")
+    /**
+     * 从搜索结果跳转。
+     * - [isDirectory] = true：进入该目录本身（点搜索结果里的文件夹）
+     * - [isDirectory] = false：跳到该文件所在目录（点搜索结果里的文件）
+     */
+    fun navigateToFileDirectory(filePath: String, isDirectory: Boolean = false) {
+        val directoryPath = if (isDirectory) filePath.trimEnd('/') else filePath.substringBeforeLast("/")
         if (directoryPath.isNotEmpty()) {
             // 设置需要恢复的滚动位置
             pendingScrollPosition = directoryPath to (scrollPositions[directoryPath] ?: 0)

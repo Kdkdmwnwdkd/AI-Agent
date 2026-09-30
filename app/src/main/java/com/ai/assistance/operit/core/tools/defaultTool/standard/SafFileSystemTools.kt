@@ -1390,7 +1390,13 @@ class SafFileSystemTools(
         }
 
         val usePathPattern = tool.parameters.find { it.name == "use_path_pattern" }?.value?.toBoolean() ?: false
-        val caseInsensitive = tool.parameters.find { it.name == "case_insensitive" }?.value?.toBoolean() ?: false
+        // 官方参数名 case_insensitive；同时兼容历史误传的 case_sensitive（取其反）
+        val caseInsensitive =
+            tool.parameters.find { it.name == "case_insensitive" }?.value?.toBoolean()
+                ?: tool.parameters
+                    .find { it.name == "case_sensitive" }?.value?.toBoolean()
+                    ?.let { !it }
+                ?: false
         val maxDepth = tool.parameters.find { it.name == "max_depth" }?.value?.toIntOrNull() ?: -1
         val regex = globToRegex(pattern, caseInsensitive)
 
@@ -1441,7 +1447,8 @@ class SafFileSystemTools(
                     val rel = if (relPrefix.isBlank()) name else relPrefix + "/" + name
                     lastRel = rel
                     val testString = if (usePathPattern) rel else name
-                    if (regex.matches(testString) && !isDir) {
+                    // 名称匹配即返回，不区分文件/目录（工具描述承诺「查找文件或目录」）
+                    if (regex.matches(testString)) {
                         val displayPath =
                             if (baseRepoPath != null) {
                                 if (baseRepoPath == "/") "/$rel" else baseRepoPath.trimEnd('/') + "/" + rel

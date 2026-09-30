@@ -124,7 +124,7 @@ fun SearchDialog(
 fun SearchResultsDialog(
     showDialog: Boolean,
     searchResults: List<FileItem>,
-    onNavigateToFileDirectory: (String) -> Unit,
+    onNavigateToFileDirectory: (String, Boolean) -> Unit,
     onDismiss: () -> Unit
 ) {
     if (showDialog) {
@@ -162,7 +162,9 @@ fun SearchResultsDialog(
                             Surface(
                                 modifier = Modifier.fillMaxWidth()
                                     .clickable { 
-                                        file.fullPath?.let { path -> onNavigateToFileDirectory(path) }
+                                        file.fullPath?.let { path ->
+                                            onNavigateToFileDirectory(path, file.isDirectory)
+                                        }
                                     },
                                 color = MaterialTheme.colorScheme.surfaceVariant,
                                 shape = RoundedCornerShape(4.dp)

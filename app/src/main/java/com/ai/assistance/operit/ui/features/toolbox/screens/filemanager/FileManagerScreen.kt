@@ -468,7 +468,9 @@ fun FileManagerScreen(navController: NavController) {
     SearchResultsDialog(
             showDialog = viewModel.showSearchResultsDialog,
             searchResults = viewModel.searchResults,
-            onNavigateToFileDirectory = { path -> viewModel.navigateToFileDirectory(path) },
+            onNavigateToFileDirectory = { path, isDir ->
+                viewModel.navigateToFileDirectory(path, isDir)
+            },
             onDismiss = { viewModel.showSearchResultsDialog = false }
     )
 
