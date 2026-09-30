@@ -31,6 +31,8 @@ fun SearchDialog(
     onCaseSensitiveChange: (Boolean) -> Unit,
     useWildcard: Boolean,
     onWildcardChange: (Boolean) -> Unit,
+    useGlobalSearch: Boolean,
+    onGlobalSearchChange: (Boolean) -> Unit,
     onSearch: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -72,6 +74,32 @@ fun SearchDialog(
                             onCheckedChange = onWildcardChange
                         )
                         Text(stringResource(R.string.use_wildcard))
+                    }
+
+                    // 搜索范围：整个存储 / 当前文件夹
+                    Text(
+                        text = stringResource(R.string.search_scope),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = useGlobalSearch,
+                            onClick = { onGlobalSearchChange(true) }
+                        )
+                        Text(stringResource(R.string.search_scope_global))
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = !useGlobalSearch,
+                            onClick = { onGlobalSearchChange(false) }
+                        )
+                        Text(stringResource(R.string.search_scope_current))
                     }
                 }
             },

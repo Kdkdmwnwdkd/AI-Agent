@@ -1199,6 +1199,9 @@
     <string name="searching">正在搜索...</string>
     <string name="case_sensitive">区分大小写</string>
     <string name="use_wildcard">使用通配符</string>
+    <string name="search_scope">搜索范围</string>
+    <string name="search_scope_global">整个存储（较慢）</string>
+    <string name="search_scope_current">仅当前文件夹</string>
     
     <!-- File Operations -->
     <string name="new_folder">新建文件夹</string>

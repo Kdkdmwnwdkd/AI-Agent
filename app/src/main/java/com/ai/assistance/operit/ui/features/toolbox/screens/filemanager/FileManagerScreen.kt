@@ -452,6 +452,8 @@ fun FileManagerScreen(navController: NavController) {
             onCaseSensitiveChange = { viewModel.isCaseSensitive = it },
             useWildcard = viewModel.useWildcard,
             onWildcardChange = { viewModel.useWildcard = it },
+            useGlobalSearch = viewModel.useGlobalSearch,
+            onGlobalSearchChange = { viewModel.useGlobalSearch = it },
             onSearch = {
                 viewModel.searchQuery = viewModel.searchDialogQuery
                 viewModel.showSearchDialog = false

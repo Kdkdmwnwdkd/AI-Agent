@@ -78,6 +78,9 @@ class FileManagerViewModel(private val context: Context) : ViewModel() {
     var isCaseSensitive by mutableStateOf(false)
     var useWildcard by mutableStateOf(true)
 
+    /** 搜索范围：true=整个存储（当前 SAF 根，全局），false=仅当前文件夹 */
+    var useGlobalSearch by mutableStateOf(true)
+
     private val toolHandler by lazy { AIToolHandler.getInstance(context) }
 
     private fun withEnvParams(base: List<ToolParameter>, environment: String? = currentEnvironment): List<ToolParameter> {
@@ -295,12 +298,17 @@ class FileManagerViewModel(private val context: Context) : ViewModel() {
                     // 处理通配符
                     val searchPattern = if (useWildcard) "*$query*" else query
 
+                    // 搜索范围：全局时从当前环境（SAF 书签 / 存储）的根开始，
+                    // 否则沿用当前所在文件夹
+                    val searchRootPath =
+                            if (useGlobalSearch && isSafEnv(currentEnvironment)) "/" else currentPath
+
                     val searchTool =
                             AITool(
                                     name = "find_files",
                                     parameters =
                                             withEnvParams(listOf(
-                                                    ToolParameter("path", currentPath),
+                                                    ToolParameter("path", searchRootPath),
                                                     ToolParameter("pattern", searchPattern),
                                                     ToolParameter(
                                                             "case_sensitive",
@@ -309,7 +317,7 @@ class FileManagerViewModel(private val context: Context) : ViewModel() {
                                             ))
                             )
 
-                    AppLogger.d("ToolboxFileManager", "execute find_files path=$currentPath env=$currentEnvironment pattern=$searchPattern")
+                    AppLogger.d("ToolboxFileManager", "execute find_files path=$searchRootPath env=$currentEnvironment pattern=$searchPattern")
                     val result = toolHandler.executeTool(searchTool)
                     AppLogger.d("ToolboxFileManager", "result find_files success=${result.success} error=${result.error}")
                     if (result.success) {
