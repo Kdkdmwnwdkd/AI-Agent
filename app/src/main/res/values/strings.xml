@@ -5460,7 +5460,11 @@
     <string name="llama_local_model_download_tip">llama.cpp 模型需要自行下载（.gguf）。请将模型文件放入以下文件夹，然后在“模型名称”中填写文件名：</string>
     <string name="llama_local_model_dir">默认模型目录：%1$s</string>
     <string name="llama_auto_config_tip">批大小、mmap、Flash Attention、KV 等 Android 兼容参数已内置，普通使用只需要调整线程数、上下文大小和 GPU 层数。</string>
-    <string name="llama_select_downloaded_model">选择已下载的模型</string>
+    <string name="llama_select_downloaded_model">可直接填写模型文件路径，或点右侧文件夹图标自行挑选</string>
+    <string name="local_model_pick_file">选择模型文件</string>
+    <string name="local_model_picked">已选择模型：%1$s</string>
+    <string name="local_model_pick_failed">选择模型失败：%1$s</string>
+    <string name="local_model_picker_unavailable">无法打开文件选择器，请检查系统权限</string>
     <string name="llama_thread_count">线程数</string>
     <string name="llama_context_size">上下文长度</string>
     <string name="llama_context_size_subtitle">Android 上建议先从 2048 开始，太大更容易因内存压力初始化失败</string>

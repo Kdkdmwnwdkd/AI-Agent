@@ -1,7 +1,6 @@
 package com.ai.assistance.operit.api.chat.llmprovider
 
 import android.content.Context
-import android.os.Environment
 import com.ai.assistance.llama.LlamaSession
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.core.chat.hooks.PromptTurn
@@ -12,6 +11,7 @@ import com.ai.assistance.operit.data.model.ModelParameter
 import com.ai.assistance.operit.data.model.ToolPrompt
 import com.ai.assistance.operit.util.AppLogger
 import com.ai.assistance.operit.util.ChatUtils
+import com.ai.assistance.operit.util.LocalModelFileStore
 import com.ai.assistance.operit.util.stream.Stream
 import com.ai.assistance.operit.util.stream.stream
 import kotlinx.coroutines.Dispatchers
@@ -34,14 +34,21 @@ class LlamaProvider(
         private const val DEFAULT_MAX_NEW_TOKENS = 1024
 
         fun getModelsDir(): File {
-            return File(
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                "玄枵/models/llama"
-            )
+            return LocalModelFileStore.llamaModelsDir()
         }
 
+        /**
+         * 解析模型文件。
+         *
+         * 兼容两种写法：
+         * - **绝对路径**：用户在设置里通过文件选择器指定的任意位置（如 `/storage/emulated/0/Models/xxx.gguf`）
+         * - **相对文件名**：默认模型目录下的文件（历史行为，保持不变）
+         */
         fun getModelFile(_context: Context, modelName: String): File {
-            return File(getModelsDir(), modelName)
+            val trimmed = modelName.trim()
+            if (trimmed.isEmpty()) return File(getModelsDir(), trimmed)
+            val candidate = File(trimmed)
+            return if (candidate.isAbsolute) candidate else File(getModelsDir(), trimmed)
         }
     }
 

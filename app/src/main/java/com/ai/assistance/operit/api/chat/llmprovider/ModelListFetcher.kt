@@ -1,11 +1,11 @@
 package com.ai.assistance.operit.api.chat.llmprovider
 
 import android.content.Context
-import android.os.Environment
 import com.ai.assistance.operit.BuildConfig
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.data.collects.ApiProviderConfigs
 import com.ai.assistance.operit.util.AppLogger
+import com.ai.assistance.operit.util.LocalModelFileStore
 import com.ai.assistance.operit.data.model.ApiProviderType
 import com.ai.assistance.operit.data.model.ModelOption
 import java.io.File
@@ -592,10 +592,7 @@ object ModelListFetcher {
     suspend fun getMnnLocalModels(context: Context): Result<List<ModelOption>> {
         return withContext(Dispatchers.IO) {
             try {
-                val modelsDir = File(
-                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                    "玄枵/models/mnn"
-                )
+                val modelsDir = LocalModelFileStore.mnnModelsDir()
                 
                 AppLogger.d(TAG, "读取MNN模型目录: ${modelsDir.absolutePath}")
                 
@@ -640,10 +637,7 @@ object ModelListFetcher {
     suspend fun getLlamaLocalModels(context: Context): Result<List<ModelOption>> {
         return withContext(Dispatchers.IO) {
             try {
-                val modelsDir = File(
-                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                    "玄枵/models/llama"
-                )
+                val modelsDir = LocalModelFileStore.llamaModelsDir()
 
                 AppLogger.d(TAG, "读取llama.cpp模型目录: ${modelsDir.absolutePath}")
 
@@ -652,6 +646,8 @@ object ModelListFetcher {
                     return@withContext Result.success(emptyList())
                 }
 
+                // 扫描模型目录。用户在设置里通过文件选择器导入的模型会被放到这里，
+                // 因此列表天然可见；手填绝对路径的情况由 LlamaProvider.getModelFile 兜底。
                 val models = modelsDir.listFiles { file ->
                     file.isFile && file.name.lowercase().endsWith(".gguf")
                 }?.map { file ->

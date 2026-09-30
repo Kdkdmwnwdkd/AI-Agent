@@ -1,9 +1,9 @@
 package com.ai.assistance.operit.data.mnn
 
 import android.content.Context
-import android.os.Environment
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.util.AppLogger
+import com.ai.assistance.operit.util.LocalModelFileStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -110,10 +110,8 @@ class MnnModelDownloadManager private constructor(private val context: Context) 
         private const val PERSISTENT_STATE_FILE_NAME = "mnn_download_states.json"
         private const val TEMP_SUFFIX = ".tmp"
         
-        val MODEL_DIR = File(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-            "玄枵/models/mnn"
-        )
+        val MODEL_DIR: File
+            get() = LocalModelFileStore.mnnModelsDir()
     }
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)

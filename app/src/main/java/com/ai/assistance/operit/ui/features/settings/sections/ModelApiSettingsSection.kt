@@ -2,6 +2,8 @@ package com.ai.assistance.operit.ui.features.settings.sections
 
 import android.annotation.SuppressLint
 import androidx.annotation.StringRes
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import com.ai.assistance.operit.util.AppLogger
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -26,6 +28,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -69,6 +72,7 @@ import com.ai.assistance.operit.ui.common.icons.providerLogoColorFilter
 import com.ai.assistance.operit.ui.common.icons.rememberProviderLogoPainter
 import com.ai.assistance.operit.ui.features.settings.RegisterModelConfigSaveAction
 import com.ai.assistance.operit.ui.features.codex.CodexLoginDialog
+import com.ai.assistance.operit.util.LocalModelFileStore
 import com.ai.assistance.operit.util.LocationUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -446,6 +450,48 @@ fun ModelApiSettingsSection(
     var modelLoadError by remember { mutableStateOf<String?>(null) }
     var showEndpointDialog by remember(config.id) { mutableStateOf(false) }
 
+    // 本地模型「选择文件」：解析中状态
+    var isResolvingModelFile by remember { mutableStateOf(false) }
+
+    /**
+     * 本地模型文件选择器。
+     *
+     * 用户从**任意位置**挑选一个 `.gguf` 文件，App 记住它的真实路径并长期使用，
+     * 不复制、不搬移。下次想换模型，再点一次重新选即可。
+     */
+    val localModelFilePickerLauncher =
+            rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.StartActivityForResult()
+            ) { result ->
+                val uri = result.data?.data
+                if (result.resultCode == android.app.Activity.RESULT_OK && uri != null) {
+                    scope.launch {
+                        isResolvingModelFile = true
+                        try {
+                            val pickedPath =
+                                    LocalModelFileStore.resolveToFilePath(
+                                            context = context,
+                                            selection = uri.toString()
+                                    )
+                            modelNameInput = pickedPath
+                            showNotification(
+                                    context.getString(R.string.local_model_picked, pickedPath)
+                            )
+                        } catch (e: Exception) {
+                            AppLogger.e(TAG, "选择本地模型失败", e)
+                            showNotification(
+                                    context.getString(
+                                            R.string.local_model_pick_failed,
+                                            e.message ?: ""
+                                    )
+                            )
+                        } finally {
+                            isResolvingModelFile = false
+                        }
+                    }
+                }
+            }
+
     // 检查是否未填写API密钥（仅用于UI显示）
     val isUsingDefaultApiKey = apiKeyInput.isBlank()
     val providerRequiresApiKey =
@@ -777,6 +823,55 @@ fun ModelApiSettingsSection(
                         },
                     enabled = !isMnnProvider && !isLlamaProvider && canEditModelName,
                     trailingContent = {
+                Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(0.dp)
+                ) {
+                if (isLlamaProvider) {
+                    IconButton(
+                            onClick = {
+                                if (isResolvingModelFile) return@IconButton
+                                val intent =
+                                        android.content.Intent(
+                                                        android.content.Intent.ACTION_OPEN_DOCUMENT
+                                                )
+                                                .apply {
+                                                    addCategory(
+                                                            android.content.Intent.CATEGORY_OPENABLE
+                                                    )
+                                                    // 模型文件名各异，用 */* 保证在任何机型上都能选中
+                                                    type = "*/*"
+                                                }
+                                runCatching {
+                                    localModelFilePickerLauncher.launch(intent)
+                                }
+                                        .onFailure { e ->
+                                            AppLogger.e(TAG, "启动文件选择器失败", e)
+                                            showNotification(
+                                                    context.getString(
+                                                            R.string.local_model_picker_unavailable
+                                                    )
+                                            )
+                                        }
+                            },
+                            modifier = Modifier.size(48.dp),
+                            enabled = !isResolvingModelFile
+                    ) {
+                        if (isResolvingModelFile) {
+                            CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                    imageVector = Icons.Outlined.FolderOpen,
+                                    contentDescription =
+                                            stringResource(R.string.local_model_pick_file),
+                                    tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
                 IconButton(
                         onClick = {
                             AppLogger.d(
@@ -856,6 +951,7 @@ fun ModelApiSettingsSection(
                                 )
                             }
                         }
+                }
                     }
             )
 
