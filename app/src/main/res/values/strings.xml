@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Operit AI</string>
+    <string name="app_name">玄枵</string>
     <string name="accessibility_service_description">用于获取UI层次结构，为AI助手提供更快速的界面分析能力，不会收集或存储任何个人信息。</string>
     
     <!-- 模型选择器相关 -->
@@ -553,7 +553,7 @@
     <string name="danger_zone">危险区域</string>
     <string name="chat_statistics">聊天记录统计</string>
     <string name="current_chats">当前共有 %1$d 条聊天记录</string>
-    <string name="backup_location">备份文件保存在「下载/Operit/backup」文件夹中</string>
+    <string name="backup_location">备份文件保存在「下载/玄枵/backup」文件夹中</string>
     <string name="faq_backup">常见问题</string>
     <string name="history_filter_role_card">按角色卡分类</string>
     <string name="history_filter_role_card_desc">角色卡-文件夹-对话三级分类</string>
@@ -583,9 +583,9 @@
     <string name="termux_setup_guide">Termux 设置向导</string>
     
     <!-- About Screen -->
-    <string name="about_title">关于 Operit AI</string>
+    <string name="about_title">关于 玄枵</string>
     <string name="about_version">版本: %1$s</string>
-    <string name="about_description">Operit AI是一个智能助手应用，能够帮助用户更高效地使用设备，提供界面分析、聊天对话等功能。</string>
+    <string name="about_description">玄枵是一个智能助手应用，能够帮助用户更高效地使用设备，提供界面分析、聊天对话等功能。</string>
     <string name="about_developer">开发者: &lt;a href="https://github.com/AAswordman"&gt;AAswordman&lt;/a&gt;</string>
     <string name="about_contact">联系我们: aaswordsman@foxmail.com</string>
     <string name="about_website">&lt;a href="https://github.com/AAswordman/Operit"&gt;GitHub: https://github.com/AAswordman/Operit&lt;/a&gt;</string>
@@ -608,7 +608,7 @@
     <string name="network_status_label">网络状态</string>
 
     <!-- Configuration Screen -->
-    <string name="config_title">Operit AI 助手</string>
+    <string name="config_title">玄枵 助手</string>
     <string name="config_description">使用 DeepSeek API Key，或配置其他模型服务</string>
     <string name="config_api_key_label">API密钥</string>
     <string name="config_api_key_placeholder">DeepSeek API密钥</string>
@@ -667,7 +667,7 @@
     
     <!-- Plugin Loading Screen -->
     <string name="plugin_skip">跳过</string>
-    <string name="plugin_app_name">OPERIT</string>
+    <string name="plugin_app_name">玄枵</string>
     <string name="plugin_status">已启动: %1$d / %2$d</string>
     <string name="plugin_loading_status_title">插件加载状态</string>
     <string name="plugin_loading_success">加载成功</string>
@@ -1169,10 +1169,10 @@
     <string name="agreement_human_readable_content">服务边界说明：Operit 不提供面向公众的拟人化情感互动服务。Operit 是在用户设备本地运行的开源客户端，不运营模型推理服务、不托管聊天会话或交互数据，也不向用户分发共享模型凭据。云模型请求由用户使用自行配置的凭据从设备直接发送至所选模型服务商，相关数据适用该服务商的规则；本地模型在设备内推理。\n\n本应用可以调用文件、终端、自动化、Root、ADB 和扩展等能力。请在操作前核对内容、备份重要数据并谨慎授予权限；因用户操作、用户配置、第三方服务或第三方扩展造成的设备、数据、账号或其他损失，应由实际操作人依适用法律处理。\n\n插件市场中的第三方插件、脚本、Skill、工具包和其他内容，其著作权及相关责任归标注的作者或权利人所有。市场展示或安装不表示 Operit 对该内容作出保证、背书或取得其权利。使用、修改、发布或再分发前，请自行确认许可和权利状态。</string>
     <string name="agreement_serious_title">严谨版法律协议</string>
     <string name="agreement_serious_content"><![CDATA[
-        <p><b>Operit 用户协议与隐私政策</b><br>版本：2026-07-15；拟生效日期：2026 年 7 月 15 日。</p>
-        <p><b>1. 适用范围与协议版本</b><br>本协议适用于 Operit 官方发布的 Android 客户端及其可选在线功能。使用本应用即表示您已阅读并同意当前版本。本应用在启动时记录您确认的协议版本；协议发生实质更新时，应用将要求您重新确认后方可继续使用。仓库中的开源代码许可由根目录 <code>LICENSE</code> 所载 GNU 宽通用公共许可证第三版（LGPLv3）规定；本协议不排除或缩减适用法律及开源许可证赋予您的权利。</p>
-        <p><b>2. 产品定位与第三方服务</b><br>Operit 是开源客户端软件，不提供大语言模型推理、共享 API Key、聊天请求中转或聊天记录云端托管。云模型、云端语音、搜索、绘图、MCP 及其他网络功能由您自行选择、配置和启用。您使用该等服务时，数据将直接发送给相应服务商，并受其服务条款和隐私政策约束。您应自行判断服务商、模型、端点和扩展的安全性、合法性与适用性，并妥善保管相关凭据。</p>
-        <p><b>3. 数据处理与隐私</b><br>聊天记录、角色卡、记忆、模型配置和 API Key 通常存储在设备的应用数据中。您主动导出、备份、上传文件、使用第三方网络功能或向外部 HTTP 服务提交请求时，相关数据将依您的操作被复制、传输或披露。市场、公告、更新检查、GitHub 登录和发布功能会访问 Operit、GitHub 或相关第三方资源；这些功能不转发聊天模型请求。请结合设备安全设置、第三方服务条款及本协议管理您的数据和凭据。</p>
+        <p><b>玄枵 用户协议与隐私政策</b><br>版本：2026-07-15；拟生效日期：2026 年 7 月 15 日。</p>
+        <p><b>1. 适用范围与协议版本</b><br>本协议适用于 玄枵 官方发布的 Android 客户端及其可选在线功能。使用本应用即表示您已阅读并同意当前版本。本应用在启动时记录您确认的协议版本；协议发生实质更新时，应用将要求您重新确认后方可继续使用。仓库中的开源代码许可由根目录 <code>LICENSE</code> 所载 GNU 宽通用公共许可证第三版（LGPLv3）规定；本协议不排除或缩减适用法律及开源许可证赋予您的权利。</p>
+        <p><b>2. 产品定位与第三方服务</b><br>玄枵 是开源客户端软件，不提供大语言模型推理、共享 API Key、聊天请求中转或聊天记录云端托管。云模型、云端语音、搜索、绘图、MCP 及其他网络功能由您自行选择、配置和启用。您使用该等服务时，数据将直接发送给相应服务商，并受其服务条款和隐私政策约束。您应自行判断服务商、模型、端点和扩展的安全性、合法性与适用性，并妥善保管相关凭据。</p>
+        <p><b>3. 数据处理与隐私</b><br>聊天记录、角色卡、记忆、模型配置和 API Key 通常存储在设备的应用数据中。您主动导出、备份、上传文件、使用第三方网络功能或向外部 HTTP 服务提交请求时，相关数据将依您的操作被复制、传输或披露。市场、公告、更新检查、GitHub 登录和发布功能会访问 玄枵、GitHub 或相关第三方资源；这些功能不转发聊天模型请求。请结合设备安全设置、第三方服务条款及本协议管理您的数据和凭据。</p>
         <p><b>4. 对外部署与运营责任</b><br>外部 HTTP 服务、QQ Bot、自动回复及类似能力由您选择启用。您将其开放给他人或公众使用时，应作为实际部署或运营者负责访问控制、用户授权、内容安全、数据保护、未成年人保护、必要的提示和其他适用义务。面向中国境内公众持续提供模拟自然人人格特征、思维模式或沟通风格的情感互动服务时，您应自行评估并遵守《人工智能拟人化互动服务管理暂行办法》及其他适用规定。您不得利用本应用提供虚拟亲属、虚拟伴侣等面向未成年人的虚拟亲密关系服务，不得诱导情感依赖或沉迷、实施情感操纵，或从事其他侵害他人合法权益的活动。</p>
         <p><b>5. 合法使用与内容责任</b><br>您应遵守适用法律法规、第三方服务规则及平台规则，不得利用本应用、扩展或配置实施违法活动、侵害他人权益、未经授权访问系统或数据，或传播违法有害内容。您对自行输入、配置、生成、发布、转发或运营的内容和行为负责。AI 输出可能存在错误、遗漏或偏差，不构成医疗、心理危机、法律、金融或其他专业建议；紧急危险情形请及时联系当地紧急服务、医疗机构或可信赖的人。</p>
         <p><b>6. 软件按现状提供</b><br>在适用法律允许的范围内，本软件按“现状”和“可用”状态提供。贡献者不对软件或第三方服务的持续可用性、准确性、安全性、适销性、特定用途适用性或不侵权作出明示或默示保证。因使用本软件、第三方服务、扩展、用户配置或自行修改造成的损失，应依适用法律和相应服务协议处理。</p>
@@ -1420,7 +1420,7 @@
     <string name="overlay_permission">悬浮窗权限</string>
     <string name="battery_optimization">电池优化豁免</string>
     <string name="location_permission">位置权限</string>
-    <string name="operit_terminal">Operit终端</string>
+    <string name="operit_terminal">玄枵终端</string>
     
     <!-- 权限级别描述 -->
     <string name="permission_level_standard">标准权限</string>
@@ -1508,7 +1508,7 @@
     <string name="data_recovery_import_snapshot">导入快照</string>
     <string name="data_recovery_start_main_app">启动主应用</string>
     <string name="data_recovery_file_management">文件管理</string>
-    <string name="data_recovery_file_management_description">此页不直接打开文件管理器。需要手动查看或导出内部文件时，可以打开 MT 管理器，添加「本地存储仓库」，选择 Operit 的数据仓库后再管理。provider: %1$s</string>
+    <string name="data_recovery_file_management_description">此页不直接打开文件管理器。需要手动查看或导出内部文件时，可以打开 MT 管理器，添加「本地存储仓库」，选择 玄枵 的数据仓库后再管理。provider: %1$s</string>
     <string name="data_recovery_sql_executor">SQL 执行器</string>
     <string name="data_recovery_messages_size">messages 大小</string>
     <string name="data_recovery_variants_size">variants 大小</string>
@@ -1868,7 +1868,7 @@
     <string name="permission_guide_intro_2_title">为极客与开发者打造的强大工具箱</string>
     <string name="permission_guide_intro_2_desc">内置超过40种专业工具，涵盖文件管理、网络请求、脚本执行和系统控制。结合强大的插件系统，您可以自动化任务，深度掌控您的设备。</string>
     <string name="permission_guide_intro_3_title">释放创造力，随时待命</string>
-    <string name="permission_guide_intro_3_desc">无论是设计网页、处理媒体文件，还是通过悬浮窗随时唤醒AI，Operit都为您提供强大、灵活且安全的创作与辅助环境。您的数据，由您掌控。</string>
+    <string name="permission_guide_intro_3_desc">无论是设计网页、处理媒体文件，还是通过悬浮窗随时唤醒AI，玄枵都为您提供强大、灵活且安全的创作与辅助环境。您的数据，由您掌控。</string>
     <string name="permission_guide_intro_page_indicator">功能介绍 %1$d/%2$d</string>
 
     <!-- 调试模式 -->
@@ -2265,7 +2265,7 @@
     <string name="tool_user_agreement">用户协议</string>
     <string name="tool_user_agreement_desc">查看应用的用户协议与隐私政策</string>
     <string name="tool_default_assistant_guide">默认助手设置</string>
-    <string name="tool_default_assistant_guide_desc">设置Operit语音悬浮为系统默认助手</string>
+    <string name="tool_default_assistant_guide_desc">设置玄枵语音悬浮为系统默认助手</string>
     <string name="tool_terminal">命令终端</string>
     <string name="tool_terminal_desc">功能强大的命令行终端，执行系统指令</string>
     <string name="tool_terminal_auto_config">终端自动配置</string>
@@ -3074,18 +3074,18 @@
     <string name="perm_desc_receive_wap_push">允许应用接收WAP推送消息</string>
     <string name="perm_desc_receive_mms">允许应用接收彩信</string>
     
-    <!-- OperitTerminal Wizard Card -->
-    <string name="operit_terminal_wizard_title">OperitTerminal 设置向导</string>
-    <string name="operit_terminal_not_installed">OperitTerminal 未安装</string>
-    <string name="operit_terminal_update_available">OperitTerminal 有更新可用</string>
-    <string name="operit_terminal_up_to_date">OperitTerminal 已是最新版本</string>
-    <string name="operit_terminal_install_description">OperitTerminal 是一个功能强大的终端应用，提供完整的 Linux 环境和包管理功能。我们需要先安装这个应用。</string>
-    <string name="operit_terminal_install_button">安装 OperitTerminal</string>
-    <string name="operit_terminal_update_description">发现 OperitTerminal 的新版本，建议更新以获得更好的功能和兼容性。</string>
+    <!-- 玄枵Terminal Wizard Card -->
+    <string name="operit_terminal_wizard_title">玄枵Terminal 设置向导</string>
+    <string name="operit_terminal_not_installed">玄枵Terminal 未安装</string>
+    <string name="operit_terminal_update_available">玄枵Terminal 有更新可用</string>
+    <string name="operit_terminal_up_to_date">玄枵Terminal 已是最新版本</string>
+    <string name="operit_terminal_install_description">玄枵Terminal 是一个功能强大的终端应用，提供完整的 Linux 环境和包管理功能。我们需要先安装这个应用。</string>
+    <string name="operit_terminal_install_button">安装 玄枵Terminal</string>
+    <string name="operit_terminal_update_description">发现 玄枵Terminal 的新版本，建议更新以获得更好的功能和兼容性。</string>
     <string name="operit_terminal_release_notes">更新说明：%1$s</string>
-    <string name="operit_terminal_update_button">更新 OperitTerminal</string>
-    <string name="operit_terminal_latest_description">恭喜！您已安装最新版本的 OperitTerminal，可以开始使用其强大的终端功能。</string>
-    <string name="operit_terminal_open_button">打开 OperitTerminal</string>
+    <string name="operit_terminal_update_button">更新 玄枵Terminal</string>
+    <string name="operit_terminal_latest_description">恭喜！您已安装最新版本的 玄枵Terminal，可以开始使用其强大的终端功能。</string>
+    <string name="operit_terminal_open_button">打开 玄枵Terminal</string>
     
     <!-- Functional Config Screen -->
     <string name="functional_model_config_title">功能模型配置设置</string>
@@ -4517,7 +4517,7 @@
     <string name="character_card_memory_profile_select">选择记忆配置</string>
     <string name="character_card_tool_access_title">自定义允许使用的工具</string>
     <string name="character_card_tool_access_enable">启用角色卡级工具白名单</string>
-    <string name="character_card_tool_access_follow_global">当前跟随全局配置</string>
+    <string name="character_card_tool_access_follow_global">当前跟随全局配置（角色卡级限制未生效，工具可用性由全局决定）</string>
     <string name="character_card_tool_access_configure">配置允许项</string>
     <string name="character_card_tool_access_summary_empty">当前未允许任何内建工具或外部来源</string>
     <string name="character_card_tool_access_summary_counts">内置工具 %1$s · 包 %2$d · Skill %3$d · MCP %4$d</string>
@@ -4565,9 +4565,9 @@
     <string name="import_color_qr">导入多维码</string>
     <string name="scan_color_qr">扫描多维码</string>
     <string name="tavern_json">酒馆 JSON</string>
-    <string name="export_tavern_json_desc">导出为 .json 并保存到 Download/Operit/exports</string>
+    <string name="export_tavern_json_desc">导出为 .json 并保存到 Download/玄枵/exports</string>
     <string name="tavern_png">酒馆 PNG</string>
-    <string name="export_tavern_png_desc">导出为可导入酒馆的图片，并保存到 Download/Operit/exports</string>
+    <string name="export_tavern_png_desc">导出为可导入酒馆的图片，并保存到 Download/玄枵/exports</string>
     <string name="image_read_error">无法读取图片</string>
     <string name="image_parse_error">无法解析图片</string>
     <string name="color_qr_not_recognized">无法识别彩色多维码</string>
@@ -4952,11 +4952,11 @@
     <string name="artifact_project_node_selection_hint">点击节点选中，再次点击可取消。</string>
     <string name="plugin_creation_fresh_task_line">请你激活operit editor，并使用沙盒包开发 dev 工具包开发新的沙盒包。</string>
     <string name="plugin_creation_fresh_package_rule_line">先确定新的沙盒包 id，后续不要改名。</string>
-    <string name="plugin_creation_fresh_dev_directory_line">开发目录固定为 手机下载/Operit/dev_package/你确定的id。开发、安装和测试都只在这里完成。</string>
+    <string name="plugin_creation_fresh_dev_directory_line">开发目录固定为 手机下载/玄枵/dev_package/你确定的id。开发、安装和测试都只在这里完成。</string>
     <string name="plugin_creation_continue_task_line">请你激活operit editor，查找沙盒包 %1$s 的位置，在此版本基础上继续开发并测试。</string>
     <string name="plugin_creation_merge_task_line">请你激活operit editor，查找沙盒包 %1$s 的位置，在此版本基础上做合并开发并测试。</string>
     <string name="plugin_creation_existing_package_rule_line">当前沙盒包 id 是 %1$s。包 id 和插件名字都必须沿用，不要改名，也不要新起包。</string>
-    <string name="plugin_creation_existing_dev_directory_line">开发目录固定为 手机下载/Operit/dev_package/%1$s。开发、安装和测试都只在这里完成。</string>
+    <string name="plugin_creation_existing_dev_directory_line">开发目录固定为 手机下载/玄枵/dev_package/%1$s。开发、安装和测试都只在这里完成。</string>
     <string name="plugin_creation_update_sandbox_package_dev">先更新 SandboxPackage_DEV。</string>
     <string name="plugin_creation_copy_types_to_dev_dir">把 skills 里的 types 覆盖复制到开发目录。</string>
     <string name="plugin_creation_use_terminal_ts_js_hint">尽量用终端，优先写 ts 和 js，再编译出最终 js。tsconfig 参考 examples。</string>
@@ -5370,7 +5370,7 @@
     <string name="custom">自定义</string>
 
     <!-- Voice Assistant Widget -->
-    <string name="voice_assistant_widget_description">快速启动 Operit 语音助手</string>
+    <string name="voice_assistant_widget_description">快速启动 玄枵 语音助手</string>
     <string name="voice_assistant_widget_title">语音助手</string>
     <string name="toolpkg_widget_host_label">自定义小部件</string>
     <string name="toolpkg_widget_host_description">添加后可绑定到某个插件注册的小组件页面</string>
@@ -5521,22 +5521,22 @@
 
     <!-- 默认助手设置引导 -->
     <string name="default_assistant_guide_title">设置默认语音助手</string>
-    <string name="default_assistant_guide_subtitle">让Operit成为您的智能助手</string>
-    <string name="default_assistant_guide_intro">将Operit设置为系统默认助手后，您可以通过长按Home键或使用语音唤醒快速启动Operit语音助手，获得更便捷的AI交互体验。</string>
+    <string name="default_assistant_guide_subtitle">让玄枵成为您的智能助手</string>
+    <string name="default_assistant_guide_intro">将玄枵设置为系统默认助手后，您可以通过长按Home键或使用语音唤醒快速启动玄枵语音助手，获得更便捷的AI交互体验。</string>
     <string name="default_assistant_guide_steps_title">设置步骤</string>
     
     <!-- 步骤1: 设置为默认助理 -->
     <string name="default_assistant_guide_step1_title">设置为默认助理</string>
-    <string name="default_assistant_guide_step1_desc">将 Operit 设置为系统的默认数字助理应用</string>
+    <string name="default_assistant_guide_step1_desc">将 玄枵 设置为系统的默认数字助理应用</string>
     <string name="default_assistant_guide_step1_detail1">• 打开系统设置 → 应用 → 默认应用 → 数字助理应用</string>
-    <string name="default_assistant_guide_step1_detail2">• 在助手应用列表中找到并选择"Operit AI"</string>
+    <string name="default_assistant_guide_step1_detail2">• 在助手应用列表中找到并选择"玄枵"</string>
     <string name="default_assistant_guide_step1_detail_android12">Android 12+: 设置 → 应用 → 默认应用 → 数字助理应用 → 默认数字助理应用</string>
     <string name="default_assistant_guide_open_settings">打开助理设置</string>
     
     <!-- 步骤2: 配置启动手势 -->
     <string name="default_assistant_guide_open_gesture_settings">打开手势设置</string>
     <string name="default_assistant_guide_step2_title">配置启动手势</string>
-    <string name="default_assistant_guide_step2_desc">设置如何快速唤起 Operit 助手</string>
+    <string name="default_assistant_guide_step2_desc">设置如何快速唤起 玄枵 助手</string>
     <string name="default_assistant_guide_step2_detail1">• 长按Home键：最常用的方式，在大部分设备上都可用</string>
     <string name="default_assistant_guide_step2_detail2">• 从屏幕底部向上滑动：部分支持全面屏手势的设备</string>
     <string name="default_assistant_guide_step2_detail_android12">Android 12+: 设置 → 应用 → 默认应用 → 数字助理应用 → 默认数字助理应用</string>
@@ -5546,29 +5546,29 @@
     <!-- 步骤4: 测试语音助手 -->
     <string name="default_assistant_guide_step4_title">测试语音助手</string>
     <string name="default_assistant_guide_step4_desc">设置完成后，测试是否能正常启动</string>
-    <string name="default_assistant_guide_step4_detail1">• 长按Home键（主屏幕按钮）应该会调起 Operit 语音助手</string>
-    <string name="default_assistant_guide_step4_detail2">• 如果设备支持语音唤醒，说"Hey Google"或设备指定的唤醒词也可能触发 Operit</string>
+    <string name="default_assistant_guide_step4_detail1">• 长按Home键（主屏幕按钮）应该会调起 玄枵 语音助手</string>
+    <string name="default_assistant_guide_step4_detail2">• 如果设备支持语音唤醒，说"Hey Google"或设备指定的唤醒词也可能触发 玄枵</string>
     
     <!-- 步骤3: 测试助手功能 -->
     <string name="default_assistant_guide_step3_title">测试助手功能</string>
-    <string name="default_assistant_guide_step3_desc">完成设置后，测试 Operit 是否能正常唤起</string>
+    <string name="default_assistant_guide_step3_desc">完成设置后，测试 玄枵 是否能正常唤起</string>
     <string name="default_assistant_guide_step3_detail1">• 使用您设置的手势（如长按Home键）唤起助手</string>
-    <string name="default_assistant_guide_step3_detail2">• 如果成功，应该会看到 Operit 的语音助手界面</string>
+    <string name="default_assistant_guide_step3_detail2">• 如果成功，应该会看到 玄枵 的语音助手界面</string>
     <string name="default_assistant_guide_step3_detail3">• 可以尝试说话或输入文字与助手交互</string>
     
     <!-- 疑难解答 -->
     <string name="default_assistant_guide_troubleshooting_title">遇到问题？</string>
-    <string name="default_assistant_guide_troubleshooting_content">如果在列表中找不到Operit，请确保：\n\n• 应用已正确安装且未被禁用\n• 已授予必要的权限（麦克风、悬浮窗等）\n• 尝试重启设备后再次设置\n\n部分定制系统可能限制第三方应用作为默认助手，如遇此情况，您仍可通过应用内的悬浮窗功能使用Operit。</string>
+    <string name="default_assistant_guide_troubleshooting_content">如果在列表中找不到玄枵，请确保：\n\n• 应用已正确安装且未被禁用\n• 已授予必要的权限（麦克风、悬浮窗等）\n• 尝试重启设备后再次设置\n\n部分定制系统可能限制第三方应用作为默认助手，如遇此情况，您仍可通过应用内的悬浮窗功能使用玄枵。</string>
     
     <!-- Voice Interaction Service -->
-    <string name="voice_interaction_service_name">Operit AI 助手</string>
+    <string name="voice_interaction_service_name">玄枵 助手</string>
     <string name="voice_interaction_service_summary">智能语音助手服务</string>
 
     <!-- Tool Permission Settings -->
     <string name="tool_permissions_title">工具权限</string>
-    <string name="tool_permissions_description">默认情况下，所有工具都需要您"询问"。您可以在下面添加例外。</string>
+    <string name="tool_permissions_description">默认情况下，所有工具都需要您"询问"（包括读取文件、播放音乐这类低风险工具）。如果您希望它们不再打扰，请把下方"全局权限开关"改为"允许"。</string>
     <string name="global_permission_switch">全局权限开关</string>
-    <string name="global_permission_switch_description">此设置作为主控制，可以覆盖单个工具权限。</string>
+    <string name="global_permission_switch_description">此设置作为主控制，可以覆盖单个工具权限。注意：即使设为"允许"，高风险工具（如删除文件、执行 Shell）仍会要求确认。</string>
     <string name="permission_level_allow">允许</string>
     <string name="permission_level_allow_description">这些工具将自动运行。</string>
     <string name="permission_level_forbid">禁止</string>
@@ -5852,7 +5852,7 @@
     <string name="start_with_new_chat_description">开启后，每次启动应用都会进入一个新的空白聊天界面，不再自动打开上一次聊天。</string>
     <string name="software_identity_title">软件标识</string>
     <string name="software_identity_description">更改侧边栏顶部显示的软件标识。</string>
-    <string name="software_identity_option_operit">Operit AI</string>
+    <string name="software_identity_option_operit">玄枵</string>
     <string name="software_identity_option_lingshu">灵枢 AI</string>
     <string name="reset_all_display_settings">重置所有显示设置</string>
     <string name="ui_accessibility_mode">无障碍适配模式</string>
@@ -5944,7 +5944,7 @@
     <string name="backup_memory_count">记忆条目</string>
     <string name="backup_memory_link_count">记忆关联</string>
     <string name="backup_files_statistics">备份文件统计</string>
-    <string name="backup_files_statistics_subtitle">Operit 导出目录中的备份文件</string>
+    <string name="backup_files_statistics_subtitle">玄枵 导出目录中的备份文件</string>
     <string name="backup_refresh">刷新</string>
     <string name="backup_scanning">扫描中</string>
     <string name="backup_chat_files">聊天记录</string>
@@ -5978,7 +5978,7 @@
     <string name="backup_room_db_restart_later">稍后</string>
     <string name="backup_room_db_last_success">上次成功备份：%1$s</string>
     <string name="backup_room_db_last_error">上次错误：%1$s</string>
-    <string name="backup_files_location_hint">提示：备份文件保存在 Download/Operit 文件夹</string>
+    <string name="backup_files_location_hint">提示：备份文件保存在 Download/玄枵 文件夹</string>
 
     <string name="backup_raw_snapshot_title">文件快照备份（实验）</string>
     <string name="backup_raw_snapshot_subtitle">以文件/目录为单位的整体压缩备份与恢复</string>
@@ -6039,7 +6039,7 @@
     <string name="backup_faq_why">为什么要备份数据？</string>
     <string name="backup_faq_why_answer">备份聊天记录可以防止应用卸载或数据丢失时，您的重要内容丢失。定期备份是个好习惯！</string>
     <string name="backup_faq_where">导出的文件保存在哪里？</string>
-    <string name="backup_faq_where_answer">导出的备份文件会保存在您手机的「下载/Operit」文件夹中，文件名包含导出的数据类型、日期和时间。</string>
+    <string name="backup_faq_where_answer">导出的备份文件会保存在您手机的「下载/玄枵」文件夹中，文件名包含导出的数据类型、日期和时间。</string>
     <string name="backup_faq_duplicate">导入后会出现重复的数据吗？</string>
     <string name="backup_faq_duplicate_answer">系统会根据记录ID判断，相同ID的记录会被更新而不是重复导入。不同ID的记录会作为新记录添加。</string>
     
@@ -6047,7 +6047,7 @@
     <string name="backup_select_export_format">选择导出格式</string>
     <string name="backup_select_format_hint">请选择要导出的聊天记录格式：</string>
     <string name="backup_format_json">JSON（推荐）</string>
-    <string name="backup_format_json_desc">Operit 原生格式，完整保留消息切换等所有数据</string>
+    <string name="backup_format_json_desc">玄枵 原生格式，完整保留消息切换等所有数据</string>
     <string name="backup_format_markdown">Markdown</string>
     <string name="backup_format_markdown_desc">轻量级标记格式，便于阅读和编辑</string>
     <string name="backup_format_html">HTML</string>
@@ -6060,7 +6060,7 @@
     <!-- 导入格式选择 -->
     <string name="backup_select_import_format">选择导入格式</string>
     <string name="backup_import_format_hint">请选择要导入的聊天记录格式：</string>
-    <string name="backup_format_operit">Operit JSON（推荐）</string>
+    <string name="backup_format_operit">玄枵 JSON（推荐）</string>
     <string name="backup_format_operit_desc">本应用的原生格式，完整保留消息切换等所有数据</string>
     <string name="backup_format_chatgpt">ChatGPT</string>
     <string name="backup_format_chatgpt_desc">OpenAI ChatGPT conversations.json 导出格式</string>
@@ -6076,7 +6076,7 @@
 
     <string name="backup_character_cards_title">角色卡</string>
     <string name="backup_character_cards_subtitle">备份与恢复角色卡配置</string>
-    <string name="backup_character_cards_current_count">当前共有 %1$d 个角色卡。导出的文件会保存在「下载/Operit」文件夹中。</string>
+    <string name="backup_character_cards_current_count">当前共有 %1$d 个角色卡。导出的文件会保存在「下载/玄枵」文件夹中。</string>
     <string name="backup_character_card_count">角色卡</string>
     <string name="backup_character_card_files">角色卡</string>
 
@@ -6170,7 +6170,7 @@
 
     <!-- Logcat -->
     <string name="logcat_no_logs_to_save">没有日志可保存</string>
-    <string name="logcat_header">=== Operit 日志 ===</string>
+    <string name="logcat_header">=== 玄枵 日志 ===</string>
     <string name="logcat_date">日期: %1$s</string>
     <string name="logcat_total_count">总条数: %1$d</string>
     <string name="logcat_save_failed">保存失败：%1$s</string>
@@ -6645,7 +6645,7 @@
     <string name="skill_publish_body_section_repo_info">## 🔗 仓库信息</string>
     <string name="skill_publish_body_label_repo_url">**仓库地址:** %1$s</string>
     <string name="skill_publish_body_section_install_method">## 📦 安装方式</string>
-    <string name="skill_publish_body_install_step1">1. 打开 Operit → 包管理 → Skills</string>
+    <string name="skill_publish_body_install_step1">1. 打开 玄枵 → 包管理 → Skills</string>
     <string name="skill_publish_body_install_step2">2. 点击「导入 Skill」→ 「从仓库导入」</string>
     <string name="skill_publish_body_install_step3">3. 输入仓库地址：`%1$s`</string>
     <string name="skill_publish_body_install_step4">4. 确认导入</string>
@@ -7162,7 +7162,7 @@
     <string name="demo_cmd_list_activities">查看活动的Activity</string>
     <string name="demo_cmd_list_services">列出系统服务</string>
     <string name="demo_cmd_check_resolution">查看屏幕分辨率</string>
-    <string name="demo_cmd_echo_hello">打印Hello OperitTerminal</string>
+    <string name="demo_cmd_echo_hello">打印Hello 玄枵Terminal</string>
     <string name="demo_cmd_list_files">列出文件和目录</string>
     <string name="demo_cmd_show_user">显示当前用户</string>
     <string name="demo_cmd_update_package_manager">更新包管理器 (Ubuntu)</string>
@@ -7724,15 +7724,15 @@
     <string name="chat_summarize_generation_failed">总结生成失败: %1$s</string>
 
     <!-- AIForegroundService (新增) -->
-    <string name="service_operit_running">Operit 正在运行</string>
+    <string name="service_operit_running">玄枵 正在运行</string>
     <string name="service_chat_complete_reminder">对话完成提醒</string>
     <string name="service_chat_complete_reminder_sound">对话完成提醒（提示音）</string>
     <string name="service_chat_complete_reminder_vibration">对话完成提醒（震动）</string>
     <string name="service_chat_complete_reminder_sound_vibration">对话完成提醒（提示音和震动）</string>
-    <string name="service_keep_background">保持 Operit 在后台运行。</string>
+    <string name="service_keep_background">保持 玄枵 在后台运行。</string>
     <string name="service_notify_when_complete">对话完成后提醒你。</string>
-    <string name="service_running_wake_pause">Operit 正在运行（唤醒暂停）</string>
-    <string name="service_running_wake_listening">Operit 正在运行（唤醒监听中）</string>
+    <string name="service_running_wake_pause">玄枵 正在运行（唤醒暂停）</string>
+    <string name="service_running_wake_listening">玄枵 正在运行（唤醒监听中）</string>
     <string name="service_running_stats">运行对话 %1$d · 调用工具 %2$d</string>
     <string name="service_running_http_listening">外部 HTTP 正在监听端口 %1$d</string>
     <string name="service_running_with_http">%1$s · 外部 HTTP %2$d</string>
@@ -7779,7 +7779,7 @@
     <string name="html_export_updated">更新</string>
     <string name="html_export_group">分组</string>
     <string name="html_export_message_count">消息数</string>
-    <string name="html_export_footer">导出自 Operit AI Assistant</string>
+    <string name="html_export_footer">导出自 玄枵 Assistant</string>
 
     <!-- MnnModelDownloadManager (新增) -->
     <string name="mnn_no_cache_data">无缓存数据</string>
@@ -8535,7 +8535,7 @@
     <string name="toolreg_list_bluetooth_bonded_devices_desc">【已配对设备】列出系统里已完成配对的蓝牙设备（含经典蓝牙与 BLE），无参数。只返回已配对项，不会扫描周围未配对的设备；要发现新设备请用 scan_bluetooth_devices。设备不支持蓝牙时报 "Bluetooth is not supported on this device."。</string>
     <string name="toolreg_scan_bluetooth_devices_desc">【扫描附近设备】扫描附近可发现的经典蓝牙与 BLE 设备，返回地址列表。可选 duration_ms 指定扫描时长，默认 10000；可选 include_ble 控制是否包含 BLE 设备，默认 true。扫描前需已完成 request_bluetooth_permission，否则返回权限错误。只想看已配对的设备用 list_bluetooth_bonded_devices，更快且无需扫描。</string>
     <string name="toolreg_bluetooth_connect_desc">【连经典蓝牙】连接到地址 %1$s 的经典蓝牙设备，返回 session_id 供后续收发数据。address 为必填，缺失报 "Must provide address parameter"。可选 uuid 指定串口服务 UUID，不填则自动选用设备上报的 SPP 通道。连接成功后请保存 session_id —— bluetooth_send / bluetooth_read / bluetooth_close 都依赖它。连接 BLE 设备请改用 bluetooth_ble_connect。</string>
-    <string name="toolreg_bluetooth_listen_desc">【等待连入】以服务端身份监听，等待其他设备主动连接本机，返回 listener_session_id。可选 name 指定对外广播的设备名，默认 "Operit Bluetooth"；可选 uuid 指定监听的服务 UUID。本工具只负责建立监听，收到连入请求后还需调用 bluetooth_accept 才能真正接受。主动连出用 bluetooth_connect。</string>
+    <string name="toolreg_bluetooth_listen_desc">【等待连入】以服务端身份监听，等待其他设备主动连接本机，返回 listener_session_id。可选 name 指定对外广播的设备名，默认 "玄枵 Bluetooth"；可选 uuid 指定监听的服务 UUID。本工具只负责建立监听，收到连入请求后还需调用 bluetooth_accept 才能真正接受。主动连出用 bluetooth_connect。</string>
     <string name="toolreg_bluetooth_accept_desc">【接受连入】接受 bluetooth_listen 监听 %1$s 上的一条连入请求，返回可用于收发数据的 session_id。listener_session_id 为必填，缺失报 "Must provide listener_session_id parameter"。可选 timeout_ms 指定等待连入的超时，默认 30000。必须先调用 bluetooth_listen 拿到 listener_session_id，本工具无法凭空接受连接。</string>
     <string name="toolreg_bluetooth_send_desc">【发数据】向经典蓝牙会话 %1$s 发送数据，session_id 为必填，缺失报 "Must provide session_id parameter"。session_id 来自 bluetooth_connect 或 bluetooth_accept 的返回值。需要一次性发送并等待对方回包时，用 bluetooth_send_and_read 更省一次往返。</string>
     <string name="toolreg_bluetooth_read_desc">【收数据】从经典蓝牙会话 %1$s 读取数据，session_id 为必填，缺失报 "Must provide session_id parameter"。可选 max_bytes 限制单次读取字节数；可选 timeout_ms 指定等待超时。session_id 来自 bluetooth_connect 或 bluetooth_accept。发送请用 bluetooth_send。</string>

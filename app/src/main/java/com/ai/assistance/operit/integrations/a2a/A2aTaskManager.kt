@@ -368,7 +368,7 @@ class A2aTaskNotCancelableException(taskId: String) :
     A2aProtocolException("A2A task is not cancelable: $taskId", errorCode = -32002)
 
 class A2aPushNotificationNotSupportedException :
-    A2aProtocolException("Operit does not support A2A push notifications", errorCode = -32003)
+    A2aProtocolException("玄枵 does not support A2A push notifications", errorCode = -32003)
 
 class A2aUnsupportedOperationException(message: String) :
     A2aProtocolException(message, errorCode = -32004)

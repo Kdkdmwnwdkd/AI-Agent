@@ -1127,7 +1127,7 @@ open class StandardSystemOperationTools(private val context: Context) {
     }
 
     open suspend fun listenBluetooth(tool: AITool): ToolResult {
-        val name = tool.parameters.find { it.name == "name" }?.value?.takeIf { it.isNotBlank() } ?: "Operit Bluetooth"
+        val name = tool.parameters.find { it.name == "name" }?.value?.takeIf { it.isNotBlank() } ?: "玄枵 Bluetooth"
         val uuid = tool.parameters.find { it.name == "uuid" }?.value
         if (!hasBluetoothConnectPermission()) {
             return bluetoothConnectPermissionError(tool.name)

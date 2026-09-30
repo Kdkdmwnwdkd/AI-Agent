@@ -813,7 +813,7 @@ suspend fun exportAndroidApp(
                             android.os.Environment.getExternalStoragePublicDirectory(
                                     android.os.Environment.DIRECTORY_DOWNLOADS
                             ),
-                            "Operit/exports"
+                            "玄枵/exports"
                     )
             if (!outputDir.exists()) {
                 outputDir.mkdirs()
@@ -873,7 +873,7 @@ suspend fun exportWindowsApp(
                             android.os.Environment.getExternalStoragePublicDirectory(
                                     android.os.Environment.DIRECTORY_DOWNLOADS
                             ),
-                            "Operit/exports"
+                            "玄枵/exports"
                     )
             if (!outputDir.exists()) {
                 outputDir.mkdirs()

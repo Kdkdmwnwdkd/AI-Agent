@@ -98,7 +98,7 @@ fun VoiceAssistantWidgetContent(context: Context) {
 
                 // 标题文字
                 Text(
-                    text = "Operit",
+                    text = "玄枵",
                     style = TextStyle(
                         fontSize = 16.sp,
                         color = ColorProvider(Color.White)

@@ -52,7 +52,7 @@ class OperitDataDocumentsProvider : DocumentsProvider() {
             dataRootCanonical = dataRoot.canonicalFile
             dataRootCanonicalPath = dataRootCanonical.path
             if (!dataRootCanonical.isDirectory) {
-                throw FileNotFoundException("Operit data directory not found: $dataRootCanonicalPath")
+                throw FileNotFoundException("玄枵 data directory not found: $dataRootCanonicalPath")
             }
             AppLogger.d(TAG, "Initialized root: $dataRootCanonicalPath")
             true
@@ -73,7 +73,7 @@ class OperitDataDocumentsProvider : DocumentsProvider() {
                 DocumentsContract.Root.FLAG_SUPPORTS_IS_CHILD
         )
         row.add(DocumentsContract.Root.COLUMN_ICON, android.R.drawable.ic_menu_manage)
-        row.add(DocumentsContract.Root.COLUMN_TITLE, "Operit Data")
+        row.add(DocumentsContract.Root.COLUMN_TITLE, "玄枵 数据")
         row.add(DocumentsContract.Root.COLUMN_SUMMARY, dataRootCanonicalPath)
         row.add(DocumentsContract.Root.COLUMN_DOCUMENT_ID, DOC_ID_ROOT)
         row.add(DocumentsContract.Root.COLUMN_AVAILABLE_BYTES, dataRootCanonical.usableSpace)

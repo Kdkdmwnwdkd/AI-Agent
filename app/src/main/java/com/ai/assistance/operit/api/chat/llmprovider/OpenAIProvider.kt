@@ -372,7 +372,7 @@ open class OpenAIProvider(
 
     private fun getOutputImagesDir(): File {
         val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        return File(downloadsDir, "Operit/output images")
+        return File(downloadsDir, "玄枵/output images")
     }
 
     private fun fileExtensionForImageMime(mimeType: String): String {

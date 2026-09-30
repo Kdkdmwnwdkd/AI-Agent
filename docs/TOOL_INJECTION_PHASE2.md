@@ -227,3 +227,115 @@ private val ALWAYS_INJECTED_TOOLS = setOf(
 > ⚠️ **不要靠括号平衡判断代码正确性**。`EnhancedAIService.kt` 的括号统计恒为 993/992（原始文件即为 1，因字符字面量 `'('` 被误算），与改动无关。必须用「原样抽取 + 真实数据 + 编译运行」的方式验证。
 
 
+
+---
+
+## 八、真机验证期发现的三件事（均非本阶段回归）
+
+以下三个现象在真机验收时被报告，逐一排查后确认**全部与第二阶段改动无关**，记录在此以免后续重复排查。
+
+### 8.1 关闭「启用角色卡级工具白名单」后，工具仍可被调用
+
+**现象**：角色卡里关掉白名单、工具一个都不勾，AI 照样能调 `find_files` / `music_play`，只是改成弹权限确认框。
+
+**根因**（`CharacterCardToolAccessResolver.resolve()` 第 76-89 行）：
+
+```kotlin
+if (!roleCardConfig.enabled) {
+    return ResolvedCharacterCardToolAccess(
+        customEnabled = false,          // ← 关键
+        effectiveBuiltinToolVisibility = effectiveGlobalToolVisibility,
+        ...
+    )
+}
+```
+
+`customEnabled = false` 时，`isBuiltinToolAllowed` 走第一行短路：
+
+```kotlin
+if (!customEnabled) { return effectiveBuiltinToolVisibility[toolName] ?: true }  // 缺省 true
+```
+
+→ **全部放行**。
+
+**定性**：这是**既有设计**，非 bug，也非本阶段引入。语义是「关闭角色卡级限制 = 移除该限制 = 回落到全局默认」，而全局默认是放行。
+
+> ⚠️ 该设计**反直觉**：用户以为"关掉白名单更安全"，实际是"限制没了"。
+> 页面原有提示「当前跟随全局配置」已改为更明确的措辞（见 §8.4）。
+
+**若要让白名单真正拦死工具**，需：**开启**第一层「启用角色卡级工具白名单」+ **关闭**第二层「启用全部内置工具」。此时走严格分支：
+
+```kotlin
+val builtinToolsEnabled = roleCardConfig.builtinToolsEnabled
+val effectiveBuiltinToolVisibility = manageableBuiltinNames.associateWith { toolName ->
+    val globalAllowed = effectiveGlobalToolVisibility[toolName] ?: true
+    when {
+        toolName != "package_proxy" -> globalAllowed && builtinToolsEnabled   // ← 第二层在这里生效
+        else -> globalAllowed
+    }
+}
+```
+
+此时 `isBuiltinToolAllowed` 走 `effectiveBuiltinToolVisibility[toolName] == true` 严格判定 → `false` → 拦死。
+
+**该组合尚未真机验证**，标注为盲区。因为拦截发生在 `ToolExecutionManager.executeInvocations` 的第 2 步（`isInvocationAllowedForRoleCard`），**优先于权限弹窗**，预期表现为"直接拒绝，不弹窗"。
+
+### 8.2 执行低风险工具（如 `music_play`）时弹出权限确认框
+
+**现象**：播放音乐时弹出「权限请求」浮窗，需点「允许」。
+
+**根因**（`ToolPermissionSystem.checkToolPermission()` 第 196-210 行）：
+
+```kotlin
+val masterSwitch = PermissionLevel.fromString(preferences[MASTER_SWITCH] ?: DEFAULT_MASTER_SWITCH)
+val overrideLevel = preferences[key]?.let { PermissionLevel.fromString(it) }
+
+val permissionLevel = overrideLevel ?: when {
+    SensitiveToolRegistry.isSensitive(tool.name) -> PermissionLevel.ASK
+    else -> masterSwitch          // ← music_play 走这里
+}
+```
+
+而 `DEFAULT_MASTER_SWITCH = PermissionLevel.ASK.name` → **主开关默认 ASK**。
+
+`music_play` 虽在 `ALWAYS_SAFE_TOOLS` 白名单中，但该集合**只用于让 `isSensitive` 返回 false**，不参与"主动放行"判定。所以它落到 `else -> masterSwitch` → 默认 ASK → 弹窗。
+
+**定性**：**设计取舍**，非 bug，非本阶段引入。保守默认（宁可多问）。
+
+**解决方式**（无需改代码）：
+- 弹窗里点「**以后都允许**」→ 写入 `tool_permission_<name> = ALLOW`
+- 或 **设置 → 工具权限 → 全局权限开关 → 改为「允许」**
+
+**副作用提醒**：主开关改 ALLOW 后，所有非高风险工具（约 90+ 个）不再弹窗，仅 `HIGH_RISK_TOOLS` 仍强制确认。`requestPermission` 超时为 **60 秒**（`PERMISSION_REQUEST_TIMEOUT_MS`），超时任务失败。
+
+### 8.3 本地模型（GGUF）"找不到"
+
+**现象**：本地模型列表为空。
+
+**根因**：模型文件目录不符合 Operit 扫描路径。
+
+- 实际位置：`/storage/emulated/0/AI 模型/xxx.gguf`
+- Operit 扫描：`/storage/emulated/0/Download/Operit/models/llama/`
+
+**定性**：**非代码问题**，移动文件即可。
+
+### 8.4 本次伴随的文案/注释修正（零逻辑改动）
+
+| 文件 | 位置 | 改动 |
+|---|---|---|
+| `core/tools/SensitiveToolRegistry.kt` | `ALWAYS_SAFE_TOOLS` 文档注释 | 原写「永远不会弹出确认」（**与实现不符**）→ 改为准确描述：仅影响 `isSensitive`，是否弹窗由主开关决定 |
+| `res/values/strings.xml` | `tool_permissions_description` | 补充说明「低风险工具默认也会询问」+ 指向全局开关 |
+| `res/values/strings.xml` | `global_permission_switch_description` | 补充说明「设为允许后高风险工具仍会确认」 |
+| `res/values/strings.xml` | `character_card_tool_access_follow_global` | 「当前跟随全局配置」→「当前跟随全局配置（角色卡级限制未生效，工具可用性由全局决定）」 |
+
+以上均为文案层面，**不改变任何运行时行为**。Kotlin 注释改动已通过编译探针验证。
+
+### 8.5 验证矩阵（更新）
+
+| 配置组合 | 第一层 `enabled` | 第二层 `builtinToolsEnabled` | 预期行为 | 验证状态 |
+|---|---|---|---|---|
+| A | ❌ 关 | 任意 | 全放行 + 弹权限 | ✅ 真机验证（视频） |
+| B | ✅ 开 | ✅ 开 | 全放行 | 未验证 |
+| C | ✅ 开 | ❌ 关 | **拦死，不弹窗** | ⚠️ **未验证（盲区）** |
+
+> 组合 C 是唯一能真正"禁用内置工具"的配置，但因为拦截早于权限弹窗，其表现（拒绝 vs 弹窗）尚未在真机上确认。

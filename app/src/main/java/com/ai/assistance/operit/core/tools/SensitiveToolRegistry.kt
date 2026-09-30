@@ -90,7 +90,15 @@ object SensitiveToolRegistry {
     )
 
     /**
-     * 明确安全的工具：纯只读操作，永远不会弹出确认。
+     * 明确不算高风险的工具：纯只读或可逆操作。
+     *
+     * 注意：本集合不代表免除确认。它的唯一作用是让 [isSensitive] 返回 false，
+     * 即不会被 [HIGH_RISK_TOOLS] 强制确认。
+     * 是否弹窗仍由全局主开关（ToolPermissionSystem.masterSwitch，默认 ASK）决定：
+     * 主开关为 ASK 时，这些工具依然会弹出权限确认框。
+     *
+     * 如需让本集合内的工具完全免确认，请把主开关设为 ALLOW，
+     * 或在设置页对单个工具配置 ALLOW 例外。
      */
     private val ALWAYS_SAFE_TOOLS = setOf(
         // 文件读取

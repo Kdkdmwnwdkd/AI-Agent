@@ -2795,7 +2795,7 @@ object SystemToolPromptsInternal {
                             description = "Listen for another device connecting to this phone over Bluetooth classic.",
                             parametersStructured =
                                 listOf(
-                                    ToolParameterSchema("name", "string", "optional service name", false, "Operit Bluetooth"),
+                                    ToolParameterSchema("name", "string", "optional service name", false, "玄枵 Bluetooth"),
                                     ToolParameterSchema("uuid", "string", "optional RFCOMM UUID", false)
                                 )
                         ),
@@ -5787,7 +5787,7 @@ object SystemToolPromptsInternal {
                             description = "监听其他设备通过蓝牙 Classic 连接本机。",
                             parametersStructured =
                                 listOf(
-                                    ToolParameterSchema("name", "string", "可选，服务名", false, "Operit Bluetooth"),
+                                    ToolParameterSchema("name", "string", "可选，服务名", false, "玄枵 Bluetooth"),
                                     ToolParameterSchema("uuid", "string", "可选，RFCOMM UUID", false)
                                 )
                         ),
