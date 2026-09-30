@@ -471,10 +471,58 @@ class LinuxFileSystemTools(context: Context) : StandardFileSystemTools(context) 
                 truncatedPartContent = truncatedPartContent.substring(0, maxFileSizeBytes)
             }
 
+            // 已返回的实际行范围（1-based，闭区间）。
+            // 若发生截断，按字符预算回算真正完整返回到的行号，避免上报"请求的 endLine"
+            // 导致模型按 end_line+1 续读时跳过被截掉的行。
+            val requestedEndLine = endLine
+            val returnedEndLine =
+                if (!isTruncated) {
+                    requestedEndLine
+                } else {
+                    var acc = 0
+                    var lastFull = startLine - 1
+                    for (line in startLine..requestedEndLine) {
+                        val lineText = fs.readFileLines(path, line, line) ?: break
+                        val cost = lineText.length + 1
+                        if (acc + cost > maxFileSizeBytes) break
+                        acc += cost
+                        lastFull = line
+                    }
+                    lastFull.coerceAtLeast(startLine)
+                }
+
             var contentWithLineNumbers = addLineNumbers(truncatedPartContent, startLine - 1, totalLines)
             if (isTruncated) {
                 contentWithLineNumbers += "\n\n... (file content truncated) ..."
             }
+
+            // 续读提示：明确剩余行数与下一步参数，避免模型重读整个文件或漏读
+            val remainingLines = (totalLines - returnedEndLine).coerceAtLeast(0)
+            contentWithLineNumbers +=
+                buildString {
+                    append("\n\n---\n")
+                    if (totalLines <= 0) {
+                        append("[文件为空]")
+                    } else {
+                        append("[已读 $startLine-$returnedEndLine 行，共 $totalLines 行")
+                        if (remainingLines > 0) {
+                            append("，剩余 $remainingLines 行")
+                        }
+                        append("]")
+                    }
+                    if (remainingLines > 0) {
+                        val nextStart = returnedEndLine + 1
+                        val nextEnd =
+                            (nextStart + ToolExecutionLimits.DEFAULT_FILE_READ_PART_LINES - 1)
+                                .coerceAtMost(totalLines)
+                        append(
+                            "\n[续读请再次调用 read_file_part，参数 path=\"$path\", " +
+                                "start_line=$nextStart, end_line=$nextEnd]"
+                        )
+                    } else {
+                        append("\n[已读到文件末尾，无需续读]")
+                    }
+                }
 
             ToolResult(
                 toolName = tool.name,
@@ -485,7 +533,7 @@ class LinuxFileSystemTools(context: Context) : StandardFileSystemTools(context) 
                     partIndex = 0, // 保留兼容性，但不再使用
                     totalParts = 1, // 保留兼容性，但不再使用
                     startLine = startLine - 1, // 转为0-based
-                    endLine = endLine,
+                    endLine = returnedEndLine,
                     totalLines = totalLines,
                     env = "linux"
                 ),

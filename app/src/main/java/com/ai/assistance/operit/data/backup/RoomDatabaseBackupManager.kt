@@ -97,10 +97,9 @@ object RoomDatabaseBackupManager {
             "${DB_NAME}-shm" to shmFile
         ))
 
-        if (targetFile.exists()) {
-            targetFile.delete()
-        }
-
+        // 注意：不要先删 targetFile —— 那是上一份可用的备份。
+        // renameTo 在同卷上是原子的；失败时退化为直接覆盖复制（overwrite=true 本身就会截断重写）。
+        // 只有在新内容确实落盘后才删除临时文件，避免"旧备份已毁、新备份未成"。
         if (!tmpFile.renameTo(targetFile)) {
             tmpFile.copyTo(targetFile, overwrite = true)
             tmpFile.delete()
@@ -140,10 +139,9 @@ object RoomDatabaseBackupManager {
             "${DB_NAME}-shm" to shmFile
         ))
 
-        if (targetFile.exists()) {
-            targetFile.delete()
-        }
-
+        // 注意：不要先删 targetFile —— 那是上一份可用的备份。
+        // renameTo 在同卷上是原子的；失败时退化为直接覆盖复制（overwrite=true 本身就会截断重写）。
+        // 只有在新内容确实落盘后才删除临时文件，避免"旧备份已毁、新备份未成"。
         if (!tmpFile.renameTo(targetFile)) {
             tmpFile.copyTo(targetFile, overwrite = true)
             tmpFile.delete()

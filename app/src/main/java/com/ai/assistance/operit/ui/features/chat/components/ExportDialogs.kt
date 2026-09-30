@@ -807,7 +807,7 @@ suspend fun exportAndroidApp(
 
             // 7. 设置签名信息并执行签名
             onProgress(0.8f, context.getString(R.string.export_signing_apk))
-            // 使用下载目录下的Operit/exports子目录
+            // 使用下载目录下的玄枵/exports子目录
             val outputDir =
                     File(
                             android.os.Environment.getExternalStoragePublicDirectory(
@@ -867,7 +867,7 @@ suspend fun exportWindowsApp(
         withContext(Dispatchers.IO) {
             onProgress(0.1f, context.getString(R.string.export_prepare_windows_template))
 
-            // 创建输出目录 - 使用下载目录下的Operit/exports子目录
+            // 创建输出目录 - 使用下载目录下的玄枵/exports子目录
             val outputDir =
                     File(
                             android.os.Environment.getExternalStoragePublicDirectory(

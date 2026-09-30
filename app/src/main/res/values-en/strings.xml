@@ -7148,7 +7148,7 @@
     <string name="default_option">Default</string>
     <string name="character_card_single_char">Single character</string>
     <string name="waifu_config_bound_to_card">Bound to character card</string>
-    <string name="advanced_import_key">Import key</string>
+    <string name="advanced_import_key">Import key %1$s</string>
     <string name="model_custom_params">Custom parameters</string>
     <string name="file_manager_home">Home</string>
     <string name="file_manager_new_tab">New tab</string>
@@ -7554,7 +7554,7 @@
     <!-- AccessibilityWizardCard -->
     <string name="a11y_wizard_risk_acknowledgment">I understand and acknowledge the risks of other apps banning or restricting account functions due to accessibility permissions, and I accept the consequences</string>
     <string name="a11y_wizard_new_version_detected">New version detected</string>
-    <string name="a11y_wizard_installed_version">Installed: %1$s</string>
+    <string name="a11y_wizard_installed_version">Installed: %1$s (Bundled: %2$s)</string>
 
     <!-- UrlConfig -->
     <string name="url_config_api_key">API Key</string>

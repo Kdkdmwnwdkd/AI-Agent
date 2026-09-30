@@ -798,13 +798,7 @@ dependencies {
     // NanoHTTPD for local web server
     implementation(libs.nanohttpd)
 
-    // 添加测试依赖
-    testImplementation(libs.junit)
-    
-    // Android测试依赖
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.compose.bom))
+    // Android 测试依赖（junit / androidx.junit / espresso / compose-bom 已在上方 "Test dependencies" 声明）
     androidTestImplementation(libs.ui.test.junit4)
     androidTestImplementation(libs.test.runner)
     androidTestImplementation(libs.test.rules)

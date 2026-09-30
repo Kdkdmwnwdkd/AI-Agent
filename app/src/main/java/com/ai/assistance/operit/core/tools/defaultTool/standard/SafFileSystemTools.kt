@@ -1631,10 +1631,56 @@ class SafFileSystemTools(
                     partContent = partContent.substring(0, maxFileSizeBytes)
                 }
 
+                // 发生截断时，按字符预算回算真正完整返回到的行号，
+                // 否则上报的是"请求的 endLine"，模型据此续读会跳过被截掉的行。
+                val requestedEndLine = minOf(endExclusive, totalLines)
+                val returnedEndLine =
+                    if (!isTruncated) {
+                        requestedEndLine
+                    } else {
+                        var acc = 0
+                        var lastFull = startLine - 1
+                        for (i in startIndex until requestedEndLine) {
+                            val cost = allLines[i].length + 1
+                            if (acc + cost > maxFileSizeBytes) break
+                            acc += cost
+                            lastFull = i + 1
+                        }
+                        lastFull.coerceAtLeast(startLine)
+                    }
+
                 var contentWithLineNumbers = addLineNumbers(partContent, startIndex, totalLines)
                 if (isTruncated) {
                     contentWithLineNumbers += "\n\n... (file content truncated) ..."
                 }
+
+                // 续读提示：明确剩余行数与下一步参数
+                val remainingLines = (totalLines - returnedEndLine).coerceAtLeast(0)
+                contentWithLineNumbers +=
+                    buildString {
+                        append("\n\n---\n")
+                        if (totalLines <= 0) {
+                            append("[文件为空]")
+                        } else {
+                            append("[已读 $startLine-$returnedEndLine 行，共 $totalLines 行")
+                            if (remainingLines > 0) {
+                                append("，剩余 $remainingLines 行")
+                            }
+                            append("]")
+                        }
+                        if (remainingLines > 0) {
+                            val nextStart = returnedEndLine + 1
+                            val nextEnd =
+                                (nextStart + ToolExecutionLimits.DEFAULT_FILE_READ_PART_LINES - 1)
+                                    .coerceAtMost(totalLines)
+                            append(
+                                "\n[续读请再次调用 read_file_part，参数 path=\"$path\", " +
+                                    "start_line=$nextStart, end_line=$nextEnd]"
+                            )
+                        } else {
+                            append("\n[已读到文件末尾，无需续读]")
+                        }
+                    }
 
                 ToolResult(
                     toolName = tool.name,
@@ -1645,7 +1691,7 @@ class SafFileSystemTools(
                         partIndex = 0,
                         totalParts = 1,
                         startLine = startIndex,
-                        endLine = minOf(endExclusive, totalLines),
+                        endLine = returnedEndLine,
                         totalLines = totalLines,
                         env = envLabel
                     ),

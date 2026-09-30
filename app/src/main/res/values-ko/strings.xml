@@ -6446,7 +6446,7 @@
     <string name="character_card_single_char">단일 문자</string>
     <string name="character_group_single_char">G</string>
     <string name="waifu_config_bound_to_card">캐릭터 카드에 바인딩됨</string>
-    <string name="advanced_import_key">키 가져오기</string>
+    <string name="advanced_import_key">키 가져오기 %1$s</string>
     <string name="model_custom_params">맞춤 매개변수</string>
     <string name="file_manager_home">홈</string>
     <string name="file_manager_new_tab">새 탭</string>
@@ -6779,7 +6779,7 @@
     <string name="attachment_current_time">[현재 시간]\n%1$s</string>
     <string name="a11y_wizard_risk_acknowledgment">접근성 권한으로 인해 다른 앱이 계정을 정지하거나 계정 기능을 제한할 위험이 있음을 이해하고 인정하며 그 결과는 본인이 부담합니다</string>
     <string name="a11y_wizard_new_version_detected">새 버전이 감지되었습니다.</string>
-    <string name="a11y_wizard_installed_version">설치됨: %1$s</string>
+    <string name="a11y_wizard_installed_version">설치됨: %1$s (내장: %2$s)</string>
     <string name="url_config_api_key">API 키</string>
     <string name="url_config_usage">사용법</string>
     <string name="url_config_top_up">충전</string>

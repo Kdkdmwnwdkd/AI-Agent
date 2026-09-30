@@ -939,7 +939,10 @@ open class DebuggerFileSystemTools(context: Context) : AccessibilityFileSystemTo
 
             if (!writeResult.success) {
                 AppLogger.e(TAG, "Failed to write with base64 method: ${writeResult.stderr}")
-                if (content.length > maxInlineBase64) {
+                // 判据必须与上面选择写入方式时一致（都用 base64 长度），
+                // 否则 content ∈ (~24.5KB, 32KB] 时会落进 fallback 分支，
+                // 用 printf 拼接原始内容，既可能失败又不会返回错误。
+                if (contentBase64.length > maxInlineBase64) {
                     return ToolResult(
                             toolName = tool.name,
                             success = false,
@@ -1019,6 +1022,28 @@ open class DebuggerFileSystemTools(context: Context) : AccessibilityFileSystemTo
                                 ),
                         error = "File was created but appears to be empty. Possible write failure."
                 )
+            }
+
+            // 覆盖率校验：非追加写入时，实际字节数必须与预期一致，
+            // 否则说明内容被截断（例如分块写入中途失败），不能当作成功。
+            if (!append) {
+                val expectedBytes = content.toByteArray(Charsets.UTF_8).size.toLong()
+                if (size != expectedBytes) {
+                    return ToolResult(
+                            toolName = tool.name,
+                            success = false,
+                            result =
+                                    FileOperationData(
+                                            operation = "write",
+                                            path = path,
+                                            successful = false,
+                                            details =
+                                                    "Content size mismatch after write: expected $expectedBytes bytes but file has $size. The file may be truncated."
+                                    ),
+                            error =
+                                    "Content size mismatch after write: expected $expectedBytes bytes but file has $size. The file may be truncated."
+                    )
+                }
             }
 
             val operation = if (append) "append" else "write"

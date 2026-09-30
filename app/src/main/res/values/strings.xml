@@ -6318,7 +6318,7 @@
     <string name="toolreg_read_file_desc">【小文件优先】读取文本文件（最多 32000 字节，约 800 行）。若看到末尾有"(file content truncated)"，说明文件太大被截断，请改用 read_file_part 分页读，不要重复调用本工具。文件: %1$s%2$s</string>
     <string name="toolreg_read_file_part_range_lines">行 %1$s-%2$s</string>
     <string name="toolreg_read_file_part_range_from">从行 %1$s 开始</string>
-    <string name="toolreg_read_file_part_desc">【读大文件首选，不会截断】按行号范围读取文件 %2$s（%1$s）%3$s。返回结果末尾会注明文件总行数与续读参数：若还需后续内容，请再次调用本工具并把 start_line 设为上次返回的 end_line + 1。首次调用可只传 path，默认读取前 200 行。</string>
+    <string name="toolreg_read_file_part_desc">【读大文件首选】按行号范围读取文件 %2$s（%1$s）%3$s，返回结果末尾会注明本次实际读取的行区间、文件总行数，以及"续读参数"——请严格按它给出的 start_line / end_line 继续读，不要自己用旧值加一。首次调用可只传 path，默认读取前 200 行。若单次内容过大，返回会被截断并注明，此时同样以末尾提示的续读参数为准。</string>
     <string name="toolreg_read_file_full_desc">【谨慎使用】无视大小限制读取整个文件 %1$s%2$s，会占用大量上下文。仅在确认文件不大、或必须查看全部内容时使用；大文件请改用 read_file_part。</string>
     <string name="toolreg_read_file_binary_desc">以 Base64 读取二进制文件 %1$s%2$s（图片、压缩包、可执行文件等）。返回值模型无法直接理解，读取文本请用 read_file。</string>
     <string name="toolreg_write_file_append_operation">追加内容到文件</string>
@@ -6335,7 +6335,7 @@
     <string name="toolreg_find_files_desc">【按文件名找】在 %1$s 中查找名称匹配 %2$s 的文件或目录%3$s，返回路径列表。pattern 支持通配符（如 "*.kt"）。需要目录的层级全貌请用 file_tree；需要按文件内容检索请用 grep_code 或 grep_context —— 本工具只匹配名称，不看内容。</string>
     <string name="toolreg_file_info_desc">获取文件信息: %1$s%2$s</string>
     <string name="toolreg_edit_file_desc">【改代码首选】把文件 %1$s 中出现的 `old` 原样替换为 `new`%2$s。old 与 new 均为必填，且必须是文件中已存在的确切文本；任一为空会失败并返回 "Both 'old' and 'new' are required for type=replace"。本工具等价于 apply_file 且 type=replace，做精确文本替换，不会重排或格式化其它内容。若只想整体覆盖文件或追加内容，请改用 write_file。</string>
-    <string name="toolreg_apply_file_desc">按 type 对文件 %1$s 做结构化编辑%2$s。type=replace 需同时提供 old 与 new，用 new 精确替换 old；type=delete 只需 old，删除该段文本；type=create 只需 new，在文件不存在时创建。上述三类参数缺一即报错（replace 报 "Both 'old' and 'new' are required"，delete 报 "Parameter 'old' is required"）。日常逐处改动建议直接用更简洁的 edit_file。</string>
+    <string name="toolreg_apply_file_desc">按 type 对文件 %1$s 做结构化编辑%2$s。type=replace 需同时提供 old 与 new，用 new 精确替换 old；type=delete 只需 old，删除该段文本；type=create 只需 new，在文件不存在时创建。上述三类参数缺一即报错（replace 报 "Both 'old' and 'new' are required for type=replace"，delete 报 "Parameter 'old' is required for type=delete"）。日常逐处改动建议直接用更简洁的 edit_file。</string>
     <string name="toolreg_zip_files_desc">压缩文件: %1$s -&gt; %2$s%3$s</string>
     <string name="toolreg_unzip_files_desc">解压文件: %1$s -&gt; %2$s%3$s</string>
     <string name="toolreg_open_file_desc">打开文件: %1$s%2$s</string>
@@ -7699,7 +7699,7 @@
     <string name="character_card_single_char">单字符</string>
     <string name="character_group_single_char">群</string>
     <string name="waifu_config_bound_to_card">绑定到角色卡</string>
-    <string name="advanced_import_key">导入密钥</string>
+    <string name="advanced_import_key">导入密钥 %1$s</string>
     <string name="model_custom_params">自定义参数</string>
     <string name="file_manager_home">主页</string>
     <string name="file_manager_new_tab">新标签页</string>
@@ -8151,7 +8151,7 @@
     <!-- AccessibilityWizardCard -->
     <string name="a11y_wizard_risk_acknowledgment">我已明确并知晓无障碍权限导致的其他应用封号、限制账号功能风险，并后果自己承担</string>
     <string name="a11y_wizard_new_version_detected">检测到新版本</string>
-    <string name="a11y_wizard_installed_version">已安装: %1$s</string>
+    <string name="a11y_wizard_installed_version">已安装: %1$s（内置: %2$s）</string>
 
     <!-- UrlConfig -->
     <string name="url_config_api_key">API 密钥</string>

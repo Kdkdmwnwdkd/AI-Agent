@@ -246,10 +246,8 @@ object RawSnapshotBackupManager {
             }
 
             withContext(Dispatchers.Main) { onProgress?.invoke(ExportProgressInfo(ExportProgress.FINALIZING)) }
-            if (outFile.exists()) {
-                outFile.delete()
-            }
-
+            // 不要先删 outFile（可能是上一份可用备份）；renameTo 同卷原子，
+            // 失败时直接覆盖复制，避免"旧备份已毁、新备份未成"。
             if (!tmpFile.renameTo(outFile)) {
                 tmpFile.copyTo(outFile, overwrite = true)
                 tmpFile.delete()
@@ -583,6 +581,56 @@ object RawSnapshotBackupManager {
 
         // A raw snapshot is a complete restore point. Keeping entries that are absent from the
         // snapshot leaves newer migration markers behind and changes how restored data is read.
+        //
+        // 安全策略：先把快照内容**完整**复制到同卷临时目录，确认成功后再替换目标目录。
+        // 直接「先删目标、再复制」的话，复制中途失败（IO 错误/磁盘满/进程被杀）会导致
+        // 旧数据已删、新数据不全 —— 两边都不可恢复。这里保证失败时目标目录保持原样。
+        val stagingDir = File(toDir.parentFile, "${toDir.name}.restore_staging")
+        if (stagingDir.exists()) {
+            stagingDir.deleteRecursively()
+        }
+
+        val hasSource = fromDir.exists() && fromDir.isDirectory
+        if (hasSource) {
+            if (!stagingDir.mkdirs() && !stagingDir.isDirectory) {
+                // 无法建立暂存目录时退回原行为，避免直接不可用
+                AppLogger.w(TAG, "cannot create staging dir, fallback to in-place replace: ${stagingDir.absolutePath}")
+                inPlaceReplaceDirContents(fromDir, toDir, preservedTopLevelDirNames)
+                return
+            }
+            try {
+                // 先把数据完整落到暂存目录（失败会抛出，目标目录尚未被动过）
+                copyDir(fromDir, stagingDir, preservedTopLevelDirNames = emptySet())
+            } catch (e: Exception) {
+                AppLogger.e(TAG, "staging copy failed, target left untouched", e)
+                runCatching { stagingDir.deleteRecursively() }
+                throw e
+            }
+        }
+
+        // 数据已在暂存目录里，下面开始替换目标目录
+        try {
+            toDir.listFiles()?.forEach { existing ->
+                if (!preservedTopLevelDirNames.contains(existing.name)) {
+                    check(existing.deleteRecursively()) {
+                        "Failed to remove stale snapshot entry: ${existing.absolutePath}"
+                    }
+                }
+            }
+            if (hasSource) {
+                moveDirContents(stagingDir, toDir, preservedTopLevelDirNames)
+            }
+        } finally {
+            runCatching { stagingDir.deleteRecursively() }
+        }
+    }
+
+    /** 原「先删后拷」实现，仅在无法建立暂存目录时兜底使用。 */
+    private fun inPlaceReplaceDirContents(
+        fromDir: File,
+        toDir: File,
+        preservedTopLevelDirNames: Set<String>
+    ) {
         toDir.listFiles()?.forEach { existing ->
             if (!preservedTopLevelDirNames.contains(existing.name)) {
                 check(existing.deleteRecursively()) {
@@ -590,9 +638,28 @@ object RawSnapshotBackupManager {
                 }
             }
         }
-
         if (!fromDir.exists() || !fromDir.isDirectory) return
         copyDir(fromDir, toDir, preservedTopLevelDirNames)
+    }
+
+    /** 把 [fromDir] 里的顶层项移动进 [toDir]（同卷 renameTo，失败时回退为复制）。 */
+    private fun moveDirContents(
+        fromDir: File,
+        toDir: File,
+        preservedTopLevelDirNames: Set<String>
+    ) {
+        fromDir.listFiles()?.forEach { child ->
+            if (preservedTopLevelDirNames.contains(child.name)) return@forEach
+            val target = File(toDir, child.name)
+            if (target.exists()) {
+                target.deleteRecursively()
+            }
+            if (!child.renameTo(target)) {
+                // 跨卷等情况：退化为复制 + 删除
+                copyDir(child, target, preservedTopLevelDirNames = emptySet())
+                child.deleteRecursively()
+            }
+        }
     }
 
     private fun copyDir(

@@ -213,6 +213,9 @@ class StandardHttpTools(private val context: Context) {
         val bodyTypeParam = tool.parameters.find { it.name == "body_type" }?.value
         val bodyType = bodyTypeParam?.lowercase() ?: "json"
 
+        // schema 里公开的是单个 timeout（秒）；connect/read/write 细粒度参数为可选项。
+        // 之前只读细粒度参数，导致按 schema 传 timeout 被静默忽略，这里补上兜底。
+        val timeoutParam = tool.parameters.find { it.name == "timeout" }?.value?.toLongOrNull()
         val connectTimeoutParam = tool.parameters.find { it.name == "connect_timeout" }?.value
         val readTimeoutParam = tool.parameters.find { it.name == "read_timeout" }?.value
         val writeTimeoutParam = tool.parameters.find { it.name == "write_timeout" }?.value
@@ -238,9 +241,9 @@ class StandardHttpTools(private val context: Context) {
         val useCookies = useCookiesParam?.lowercase() != "false"
         val client =
                 buildConfigurableClient(
-                        connectTimeout = connectTimeoutParam?.toLongOrNull() ?: 15,
-                        readTimeout = readTimeoutParam?.toLongOrNull() ?: 20,
-                        writeTimeout = writeTimeoutParam?.toLongOrNull() ?: 15,
+                        connectTimeout = connectTimeoutParam?.toLongOrNull() ?: timeoutParam ?: 15,
+                        readTimeout = readTimeoutParam?.toLongOrNull() ?: timeoutParam ?: 20,
+                        writeTimeout = writeTimeoutParam?.toLongOrNull() ?: timeoutParam ?: 15,
                         followRedirects = followRedirectsParam?.lowercase() != "false",
                         followSslRedirects = followRedirectsParam?.lowercase() != "false",
                         useCookies = useCookies,
@@ -630,6 +633,9 @@ class StandardHttpTools(private val context: Context) {
         val filesParam = tool.parameters.find { it.name == "files" }?.value ?: "[]"
 
         // 高级参数
+        // schema 里公开的是单个 timeout（秒）；connect/read/write 细粒度参数为可选项。
+        // 之前只读细粒度参数，导致按 schema 传 timeout 被静默忽略，这里补上兜底。
+        val timeoutParam = tool.parameters.find { it.name == "timeout" }?.value?.toLongOrNull()
         val connectTimeoutParam = tool.parameters.find { it.name == "connect_timeout" }?.value
         val readTimeoutParam = tool.parameters.find { it.name == "read_timeout" }?.value
         val writeTimeoutParam = tool.parameters.find { it.name == "write_timeout" }?.value
@@ -682,9 +688,9 @@ class StandardHttpTools(private val context: Context) {
             // 配置客户端
             val client =
                     buildConfigurableClient(
-                            connectTimeout = connectTimeoutParam?.toLongOrNull() ?: 15,
-                            readTimeout = readTimeoutParam?.toLongOrNull() ?: 20,
-                            writeTimeout = writeTimeoutParam?.toLongOrNull() ?: 15,
+                            connectTimeout = connectTimeoutParam?.toLongOrNull() ?: timeoutParam ?: 15,
+                            readTimeout = readTimeoutParam?.toLongOrNull() ?: timeoutParam ?: 20,
+                            writeTimeout = writeTimeoutParam?.toLongOrNull() ?: timeoutParam ?: 15,
                             followRedirects = followRedirectsParam?.lowercase() != "false",
                             followSslRedirects = followRedirectsParam?.lowercase() != "false",
                             useCookies = useCookiesParam?.lowercase() != "false",

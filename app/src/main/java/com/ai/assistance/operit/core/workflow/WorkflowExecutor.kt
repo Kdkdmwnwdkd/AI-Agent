@@ -1247,7 +1247,7 @@ class WorkflowExecutor(private val context: Context) {
         try {
             // 检查是否有 actionType
             if (node.actionType.isBlank()) {
-                val errorMsg = context.getString(R.string.workflow_node_execution_exception, context.getString(R.string.workflow_node_no_action, node.name))
+                val errorMsg = context.getString(R.string.workflow_node_execution_exception, context.getString(R.string.workflow_node_no_action_type, node.name))
                 runLogger.w(errorMsg, nodeId = node.id, nodeName = node.name)
                 nodeResults[node.id] = NodeExecutionState.Failed(errorMsg)
                 onNodeStateChange(node.id, NodeExecutionState.Failed(errorMsg))

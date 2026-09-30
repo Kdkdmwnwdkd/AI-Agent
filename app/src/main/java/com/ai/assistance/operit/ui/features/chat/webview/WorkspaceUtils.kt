@@ -81,11 +81,14 @@ fun getWorkspacePath(context: Context, chatId: String): String {
 }
 
 /**
- * 获取旧的工作区路径（外部存储）
+ * 获取旧的工作区路径（外部存储，应用改名前）。
+ *
+ * 注意：这里必须使用**改名前**的根目录名 `Operit`，不能走 `OperitPaths`
+ * （它已指向新名 `玄枵`），否则该函数无法定位到历史数据。
  * 路径: /sdcard/Download/Operit/workspace/{chatId}
  */
 fun getLegacyWorkspacePath(chatId: String): String {
-    return OperitPaths.workspacePathSdcard(chatId)
+    return "/sdcard/Download/Operit/workspace/$chatId"
 }
 
 fun ensureWorkspaceDirExists(path: String): File {

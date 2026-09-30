@@ -6210,7 +6210,7 @@ Kini anda boleh menggunakan mod AutoGLM di antara muka perbualan.</string>
     <string name="character_card_single_char">Aksara tunggal</string>
     <string name="character_group_single_char">Kumpulan</string>
     <string name="waifu_config_bound_to_card">Terikat kepada kad watak</string>
-    <string name="advanced_import_key">Import kunci</string>
+    <string name="advanced_import_key">Import kunci %1$s</string>
     <string name="model_custom_params">Parameter tersuai</string>
     <string name="file_manager_home">Laman utama</string>
     <string name="file_manager_new_tab">Tab baharu</string>
@@ -6638,7 +6638,7 @@ Kini anda boleh menggunakan mod AutoGLM di antara muka perbualan.</string>
 
     <string name="a11y_wizard_risk_acknowledgment">Saya telah memahami dan mengetahui risiko sekatan akaun atau had fungsi akaun aplikasi lain yang disebabkan oleh kebenaran aksesibilitas, dan saya akan menanggung akibatnya sendiri</string>
     <string name="a11y_wizard_new_version_detected">Versi baru dikesan</string>
-    <string name="a11y_wizard_installed_version">Telah dipasang: %1$s</string>
+    <string name="a11y_wizard_installed_version">Telah dipasang: %1$s (Terbina: %2$s)</string>
     <string name="url_config_api_key">Kunci API</string>
     <string name="url_config_usage">Penggunaan</string>
     <string name="url_config_top_up">Isi semula</string>

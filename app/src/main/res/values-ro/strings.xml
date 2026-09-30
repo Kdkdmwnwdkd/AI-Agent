@@ -7349,7 +7349,7 @@ Acum poate fi utilizat în interfața de dialog AutoGLM A devenit un model.</str
     <string name="character_card_single_char">Un singur caracter</string>
     <string name="character_group_single_char">Grup</string>
     <string name="waifu_config_bound_to_card">Asociere cu cartea personajului</string>
-    <string name="advanced_import_key">Cheia de import</string>
+    <string name="advanced_import_key">Cheia de import %1$s</string>
     <string name="model_custom_params">Parametri personalizați</string>
     <string name="file_manager_home">Pagina principală</string>
     <string name="file_manager_new_tab">Pagină nouă</string>
@@ -7795,7 +7795,7 @@ Acum poate fi utilizat în interfața de dialog AutoGLM A devenit un model.</str
     <!-- AccessibilityWizardCard -->
     <string name="a11y_wizard_risk_acknowledgment">Am înțeles și sunt conștient de riscurile legate de blocarea contului sau de restricționarea funcționalităților altor aplicații ca urmare a accesului la funcțiile de accesibilitate și îmi asum pe propria răspundere consecințele.</string>
     <string name="a11y_wizard_new_version_detected">A fost detectată o nouă versiune</string>
-    <string name="a11y_wizard_installed_version">Instalat: %1$s</string>
+    <string name="a11y_wizard_installed_version">Instalat: %1$s (Inclus: %2$s)</string>
 
     <!-- UrlConfig -->
     <string name="url_config_api_key">API Cheie</string>

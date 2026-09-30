@@ -6005,7 +6005,7 @@ Agora é possível usar o modo AutoGLM na interface de diálogo.</string>
     <string name="character_card_single_char">caractere único</string>
     <string name="character_group_single_char">grupo</string>
     <string name="waifu_config_bound_to_card">Vincular ao cartão de personagem</string>
-    <string name="advanced_import_key">Chave de importação</string>
+    <string name="advanced_import_key">Chave de importação %1$s</string>
     <string name="model_custom_params">Parâmetros personalizados</string>
     <string name="file_manager_home">Página inicial</string>
     <string name="file_manager_new_tab">página nova guia</string>
@@ -6294,7 +6294,7 @@ Agora é possível usar o modo AutoGLM na interface de diálogo.</string>
     <string name="attachment_current_time">【Hora atual】\n%1$s</string>
     <string name="a11y_wizard_risk_acknowledgment">Deixei claro e ciente dos riscos de banir outros aplicativos e limitar as funções da conta causados ​​pelas permissões de acessibilidade, e eu mesmo suportarei as consequências.</string>
     <string name="a11y_wizard_new_version_detected">Nova versão detectada</string>
-    <string name="a11y_wizard_installed_version">Instalado: %1$s</string>
+    <string name="a11y_wizard_installed_version">Instalado: %1$s (Integrado: %2$s)</string>
     <string name="url_config_api_key">Chave de API</string>
     <string name="url_config_usage">Dosagem</string>
     <string name="url_config_top_up">recarregar</string>

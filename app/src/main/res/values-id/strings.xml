@@ -6300,7 +6300,7 @@ Sekarang Anda dapat menggunakan mode AutoGLM di antarmuka percakapan.</string>
     <string name="character_card_single_char">Karakter tunggal</string>
     <string name="character_group_single_char">Grup</string>
     <string name="waifu_config_bound_to_card">Terikat ke kartu karakter</string>
-    <string name="advanced_import_key">Impor kunci</string>
+    <string name="advanced_import_key">Impor kunci %1$s</string>
     <string name="model_custom_params">Parameter kustom</string>
     <string name="file_manager_home">Beranda</string>
     <string name="file_manager_new_tab">Tab baru</string>
@@ -6658,7 +6658,7 @@ Sekarang Anda dapat menggunakan mode AutoGLM di antarmuka percakapan.</string>
     <string name="attachment_current_time">【Waktu saat ini】\n%1$s</string>
     <string name="a11y_wizard_risk_acknowledgment">Saya telah memahami dan menyadari risiko pemblokiran aplikasi lain dan pembatasan fungsi akun yang disebabkan oleh izin aksesibilitas, dan akan menanggung konsekuensinya sendiri</string>
     <string name="a11y_wizard_new_version_detected">Versi baru terdeteksi</string>
-    <string name="a11y_wizard_installed_version">Terpasang: %1$s</string>
+    <string name="a11y_wizard_installed_version">Terpasang: %1$s (Bawaan: %2$s)</string>
     <string name="url_config_api_key">Kunci API</string>
     <string name="url_config_usage">Penggunaan</string>
     <string name="url_config_top_up">Isi ulang</string>

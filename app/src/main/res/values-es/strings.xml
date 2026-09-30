@@ -6420,7 +6420,7 @@ Ahora puede usar el modo AutoGLM en la interfaz de conversación.</string>
     <string name="character_card_single_char">Un solo carácter</string>
     <string name="character_group_single_char">Grupo</string>
     <string name="waifu_config_bound_to_card">Vinculado a la tarjeta de personaje</string>
-    <string name="advanced_import_key">Importar clave</string>
+    <string name="advanced_import_key">Importar clave %1$s</string>
     <string name="model_custom_params">Parámetros personalizados</string>
     <string name="file_manager_home">Inicio</string>
     <string name="file_manager_new_tab">Nueva pestaña</string>
@@ -6723,7 +6723,7 @@ Ahora puede usar el modo AutoGLM en la interfaz de conversación.</string>
     <string name="attachment_current_time">【Hora actual】\n%1$s</string>
     <string name="a11y_wizard_risk_acknowledgment">He comprendido y acepto los riesgos de suspensión de cuenta o restricción de funciones en otras aplicaciones debido al permiso de accesibilidad, y asumo las consecuencias</string>
     <string name="a11y_wizard_new_version_detected">Nueva versión detectada</string>
-    <string name="a11y_wizard_installed_version">Instalado: %1$s</string>
+    <string name="a11y_wizard_installed_version">Instalado: %1$s (Incluido: %2$s)</string>
     <string name="url_config_api_key">Clave API</string>
     <string name="url_config_usage">Uso</string>
     <string name="url_config_top_up">Recargar</string>
