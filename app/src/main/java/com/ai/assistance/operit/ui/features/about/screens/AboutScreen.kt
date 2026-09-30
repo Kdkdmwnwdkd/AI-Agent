@@ -58,7 +58,10 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import java.util.Locale
 
-private const val GITHUB_PROJECT_URL = "https://github.com/AAswordman/Operit"
+// 玄枵（Operit 二次开发版）项目地址。
+// 原先指向上游 https://github.com/AAswordman/Operit，此处改为本仓库，
+// 与 R.string.about_website 保持一致（该字符串同时被 UpdateManager 解析用于更新检查）。
+private const val GITHUB_PROJECT_URL = "https://github.com/Kdkdmwnwdkd/AI-Agent"
 
 private enum class PatchUpdatePhase {
     SELECTING_MIRROR,

@@ -48,6 +48,21 @@ class UpdateManager private constructor(private val context: Context) {
     companion object {
         @Volatile private var INSTANCE: UpdateManager? = null
 
+        /**
+         * 是否启用在线更新检查。
+         *
+         * 玄枵为 Operit 的二次开发版，暂停在线更新检查：
+         * 更新检查会从 R.string.about_website 中正则提取 GitHub 仓库地址，
+         * 再读取该仓库的 latest release 进行版本比对。当前本仓库的 Release
+         * 只有 CI 构建产物（tag 形如 ci-run-234），其版本号解析结果为 0.0.0，
+         * 既无法正确表示版本，也会掩盖上游的真实新版本。
+         *
+         * 设为 false 后，检查更新不再发起网络请求，UI 会直接进入
+         * 「已是最新」状态，避免误导用户。
+         * 若日后建立了规范的 Release 版本号（如 v1.13.0），可将此值改回 true。
+         */
+        private const val UPDATE_CHECK_ENABLED = false
+
         fun getInstance(context: Context): UpdateManager {
             return INSTANCE
                     ?: synchronized(this) {
@@ -131,6 +146,12 @@ class UpdateManager private constructor(private val context: Context) {
 
     /** 检查更新的内部实现 */
     private suspend fun checkForUpdatesInternal(currentVersion: String): UpdateStatus {
+        // 玄枵二次开发版：在线更新检查已停用，直接返回「已是最新」，不发起网络请求。
+        // 原因见 UPDATE_CHECK_ENABLED 的注释（本仓库 Release 只有 CI 包，版本号无法正确解析）。
+        if (!UPDATE_CHECK_ENABLED) {
+            AppLogger.d(TAG, "update check disabled (fork build), return UpToDate")
+            return UpdateStatus.UpToDate
+        }
         return withContext(Dispatchers.IO) {
             try {
                 val betaEnabled = try {
