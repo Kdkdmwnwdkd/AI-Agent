@@ -51,7 +51,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   JAVA_VERSION: '21'
@@ -316,3 +316,33 @@ jobs:
             app/build/outputs/bundle/**/*.aab
           if-no-files-found: error
           retention-days: 14
+
+      # 追加：把构建产物同步发到 Release。
+      # 原因：GitHub Actions artifact 的下载链路是
+      #   api.github.com/.../artifacts/{id}/zip  ->  302  ->  *.blob.core.windows.net（带签名）
+      # 在受限网络下（api.github.com 被劫持、只能走 gh-proxy 类镜像）时，
+      # 镜像服务端会跟随 302 但丢失 GitHub 签发的临时签名参数，
+      # 导致 Azure 直接返回 401 InvalidAuthenticationInfo，产物无法取回。
+      # 而 github.com/releases/download/... 是镜像普遍支持良好的路径，故同时发一份 Release。
+      - name: Publish APK to GitHub Release
+        if: success()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="ci-run-${GITHUB_RUN_NUMBER}"
+          # 收集 APK（assembleDebug 产出一个；assembleNightly/Clone 可能多个）
+          mapfile -t APKS < <(find app/build/outputs/apk -name '*.apk' -type f 2>/dev/null | sort)
+          if [ "${#APKS[@]}" -eq 0 ]; then
+            echo "No APK found, skip release publishing." >&2
+            exit 0
+          fi
+          echo "Found ${#APKS[@]} APK(s):"
+          printf '  %s\n' "${APKS[@]}"
+          # 同 run_number 重跑时先清掉旧 tag/release，保证幂等
+          gh release delete "$TAG" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "$TAG" \
+            --title "CI build #${GITHUB_RUN_NUMBER} (${GITHUB_SHA::8})" \
+            --notes "Automated build from ${GITHUB_SHA} (run #${GITHUB_RUN_NUMBER})." \
+            "${APKS[@]}"
