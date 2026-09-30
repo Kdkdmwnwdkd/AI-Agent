@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#FFFFFFFF" />
-</shape>
+<!--
+  应用图标背景层的 drawable 引用别名。
+  实际位图资源位于 mipmap-<density>/ic_launcher_background_simple.png。
+-->
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+    android:src="@mipmap/ic_launcher_background_simple"
+    android:gravity="center" />
