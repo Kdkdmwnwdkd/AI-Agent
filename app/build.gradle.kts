@@ -430,8 +430,27 @@ android {
         applicationId = "com.ai.assistance.operit"
         minSdk = 26
         targetSdk = 34
-        versionCode = 51
-        versionName = "1.12.2"
+
+        // ── 版本号 ────────────────────────────────────────────────────────
+        // 玄枵是 Operit 的二次开发版，需要与上游版本并存区分，同时保证
+        // 「同签名前提下可直接覆盖安装」（不覆盖安装就必须先卸载，用户数据会丢）。
+        //
+        // 规则：
+        //   versionCode = 基准(51000) + 构建号
+        //   versionName = "<上游基线版本>-xx.<构建号>"
+        //
+        // 为什么用 51000 起步而不是 52：
+        //   上游 Operit 当前 versionCode 为 51，且会持续增长。若本仓库用 52、53…
+        //   叠加，将来合入上游版本时极易与之撞号（撞号会导致无法覆盖安装）。
+        //   取 51000 前缀使本仓库版本号与上游天然错开，同时仍单调递增。
+        //
+        // 构建号来源：
+        //   - CI：GITHUB_RUN_NUMBER（每次 workflow 运行自增，全局唯一）
+        //   - 本地：GITHUB_RUN_NUMBER 不存在时退回 0，得到 …-xx.0（仅供本地调试）
+        //   这样每次出包的 versionCode 都不同，用户可直接覆盖安装，无需手改。
+        val ciRunNumber = (System.getenv("GITHUB_RUN_NUMBER") ?: "0").toIntOrNull() ?: 0
+        versionCode = 51000 + ciRunNumber
+        versionName = "1.12.2-xx.$ciRunNumber"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
