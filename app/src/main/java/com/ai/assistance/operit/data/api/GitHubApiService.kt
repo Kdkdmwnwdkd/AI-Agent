@@ -161,8 +161,7 @@ class GitHubApiService(private val context: Context) {
                 .addHeader("Authorization", authHeader)
                 .build()
             
-            val response = client.newCall(request).execute().use { response ->
-
+            client.newCall(request).execute().use { response ->
                 if (response.isSuccessful) {
                     val responseBody = response.body?.string()
                     if (responseBody != null) {
@@ -193,8 +192,7 @@ class GitHubApiService(private val context: Context) {
                 requestBuilder.addHeader("Authorization", authHeader)
             }
 
-            val response = client.newCall(requestBuilder.build()).execute().use { response ->
-
+            client.newCall(requestBuilder.build()).execute().use { response ->
                 if (response.isSuccessful) {
                     val responseBody = response.body?.string()
                     if (responseBody != null) {
@@ -243,8 +241,7 @@ class GitHubApiService(private val context: Context) {
                 requestBuilder.addHeader("Authorization", authHeader)
             }
 
-            val response = client.newCall(requestBuilder.build()).execute().use { response ->
-
+            client.newCall(requestBuilder.build()).execute().use { response ->
                 if (response.isSuccessful) {
                     val responseBody = response.body?.string()
                     if (responseBody != null) {
@@ -311,8 +308,7 @@ class GitHubApiService(private val context: Context) {
                 requestBuilder.addHeader("Authorization", authHeader)
             }
             
-            val response = client.newCall(requestBuilder.build()).execute().use { response ->
-
+            client.newCall(requestBuilder.build()).execute().use { response ->
                 if (response.isSuccessful) {
                     val responseBody = response.body?.string()
                     if (responseBody != null) {
@@ -346,8 +342,7 @@ class GitHubApiService(private val context: Context) {
                 requestBuilder.addHeader("Authorization", authHeader)
             }
             
-            val response = client.newCall(requestBuilder.build()).execute().use { response ->
-
+            client.newCall(requestBuilder.build()).execute().use { response ->
                 if (response.isSuccessful) {
                     val responseBody = response.body?.string()
                     if (responseBody != null) {
@@ -394,8 +389,7 @@ class GitHubApiService(private val context: Context) {
                 requestBuilder.addHeader("Authorization", authHeader)
             }
             
-            val response = client.newCall(requestBuilder.build()).execute().use { response ->
-
+            client.newCall(requestBuilder.build()).execute().use { response ->
                 if (response.isSuccessful) {
                     val responseBody = response.body?.string()
                     if (responseBody != null) {
@@ -446,7 +440,7 @@ class GitHubApiService(private val context: Context) {
                     .addHeader("Accept", "application/vnd.github+json")
                     .build()
 
-            val response = client.newCall(request).execute().use { response ->
+            client.newCall(request).execute().use { response ->
                 val responseBody = response.body?.string()
 
                 if (response.isSuccessful && responseBody != null) {
@@ -503,7 +497,7 @@ class GitHubApiService(private val context: Context) {
                     .addHeader("Accept", "application/vnd.github+json")
                     .build()
 
-            val response = client.newCall(request).execute().use { response ->
+            client.newCall(request).execute().use { response ->
                 val responseBody = response.body?.string()
 
                 if (response.isSuccessful) {
@@ -532,7 +526,7 @@ class GitHubApiService(private val context: Context) {
                 requestBuilder.addHeader("Authorization", authHeader)
             }
 
-            val response = client.newCall(requestBuilder.build()).execute().use { response ->
+            client.newCall(requestBuilder.build()).execute().use { response ->
                 val responseBody = response.body?.string()
 
                 if (response.isSuccessful && responseBody != null) {
@@ -568,7 +562,7 @@ class GitHubApiService(private val context: Context) {
                 requestBuilder.addHeader("Authorization", authHeader)
             }
 
-            val response = client.newCall(requestBuilder.build()).execute().use { response ->
+            client.newCall(requestBuilder.build()).execute().use { response ->
                 val responseBody = response.body?.string()
 
                 if (response.isSuccessful && responseBody != null) {
@@ -634,7 +628,7 @@ class GitHubApiService(private val context: Context) {
                     .addHeader("Accept", "application/vnd.github+json")
                     .build()
 
-            val response = client.newCall(request).execute().use { response ->
+            client.newCall(request).execute().use { response ->
                 val responseBody = response.body?.string()
 
                 if (response.isSuccessful && responseBody != null) {
@@ -684,7 +678,7 @@ class GitHubApiService(private val context: Context) {
                     .addHeader("Accept", "application/vnd.github+json")
                     .build()
 
-            val response = client.newCall(request).execute().use { response ->
+            client.newCall(request).execute().use { response ->
                 val responseBody = response.body?.string()
 
                 if (response.isSuccessful && responseBody != null) {
@@ -735,7 +729,7 @@ class GitHubApiService(private val context: Context) {
                     .addHeader("Accept", "application/vnd.github+json")
                     .build()
 
-            val response = client.newCall(request).execute().use { response ->
+            client.newCall(request).execute().use { response ->
                 val responseBody = response.body?.string()
 
                 if (response.isSuccessful) {
@@ -766,7 +760,7 @@ class GitHubApiService(private val context: Context) {
                     .addHeader("Accept", "application/vnd.github+json")
                     .build()
 
-            val response = client.newCall(request).execute().use { response ->
+            client.newCall(request).execute().use { response ->
                 val responseBody = response.body?.string()
 
                 if (response.isSuccessful) {
@@ -813,7 +807,7 @@ class GitHubApiService(private val context: Context) {
                     .addHeader("Accept", "application/vnd.github+json")
                     .build()
 
-            val response = client.newCall(request).execute().use { response ->
+            client.newCall(request).execute().use { response ->
                 val responseBody = response.body?.string()
 
                 if (response.isSuccessful && responseBody != null) {
