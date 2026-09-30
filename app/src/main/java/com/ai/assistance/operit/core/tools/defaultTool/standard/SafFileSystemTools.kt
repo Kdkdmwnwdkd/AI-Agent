@@ -1390,13 +1390,8 @@ class SafFileSystemTools(
         }
 
         val usePathPattern = tool.parameters.find { it.name == "use_path_pattern" }?.value?.toBoolean() ?: false
-        // 官方参数名 case_insensitive；同时兼容历史误传的 case_sensitive（取其反）
         val caseInsensitive =
-            tool.parameters.find { it.name == "case_insensitive" }?.value?.toBoolean()
-                ?: tool.parameters
-                    .find { it.name == "case_sensitive" }?.value?.toBoolean()
-                    ?.let { !it }
-                ?: false
+            tool.parameters.find { it.name == "case_insensitive" }?.value?.toBoolean() ?: false
         val maxDepth = tool.parameters.find { it.name == "max_depth" }?.value?.toIntOrNull() ?: -1
         val regex = globToRegex(pattern, caseInsensitive)
 

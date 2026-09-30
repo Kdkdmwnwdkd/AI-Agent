@@ -246,11 +246,10 @@ object RawSnapshotBackupManager {
             }
 
             withContext(Dispatchers.Main) { onProgress?.invoke(ExportProgressInfo(ExportProgress.FINALIZING)) }
-            // 不要先删 outFile（可能是上一份可用备份）；renameTo 同卷原子，
-            // 失败时直接覆盖复制，避免"旧备份已毁、新备份未成"。
-            if (!tmpFile.renameTo(outFile)) {
-                tmpFile.copyTo(outFile, overwrite = true)
-                tmpFile.delete()
+            // 不要先删 outFile（可能是上一份可用备份）。tmpFile 与 outFile 同目录、必然同卷，
+            // renameTo 会原子覆盖；失败说明环境真出了问题，直接抛出而不是偷偷复制。
+            check(tmpFile.renameTo(outFile)) {
+                "Failed to finalize backup: cannot rename ${tmpFile.absolutePath} to ${outFile.absolutePath}"
             }
 
             AppLogger.i(TAG, "export done: ${outFile.absolutePath} (${outFile.length()} bytes)")
@@ -592,14 +591,13 @@ object RawSnapshotBackupManager {
 
         val hasSource = fromDir.exists() && fromDir.isDirectory
         if (hasSource) {
-            if (!stagingDir.mkdirs() && !stagingDir.isDirectory) {
-                // 无法建立暂存目录时退回原行为，避免直接不可用
-                AppLogger.w(TAG, "cannot create staging dir, fallback to in-place replace: ${stagingDir.absolutePath}")
-                inPlaceReplaceDirContents(fromDir, toDir, preservedTopLevelDirNames)
-                return
+            // stagingDir 与 toDir 同父目录、必然同卷。建不出来只可能是磁盘满或权限异常，
+            // 此时绝不能继续去删 toDir 的内容，直接抛出。
+            check(stagingDir.mkdirs() || stagingDir.isDirectory) {
+                "Failed to create restore staging dir: ${stagingDir.absolutePath}"
             }
+            // 先把数据完整落到暂存目录。失败会抛出，此时 toDir 尚未被动过。
             try {
-                // 先把数据完整落到暂存目录（失败会抛出，目标目录尚未被动过）
                 copyDir(fromDir, stagingDir, preservedTopLevelDirNames = emptySet())
             } catch (e: Exception) {
                 AppLogger.e(TAG, "staging copy failed, target left untouched", e)
@@ -625,24 +623,7 @@ object RawSnapshotBackupManager {
         }
     }
 
-    /** 原「先删后拷」实现，仅在无法建立暂存目录时兜底使用。 */
-    private fun inPlaceReplaceDirContents(
-        fromDir: File,
-        toDir: File,
-        preservedTopLevelDirNames: Set<String>
-    ) {
-        toDir.listFiles()?.forEach { existing ->
-            if (!preservedTopLevelDirNames.contains(existing.name)) {
-                check(existing.deleteRecursively()) {
-                    "Failed to remove stale snapshot entry: ${existing.absolutePath}"
-                }
-            }
-        }
-        if (!fromDir.exists() || !fromDir.isDirectory) return
-        copyDir(fromDir, toDir, preservedTopLevelDirNames)
-    }
-
-    /** 把 [fromDir] 里的顶层项移动进 [toDir]（同卷 renameTo，失败时回退为复制）。 */
+    /** 把 [fromDir] 里的顶层项移动进 [toDir]。staging 与 toDir 同卷，renameTo 不会跨卷失败。 */
     private fun moveDirContents(
         fromDir: File,
         toDir: File,
@@ -654,10 +635,8 @@ object RawSnapshotBackupManager {
             if (target.exists()) {
                 target.deleteRecursively()
             }
-            if (!child.renameTo(target)) {
-                // 跨卷等情况：退化为复制 + 删除
-                copyDir(child, target, preservedTopLevelDirNames = emptySet())
-                child.deleteRecursively()
+            check(child.renameTo(target)) {
+                "Failed to move restored entry: ${child.absolutePath} -> ${target.absolutePath}"
             }
         }
     }
