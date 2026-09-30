@@ -215,7 +215,7 @@ val effectiveBuiltinToolVisibility = manageableBuiltinNames.associateWith { tool
 | `use_package` 依赖 | 市场工具仍需此工具可用 | 由 `builtinToolsEnabled` 总开关统一放行，`canUsePackageSystem` 逻辑不变 |
 | 全局工具可见性 | 用户可能在设置页关掉了某些内置工具 | 4.2 中保留 `effectiveGlobalToolVisibility` 叠加，全局优先 |
 | 白名单列表变长 | 163 项在弹窗内滚动 | 保留搜索框（匹配 key/title/subtitle）；列表容器已有 `heightIn(max = 320.dp)` + `verticalScroll` |
-| CLI 模式 | `CliToolModeSupport` 走独立通道（仅 2 个代理工具） | 本次改动不涉及，需单独回归 |
+| CLI 模式 | `CliToolModeSupport` 走独立通道 | 本步不涉及；但第二步改动了 `search` 的校验与描述，需回归（见 `TOOL_INJECTION_PHASE2.md` §7.4） |
 | `allowedBuiltinTools` 语义变更 | 若外部脚本/用户依赖该项做授权 | 工具描述已明确标注为兼容字段；UI 不再呈现该项 |
 
 ---

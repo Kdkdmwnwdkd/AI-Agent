@@ -197,3 +197,33 @@ private val ALWAYS_INJECTED_TOOLS = setOf(
 
 - 目录概要的数量**未按角色卡权限过滤**（用的是全量分类），只影响显示的数字，不影响 `search` 实际返回结果（那里有过滤）。可接受。
 
+### 7.8 影响面清单
+
+| 调用方 | 是否受影响 | 说明 |
+| --- | --- | --- |
+| `EnhancedAIService` FULL 注入 | ✅ 改 | 全量 → 常驻 30 + `search` |
+| `EnhancedAIService` CLI 注入 | ⚠️ 间接 | `buildCliPublicToolPrompts` 改为复用 `buildToolCatalogSearchPrompt(CLI)`，**返回集不变**（search + proxy，已实测验证），仅 search 描述文案更准确 |
+| `SystemPromptConfig` CLI 分支 | ❌ 不变 | `buildCliModePrompt` 未动 |
+| `SystemPromptConfig` FULL + ToolCallAPI | ✅ 改 | 新增目录概要 |
+| `SystemPromptConfig` XML 分支 | ❌ 不变 | 走 `availableTools`，不受影响 |
+| `ToolExecutionManager` 权限检查 | ⚠️ 放宽 | FULL 下 `search` 免权限检查（原来会走正常检查）。`search` 只读本机工具目录、不触碰任何设备能力，安全 |
+| `ToolExecutionManager` 曝光校验 | ⚠️ 放宽 | FULL 下 `search` 不再被拒 |
+| `ToolRegistration` search 执行校验 | ⚠️ 放宽 | 同上 |
+| `ToolRegistration` proxy 执行校验 | ❌ 不变 | 仍要求 CLI |
+| `CliToolModeSupport.buildHiddenToolCatalog` | ❌ 不变 | 复用，未改 |
+| `CliToolModeSupport.searchHiddenToolCatalog` | ❌ 不变 | 复用，未改 |
+| 工作流 / `getAllCategories` | ❌ 不变 | 仍返回全量 |
+| `getManageableToolPrompts` | ❌ 不变 | 白名单页仍显示全量 163 |
+
+### 7.9 验证方法（沙箱内）
+
+沙箱**无法跑完整 Gradle 构建**（缺 android.jar 与外部依赖包）。采用的替代验证：
+
+1. **逻辑等价探针**（`/tmp/synt2/`）：把改动后的方法**原样抽出**，配从真实源码解析出的 165 个工具数据，编译运行。
+   - 结果：常驻 30 + 待检索 135 = 165，**无丢失无重复**；常驻筛选 100% 命中清单。
+2. **放行矩阵探针**：验证 FULL/CLI × search/proxy 的 8 种组合，全部符合预期。
+3. **体量渲染**：按 `ToolPrompt.toString()` 真实规则统计。
+
+> ⚠️ **不要靠括号平衡判断代码正确性**。`EnhancedAIService.kt` 的括号统计恒为 993/992（原始文件即为 1，因字符字面量 `'('` 被误算），与改动无关。必须用「原样抽取 + 真实数据 + 编译运行」的方式验证。
+
+
