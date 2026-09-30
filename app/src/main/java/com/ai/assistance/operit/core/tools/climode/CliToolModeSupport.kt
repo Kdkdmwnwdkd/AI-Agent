@@ -75,94 +75,117 @@ object CliToolModeSupport {
         return PUBLIC_TOOL_NAMES.contains(toolName.trim())
     }
 
+    /**
+     * `search` 是两种模式共用的「目录检索」工具：
+     * - CLI 模式：唯一入口，检索后必须走 `proxy` 调用；
+     * - FULL 模式：只用于发现被收进目录的冷门工具，发现后**直接调用**即可，无需 proxy。
+     *
+     * 因此 `search` 在 FULL 模式下也要允许执行，而 `proxy` 仍然仅限 CLI。
+     */
+    fun isSearchToolAllowed(mode: ToolExposureMode, toolName: String): Boolean {
+        val name = toolName.trim()
+        if (name != SEARCH_TOOL_NAME) return false
+        return mode == ToolExposureMode.CLI || mode == ToolExposureMode.FULL
+    }
+
+    /** `proxy` 仅 CLI 模式可用：FULL 模式的工具是直接暴露的，不需要代理层。 */
+    fun isProxyToolAllowed(mode: ToolExposureMode, toolName: String): Boolean {
+        return mode == ToolExposureMode.CLI && toolName.trim() == PROXY_TOOL_NAME
+    }
+
     fun isReservedProxyTarget(toolName: String): Boolean {
         return RESERVED_PROXY_TARGETS.contains(toolName.trim())
     }
 
     fun defaultSearchLimit(): Int = DEFAULT_SEARCH_LIMIT
 
+    /**
+     * 目录检索工具 `search` 的单条定义（不含 CLI 模式的 `proxy`）。
+     *
+     * 两种模式共用同一个工具，但「检索到之后怎么用」不同，故描述需按模式区分：
+     * - CLI 模式：检索后必须经 `proxy` 调用（调用方随后会追加 `proxy` 定义）；
+     * - FULL 模式：检索后直接调用目标工具。
+     */
+    fun buildToolCatalogSearchPrompt(
+        useEnglish: Boolean,
+        mode: ToolExposureMode = ToolExposureMode.FULL
+    ): List<ToolPrompt> {
+        val viaProxy = mode == ToolExposureMode.CLI
+        val description =
+            if (useEnglish) {
+                if (viaProxy) {
+                    "Search the hidden tool catalog. Use this first to discover a hidden tool's " +
+                        "name and parameters, then call `proxy` with that target tool name."
+                } else {
+                    "Search the built-in tool catalog for tools that are not currently listed. " +
+                        "Use this when you need a capability you cannot find among the available tools, " +
+                        "then call the discovered tool directly with its normal parameters."
+                }
+            } else {
+                if (viaProxy) {
+                    "检索隐藏工具目录。先用本工具查到目标工具名与参数，" +
+                        "再用 `proxy` 携带该工具名调用。"
+                } else {
+                    "检索未直接列出的内置工具目录。" +
+                        "当可用工具列表里找不到所需能力时，用本工具按关键词检索，" +
+                        "拿到工具名后【直接调用】该工具即可，无需其它中转。"
+                }
+            }
+        return listOf(
+            ToolPrompt(
+                name = SEARCH_TOOL_NAME,
+                description = description,
+                parametersStructured = listOf(
+                    ToolParameterSchema(
+                        name = "query",
+                        type = "string",
+                        description = if (useEnglish) {
+                            "capability keyword or tool name to search for, e.g. \"bluetooth\""
+                        } else {
+                            "能力关键词或工具名，例如「蓝牙」「截图」"
+                        },
+                        required = true
+                    ),
+                    ToolParameterSchema(
+                        name = "limit",
+                        type = "integer",
+                        description = if (useEnglish) {
+                            "optional, max results to return"
+                        } else {
+                            "可选，返回结果的最大条数"
+                        },
+                        required = false,
+                        default = DEFAULT_SEARCH_LIMIT.toString()
+                    )
+                )
+            )
+        )
+    }
+
     fun buildCliPublicToolPrompts(useEnglish: Boolean): List<ToolPrompt> {
-        return if (useEnglish) {
-            listOf(
-                ToolPrompt(
-                    name = SEARCH_TOOL_NAME,
-                    description = "Search the hidden tool catalog only. Use this first to discover hidden tool names and parameter shapes.",
-                    parametersStructured = listOf(
-                        ToolParameterSchema(
-                            name = "query",
-                            type = "string",
-                            description = "tool capability or hidden tool name to search for",
-                            required = true
-                        ),
-                        ToolParameterSchema(
-                            name = "limit",
-                            type = "integer",
-                            description = "optional, max results to return",
-                            required = false,
-                            default = DEFAULT_SEARCH_LIMIT.toString()
-                        )
-                    )
+        return buildToolCatalogSearchPrompt(useEnglish, ToolExposureMode.CLI) +
+            listOf(buildCliProxyPrompt(useEnglish))
+    }
+
+    private fun buildCliProxyPrompt(useEnglish: Boolean): ToolPrompt {
+        return ToolPrompt(
+            name = PROXY_TOOL_NAME,
+            description = "Execute a hidden tool after you discover its target tool name and parameter shape via search.",
+            parametersStructured = listOf(
+                ToolParameterSchema(
+                    name = "tool_name",
+                    type = "string",
+                    description = "hidden target tool name, e.g. read_file or packageName:toolName",
+                    required = true
                 ),
-                ToolPrompt(
-                    name = PROXY_TOOL_NAME,
-                    description = "Execute a hidden tool after you discover its target tool name and parameter shape via search.",
-                    parametersStructured = listOf(
-                        ToolParameterSchema(
-                            name = "tool_name",
-                            type = "string",
-                            description = "hidden target tool name, for example read_file or packageName:toolName",
-                            required = true
-                        ),
-                        ToolParameterSchema(
-                            name = "params",
-                            type = "object",
-                            description = "JSON object of parameters to forward to the hidden target tool",
-                            required = true
-                        )
-                    )
+                ToolParameterSchema(
+                    name = "params",
+                    type = "object",
+                    description = "JSON params object forwarded to the hidden target tool",
+                    required = true
                 )
             )
-        } else {
-            listOf(
-                ToolPrompt(
-                    name = SEARCH_TOOL_NAME,
-                    description = "Search the hidden tool catalog only. Use this first to discover hidden tool names and parameter shapes.",
-                    parametersStructured = listOf(
-                        ToolParameterSchema(
-                            name = "query",
-                            type = "string",
-                            description = "tool capability or hidden tool name to search for",
-                            required = true
-                        ),
-                        ToolParameterSchema(
-                            name = "limit",
-                            type = "integer",
-                            description = "optional, max results to return",
-                            required = false,
-                            default = DEFAULT_SEARCH_LIMIT.toString()
-                        )
-                    )
-                ),
-                ToolPrompt(
-                    name = PROXY_TOOL_NAME,
-                    description = "Execute a hidden tool after you discover its target tool name and parameter shape via search.",
-                    parametersStructured = listOf(
-                        ToolParameterSchema(
-                            name = "tool_name",
-                            type = "string",
-                            description = "hidden target tool name, e.g. read_file or packageName:toolName",
-                            required = true
-                        ),
-                        ToolParameterSchema(
-                            name = "params",
-                            type = "object",
-                            description = "JSON params object forwarded to the hidden target tool",
-                            required = true
-                        )
-                    )
-                )
-            )
-        }
+        )
     }
 
     fun buildCliModePrompt(useEnglish: Boolean): String {

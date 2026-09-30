@@ -1090,12 +1090,16 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             name = CliToolModeSupport.SEARCH_TOOL_NAME,
             descriptionGenerator = { tool ->
                 val query = tool.parameters.find { it.name == "query" }?.value ?: ""
-                "Search hidden tool catalog: $query"
+                // 该文案展示在工具调用进度里（给用户看），CLI 与 FULL 模式都会走到。
+                "检索工具目录: $query"
             },
             executor = { tool ->
                 val useEnglish = isEnglishLanguage()
                 val runtimeContext = ToolExecutionManager.currentToolRuntimeContext()
-                if (runtimeContext?.toolExposureMode != ToolExposureMode.CLI) {
+                val exposureMode = runtimeContext?.toolExposureMode ?: ToolExposureMode.FULL
+                // `search` 在 CLI 与 FULL 模式下都可用：
+                // CLI 用它发现隐藏工具后走 proxy；FULL 用它发现被收进目录的冷门工具后直接调用。
+                if (!CliToolModeSupport.isSearchToolAllowed(exposureMode, tool.name)) {
                     return@registerTool ToolResult(
                         toolName = tool.name,
                         success = false,

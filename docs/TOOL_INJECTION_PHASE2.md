@@ -125,6 +125,75 @@ private val ALWAYS_INJECTED_TOOLS = setOf(
 
 ## 六、当前状态
 
-- [x] 第一步：内部工具接入注入通道（`aca450ab`，CI 验证中）
-- [ ] 第一步真机验证
-- [ ] 第二步：分类/按需展开
+- [x] 第一步：内部工具接入注入通道（`aca450ab`）——**真机已验证通过**（音乐正常播放）
+- [x] 补充修复：工具清单注入前按名字去重（`ef74abaa`，修 DeepSeek 400 拒收）
+- [x] 第二步：分类/按需展开（本文件 §七）
+
+---
+
+## 七、第二步实现记录
+
+### 7.1 最终方案（方案 B 变体）
+
+采用**「常驻精选 + 目录检索」**，但没有新造工具 —— **直接复用 CLI 模式已有的 `search`**。
+
+| 决策 | 内容 | 理由 |
+| --- | --- | --- |
+| 检索工具名 | 复用 `search`（`CliToolModeSupport.SEARCH_TOOL_NAME`） | 已有注册、已有权限逻辑、已有打分排序；新造会双份维护 |
+| FULL 模式是否给 `proxy` | **不给** | FULL 模式工具直接调用，不需要代理层 |
+| `search` 的可用模式 | CLI + FULL 都放行 | 用 `isSearchToolAllowed(mode, name)` 统一判定 |
+| 目录来源 | 复用 `buildHiddenToolCatalog` | 已含角色卡权限过滤，语义天然一致 |
+| 分类切分 | `SystemToolPrompts.splitAlwaysOnAndSearchable()` | 常驻部分复用 `filterAlwaysOnCategories`，与 `alwaysOnOnly` 路径同源 |
+
+### 7.2 改动清单
+
+| 文件 | 改动 |
+| --- | --- |
+| `SystemToolPrompts.kt` | 新增 `ALWAYS_ON_TOOL_NAMES` / `ALWAYS_ON_BASE_TOOL_NAMES`（共 30 个）、`isAlwaysOnTool()`、`filterAlwaysOnCategories()`、`splitAlwaysOnAndSearchable()`、`buildHiddenToolDirectorySummary()`；`getAIAllCategoriesEn/Cn` 新增 `alwaysOnOnly` 参数 |
+| `CliToolModeSupport.kt` | 新增 `isSearchToolAllowed()` / `isProxyToolAllowed()`；把 `search` 定义抽成 `buildToolCatalogSearchPrompt(useEnglish, mode)`，`buildCliPublicToolPrompts` 复用之（删除了旧的重复定义） |
+| `EnhancedAIService.kt` | FULL 分支改为「常驻分类 + `search`」，不再全量注入 |
+| `SystemPromptConfig.kt` | FULL + Tool Call API 分支注入「隐藏工具目录概要」（分类名 + 数量） |
+| `ToolExecutionManager.kt` | FULL 模式下放行 `search`（`proxy` 仍拒）；两者都免权限检查 |
+| `ToolRegistration.kt` | `search` 执行校验从「仅 CLI」放宽为「CLI 或 FULL」 |
+
+### 7.3 体量收益（实测）
+
+用真实工具清单渲染 `ToolPrompt.toString()` 得出：
+
+```
+全量注入      : 42,962 字符  (165 工具)
+常驻注入      :  9,490 字符  ( 30 工具)
+目录概要      :    112 字符  (  2 行分类)
+瘦身后        :  9,602 字符
+节省          : 33,360 字符  (77.7%)
+```
+
+### 7.4 放行矩阵（已验证）
+
+| 模式 | `search` | `proxy` | 其它工具 |
+| --- | --- | --- | --- |
+| FULL | ✅ 允许 | ❌ 拒绝 | 直接调用 |
+| CLI | ✅ 允许 | ✅ 允许 | 拒绝（须走 proxy） |
+
+### 7.5 常驻清单（30 个）
+
+- **音乐 8**：`music_play/play_queue/pause/resume/stop/seek/set_volume/status`
+- **交互 2**：`tap`、`capture_screenshot`
+- **输出 3**：`send_notification`、`share_file`、`open_file`
+- **基础 2**：`sleep`、`use_package`
+- **文件 10**：`list_files`、`read_file`、`read_file_part`、`create_file`、`edit_file`、`delete_file`、`make_directory`、`find_files`、`grep_code`、`grep_context`
+- **网络 3**：`visit_web`、`web_search`、`http_request`
+- **记忆 2**：`query_memory`、`get_memory_by_title`
+
+### 7.6 待真机验证
+
+- [ ] 放歌：对话"放首歌" → 直接调 `music_play`（不需检索）
+- [ ] 冷门工具：对话"列出蓝牙设备" → 先 `search` 再直接调用
+- [ ] 模型能正确列出自己的工具（不再数错）
+- [ ] CLI 模式（本地小模型）行为不变
+- [ ] 角色卡内置工具总开关关闭 → 内置工具全部不可用
+
+### 7.7 已知偏差
+
+- 目录概要的数量**未按角色卡权限过滤**（用的是全量分类），只影响显示的数字，不影响 `search` 实际返回结果（那里有过滤）。可接受。
+

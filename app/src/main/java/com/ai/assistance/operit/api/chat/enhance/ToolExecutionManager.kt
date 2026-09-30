@@ -224,8 +224,11 @@ object ToolExecutionManager {
                     )
                 }
 
+                // FULL 模式下 `search` 是允许的（用于检索被收进目录的冷门工具），
+                // 只有 `proxy` 才是 CLI 专属。
                 toolExposureMode == ToolExposureMode.FULL &&
-                    CliToolModeSupport.isCliPublicTool(toolName) -> {
+                    CliToolModeSupport.isCliPublicTool(toolName) &&
+                    !CliToolModeSupport.isSearchToolAllowed(toolExposureMode, toolName) -> {
                     CliToolModeSupport.buildCliModeUnavailableMessage(useEnglish)
                 }
 
@@ -444,14 +447,15 @@ object ToolExecutionManager {
                 resolvedTarget.tool
             }
 
-        if (toolExposureMode == ToolExposureMode.CLI &&
-            (invocation.tool.name == CliToolModeSupport.SEARCH_TOOL_NAME ||
-                invocation.tool.name == CliToolModeSupport.PROXY_TOOL_NAME)
+        // `search` 只是查询本机工具目录，不触碰任何设备能力，因此两种模式都免权限检查。
+        // `proxy` 仅 CLI 模式存在，同样免检（它会转调目标工具，由目标工具自己走权限）。
+        if (CliToolModeSupport.isSearchToolAllowed(toolExposureMode, invocation.tool.name) ||
+            CliToolModeSupport.isProxyToolAllowed(toolExposureMode, invocation.tool.name)
         ) {
             toolHandler.notifyToolPermissionChecked(
                 permissionTool,
                 granted = true,
-                reason = "CLI public tool"
+                reason = "tool catalog search/proxy"
             )
             return Pair(true, null)
         }

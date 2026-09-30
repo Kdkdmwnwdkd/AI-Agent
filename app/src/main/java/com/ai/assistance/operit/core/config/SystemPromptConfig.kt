@@ -156,6 +156,32 @@ PACKAGE SYSTEM
     private fun getPackageSystemGuidelinesToolCall(useEnglish: Boolean): String =
         if (useEnglish) PACKAGE_SYSTEM_GUIDELINES_TOOL_CALL_EN else PACKAGE_SYSTEM_GUIDELINES_TOOL_CALL_CN
 
+    /**
+     * FULL 模式下注入「隐藏工具目录概要」。
+     *
+     * 为控制提示词体量，工具只注入了常驻的高频项，其余按分类收进隐藏目录，
+     * 由模型在需要时调用 `search` 检索。这里只列出分类名与工具数（几行文本），
+     * 明确告诉模型"还有哪些能力可用、去哪里找"，避免它误以为工具不够用。
+     */
+    private fun buildHiddenToolDirectorySection(useEnglish: Boolean): String {
+        return try {
+            val all =
+                if (useEnglish) {
+                    SystemToolPrompts.getAIAllCategoriesEn(alwaysOnOnly = false)
+                } else {
+                    SystemToolPrompts.getAIAllCategoriesCn(alwaysOnOnly = false)
+                }
+            val (_, searchable) = SystemToolPrompts.splitAlwaysOnAndSearchable(
+                useEnglish = useEnglish,
+                categories = all
+            )
+            SystemToolPrompts.buildHiddenToolDirectorySummary(searchable, useEnglish)
+        } catch (e: Exception) {
+            // 目录概要只是锦上添花，任何异常都不应影响系统提示词构建。
+            ""
+        }
+    }
+
 
 
     /** Base system prompt template used by the enhanced AI service */
@@ -424,8 +450,18 @@ AVAILABLE_TOOLS_SECTION""".trimIndent()
                 } else {
                     PACKAGE_SYSTEM_GUIDELINES_TOOL_CALL_CN
                 }
+            // FULL 模式下工具虽通过 API 的 tools 字段下发，但为控制提示词体量只下发了
+            // 「常驻工具」，其余已按分类收进隐藏目录。这里补一段目录概要，
+            // 让模型知道还有哪些分类、以及该在何时调用 `search` 检索。
+            // 仅当工具确实通过 Tool Call API 下发时才注入（否则工具未注入，概要会误导模型）。
+            val hiddenToolDirectory =
+                if (toolExposureMode == ToolExposureMode.FULL) {
+                    buildHiddenToolDirectorySection(useEnglish)
+                } else {
+                    ""
+                }
             prompt = prompt
-                .replace("TOOL_USAGE_GUIDELINES_SECTION", "")
+                .replace("TOOL_USAGE_GUIDELINES_SECTION", hiddenToolDirectory)
                 .replace("PACKAGE_SYSTEM_GUIDELINES_SECTION", if (packageSystemVisible) packageGuidelines else "")
                 .replace("AVAILABLE_TOOLS_SECTION", "")
         } else {

@@ -3008,7 +3008,17 @@ class EnhancedAIService private constructor(private val context: Context) {
                     )
                 }
 
-                categories.flatMap { it.tools }.toMutableList().apply {
+                // FULL 模式改为「常驻 + 按需检索」：
+                // 162 个内置工具全量注入约 18 万字符（≈4.6 万 token），会挤占上下文
+                // 并导致模型注意力涣散（越靠后的工具越容易被忽略，如 music_*）。
+                // 因此只注入高频常驻工具，其余收进目录由 `search` 按需检索。
+                val (alwaysOnCategories, _) =
+                    SystemToolPrompts.splitAlwaysOnAndSearchable(
+                        useEnglish = isEnglish,
+                        categories = categories
+                    )
+
+                alwaysOnCategories.flatMap { it.tools }.toMutableList().apply {
                     retainAll { tool ->
                         roleCardToolAccess.isBuiltinToolAllowed(tool.name)
                     }
@@ -3026,7 +3036,16 @@ class EnhancedAIService private constructor(private val context: Context) {
                     "CLI Tool Mode已启用，提供 ${selectedTools.size} 个工具 (provider=${config.apiProviderType})"
                 )
             } else if (config.enableToolCall) {
-                // 注意：FULL 模式下的 183 个内置工具是【直接暴露】的，模型可以直接调用。
+                // FULL 模式下 `search` 用于检索被收进目录的冷门工具；
+                // 不含 `proxy` —— FULL 模式的工具是直接暴露、直接调用的，不需要代理层。
+                selectedTools.addAll(
+                    CliToolModeSupport.buildToolCatalogSearchPrompt(
+                        useEnglish = isEnglish,
+                        mode = ToolExposureMode.FULL
+                    )
+                )
+                // 注意：FULL 模式下的内置工具是【直接暴露】的，模型可以直接调用
+                // （为控制提示词体量只暴露了常驻高频工具，其余通过 `search` 检索后直接调用）。
                 // 这里的 package_proxy 只负责转调「包」（use_package 激活的插件）提供的工具，
                 // 与内置工具无关。若不把这条边界说清楚，模型会把内置工具（如 music_play）
                 // 也塞进 package_proxy，然后因为缺少 packageName: 前缀而报错。

@@ -573,7 +573,8 @@ object SystemToolPrompts {
         hasBackendVideoRecognition: Boolean = false,
         chatModelHasDirectAudio: Boolean = false,
         chatModelHasDirectVideo: Boolean = false,
-        safBookmarkNames: List<String> = emptyList()
+        safBookmarkNames: List<String> = emptyList(),
+        alwaysOnOnly: Boolean = false
     ): List<SystemToolPromptCategory> {
         val shouldExposeIntent =
             (hasBackendImageRecognition && !chatModelHasDirectImage) ||
@@ -611,12 +612,17 @@ object SystemToolPrompts {
         // 内部工具（music_play、tap、install_app 等 146 个）同样是模型可直接调用的内置工具。
         // 此前这里只返回 4 个基础分类，导致内部工具永远不会进入模型的工具列表，
         // 模型只能误走 package_proxy 去猜，然后撞上 packageName:toolName 校验报错。
-        return listOf(
-            basicTools,
-            adjustedFileSystemTools,
-            httpTools,
-            memoryTools
-        ) + internalToolCategoriesEn
+        val all =
+            listOf(
+                basicTools,
+                adjustedFileSystemTools,
+                httpTools,
+                memoryTools
+            ) + internalToolCategoriesEn
+
+        // FULL 模式的「常驻 + 按需检索」策略：只保留高频常驻工具，
+        // 其余收进隐藏目录由 search 工具按需检索（详见 splitAlwaysOnAndSearchable）。
+        return if (alwaysOnOnly) filterAlwaysOnCategories(all) else all
     }
 
     fun getAllCategoriesEn(
@@ -652,7 +658,8 @@ object SystemToolPrompts {
         hasBackendVideoRecognition: Boolean = false,
         chatModelHasDirectAudio: Boolean = false,
         chatModelHasDirectVideo: Boolean = false,
-        safBookmarkNames: List<String> = emptyList()
+        safBookmarkNames: List<String> = emptyList(),
+        alwaysOnOnly: Boolean = false
     ): List<SystemToolPromptCategory> {
         val shouldExposeIntent =
             (hasBackendImageRecognition && !chatModelHasDirectImage) ||
@@ -690,12 +697,17 @@ object SystemToolPrompts {
         // 内部工具（music_play、tap、install_app 等 146 个）同样是模型可直接调用的内置工具。
         // 此前这里只返回 4 个基础分类，导致内部工具永远不会进入模型的工具列表，
         // 模型只能误走 package_proxy 去猜，然后撞上 packageName:toolName 校验报错。
-        return listOf(
-            basicToolsCn,
-            adjustedFileSystemTools,
-            httpToolsCn,
-            memoryToolsCn
-        ) + internalToolCategoriesCn
+        val all =
+            listOf(
+                basicToolsCn,
+                adjustedFileSystemTools,
+                httpToolsCn,
+                memoryToolsCn
+            ) + internalToolCategoriesCn
+
+        // FULL 模式的「常驻 + 按需检索」策略：只保留高频常驻工具，
+        // 其余收进隐藏目录由 search 工具按需检索（详见 splitAlwaysOnAndSearchable）。
+        return if (alwaysOnOnly) filterAlwaysOnCategories(all) else all
     }
 
     fun getAllCategoriesCn(
@@ -744,6 +756,129 @@ object SystemToolPrompts {
         return getBaseBuiltinCategories(useEnglish)
             .flatMap { it.tools }
             .mapTo(linkedSetOf()) { it.name }
+    }
+
+    /**
+     * 「常驻工具」清单：高频、轻量、值得每轮都直接暴露给模型的工具。
+     *
+     * 背景：全部内置工具（约 162 个）的提示词体量很大（实测量级为 4 万+ 字符），
+     * 会挤占模型上下文并导致注意力涣散：越靠后的工具越容易被忽略（如 music_* 在尾部）。
+     *
+     * 因此 FULL 模式下改为「常驻 + 按需检索」：
+     * - 本清单内的工具直接注入，模型可立即调用；
+     * - 其余工具收进目录，模型通过 `search` 工具检索后再【直接调用】。
+     *
+     * 选取原则：日常高频、且描述体量可控。改动此清单前请先评估提示词增量。
+     */
+    private val ALWAYS_ON_TOOL_NAMES = linkedSetOf(
+        // 音乐播放（用户高频场景）
+        "music_play", "music_play_queue", "music_pause", "music_resume",
+        "music_stop", "music_seek", "music_set_volume", "music_status",
+        // UI 交互
+        "tap", "capture_screenshot",
+        // 常用输出与文件分享
+        "send_notification", "share_file", "open_file"
+    )
+
+    /** 基础 4 类中同样需要常驻的工具（文件/网络/记忆类是日常操作主力）。 */
+    private val ALWAYS_ON_BASE_TOOL_NAMES = linkedSetOf(
+        // 基础
+        "sleep", "use_package",
+        // 文件系统
+        "list_files", "read_file", "read_file_part", "create_file", "edit_file",
+        "delete_file", "make_directory", "find_files", "grep_code", "grep_context",
+        // HTTP
+        "visit_web", "web_search", "http_request",
+        // 记忆
+        "query_memory", "get_memory_by_title"
+    )
+
+    /**
+     * 判断某工具是否属于「常驻」集合（FULL 模式直接注入）。
+     *
+     * 注意：常驻集合同时覆盖基础 4 类与内部工具中的高频项。
+     */
+    fun isAlwaysOnTool(toolName: String): Boolean {
+        val name = toolName.trim()
+        return ALWAYS_ON_TOOL_NAMES.contains(name) ||
+            ALWAYS_ON_BASE_TOOL_NAMES.contains(name)
+    }
+
+    /**
+     * 只保留「常驻」工具，空分类被剔除。
+     *
+     * 注意：必须基于 `getAIAllCategories`（而非原始的 `getBaseBuiltinCategories`），
+     * 否则会丢掉 `read_file` 的意图参数裁剪与 SAF 书签说明等运行时调整。
+     */
+    private fun filterAlwaysOnCategories(
+        categories: List<SystemToolPromptCategory>
+    ): List<SystemToolPromptCategory> {
+        return categories.mapNotNull { category ->
+            val kept = category.tools.filter { isAlwaysOnTool(it.name) }
+            if (kept.isEmpty()) null else category.copy(tools = kept)
+        }
+    }
+
+    /**
+     * 把全部内置工具分类拆成「常驻」与「待检索」两部分。
+     *
+     * FULL 模式使用：常驻部分直接注入给模型，待检索部分收进隐藏目录，
+     * 由 `search` 工具按需检索（模型发现后直接调用，无需 proxy）。
+     *
+     * @return 常驻分类（仅含常驻工具，空分类被剔除）与待检索分类（仅含非常驻工具）。
+     */
+    fun splitAlwaysOnAndSearchable(
+        useEnglish: Boolean,
+        categories: List<SystemToolPromptCategory>? = null
+    ): Pair<List<SystemToolPromptCategory>, List<SystemToolPromptCategory>> {
+        // 允许调用方传入已按运行时条件调整过的分类（含 read_file 意图参数裁剪等），
+        // 未传入时才回退到默认全量分类。
+        val all = categories
+            ?: (if (useEnglish) getAIAllCategoriesEn() else getAIAllCategoriesCn())
+
+        // 常驻部分直接复用 filterAlwaysOnCategories，保证两条路径的筛选语义永远一致。
+        val alwaysOn = filterAlwaysOnCategories(all)
+
+        val searchable = mutableListOf<SystemToolPromptCategory>()
+        all.forEach { category ->
+            val rest = category.tools.filterNot { isAlwaysOnTool(it.name) }
+            if (rest.isNotEmpty()) {
+                searchable += category.copy(tools = rest)
+            }
+        }
+
+        return alwaysOn to searchable
+    }
+
+    /**
+     * 生成「隐藏工具目录概要」：按分类列出分类名与工具数，供模型判断该不该检索。
+     *
+     * 只给出目录（不展开工具描述），体量极小；模型需要某类工具时再调 `search`。
+     */
+    fun buildHiddenToolDirectorySummary(
+        categories: List<SystemToolPromptCategory>,
+        useEnglish: Boolean
+    ): String {
+        val lines = categories
+            .filter { it.tools.isNotEmpty() }
+            .map { "${it.categoryName} (${it.tools.size})" }
+        if (lines.isEmpty()) return ""
+
+        return if (useEnglish) {
+            buildString {
+                appendLine("Other built-in tools are grouped into categories (not listed here to save context):")
+                lines.forEach { appendLine("- $it") }
+                append("When you need one of them, call `search` with a capability keyword ")
+                append("(e.g. \"bluetooth\", \"screenshot\"), then call the discovered tool directly.")
+            }
+        } else {
+            buildString {
+                appendLine("其余内置工具已按分类收起（为节省上下文不在此展开）：")
+                lines.forEach { appendLine("- $it") }
+                append("需要时调用 `search` 工具，传入能力关键词（如「蓝牙」「截图」）检索，")
+                append("拿到工具名后【直接调用】即可，无需其它中转。")
+            }
+        }
     }
 
     private fun applyToolOrder(
