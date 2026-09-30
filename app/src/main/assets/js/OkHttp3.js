@@ -239,7 +239,13 @@ class RequestBuilder {
         return this;
     }
 
-    // Add multipart form parameter (for file uploads)
+    // Add multipart form parameter
+    //
+    // contentType 决定这一项是「文件」还是「普通文本字段」：
+    //   - 传了 contentType  -> 文件，value 必须是设备上的真实路径
+    //   - 没传 contentType  -> 普通文本字段，value 原样作为字段值
+    // 这个判断必须在调用时就定下来，不能靠 value 的内容去猜：像 "/a/b" 这种
+    // 既可能是路径也可能是普通文本，猜错会静默传错东西。
     multipartParam(name, value, contentType) {
         this._request.multipartParams.push({ name, value, contentType });
         this._request.bodyType = 'multipart';
@@ -258,14 +264,35 @@ class RequestBuilder {
 
         // Handle multipart form data
         if (this._request.bodyType === 'multipart' && this._request.multipartParams.length > 0) {
-            // Multipart requests are handled differently - we'll use multipart_request tool
+            // multipart 交给 multipart_request 工具执行。
+            // 注意参数名必须和 Kotlin 侧 StandardHttpTools.multipartRequest() 读取的一致：
+            //   form_data -> JSON 对象，普通文本字段
+            //   files     -> JSON 数组，文件项 {field_name, file_path, content_type, file_name}
+            // 这两个名字同时对应 Network.uploadFile() 的对外契约（见 network.d.ts）。
+            const form_data = {};
+            const files = [];
+            for (const param of this._request.multipartParams) {
+                if (param.contentType) {
+                    // 有 contentType，按文件处理
+                    files.push({
+                        field_name: param.name,
+                        file_path: param.value,
+                        content_type: param.contentType
+                    });
+                } else {
+                    // 没有 contentType，按普通文本字段处理
+                    form_data[param.name] = param.value;
+                }
+            }
+
             return {
                 execute: async () => {
                     const params = {
                         url: this._request.url,
                         method: this._request.method,
                         headers: JSON.stringify(this._request.headers),
-                        fields: JSON.stringify(this._request.multipartParams)
+                        form_data: JSON.stringify(form_data),
+                        files: JSON.stringify(files)
                     };
                     const response = await toolCall("multipart_request", params);
                     return new Response(response);
