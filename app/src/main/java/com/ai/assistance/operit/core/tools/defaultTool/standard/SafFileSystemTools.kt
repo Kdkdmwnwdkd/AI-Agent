@@ -1710,12 +1710,22 @@ class SafFileSystemTools(
             try {
                 val input = contentResolver.openInputStream(uri)
                     ?: return@withContext ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "Failed to open uri: $path")
+
+                // 大小未知时无法保证读得下，按"拒绝"处理而不是放行：
+                // 放行会让 readBytes() 在大文件上直接 OOM 杀掉进程，比返回失败严重得多。
+                val declaredSize = querySize(uri)
+                    ?: return@withContext ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = "Cannot determine file size for: $path. The content provider did not report OpenableColumns.SIZE, so a safe binary read cannot be performed.")
+
+                ToolExecutionLimits.rejectBinaryReadReason(declaredSize)?.let { reason ->
+                    return@withContext ToolResult(toolName = tool.name, success = false, result = StringResultData(""), error = reason)
+                }
+
                 val bytes = input.use { it.readBytes() }
                 val base64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
                 ToolResult(
                     toolName = tool.name,
                     success = true,
-                    result = BinaryFileContentData(path = path, contentBase64 = base64, size = querySize(uri) ?: bytes.size.toLong(), env = envLabel),
+                    result = BinaryFileContentData(path = path, contentBase64 = base64, size = declaredSize, env = envLabel),
                     error = ""
                 )
             } catch (e: Exception) {

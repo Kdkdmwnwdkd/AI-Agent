@@ -1537,9 +1537,18 @@ open class StandardFileSystemTools(protected val context: Context) {
                     )
                 }
 
+                val fileSize = file.length()
+                ToolExecutionLimits.rejectBinaryReadReason(fileSize)?.let { reason ->
+                    return@withContext ToolResult(
+                        toolName = tool.name,
+                        success = false,
+                        result = StringResultData(""),
+                        error = reason
+                    )
+                }
+
                 val bytes = file.readBytes()
                 val base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
-
                 ToolResult(
                     toolName = tool.name,
                     success = true,

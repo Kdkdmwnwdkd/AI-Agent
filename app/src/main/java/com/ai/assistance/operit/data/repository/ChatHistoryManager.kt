@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.room.withTransaction
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.data.backup.OperitBackupDirs
 import com.ai.assistance.operit.data.db.AppDatabase
@@ -611,7 +612,10 @@ class ChatHistoryManager private constructor(private val context: Context) {
         variantsByTimestamp: Map<Long, List<OperitArchivedMessageVariant>> = emptyMap(),
     ) {
         chatMutex(history.id).withLock {
-            try {
+            // 必须整体放进一个事务：这里是「先删旧消息、再插新消息」的替换流程，
+            // 删和插之间如果进程被杀（切后台被回收、低内存 kill、崩溃），该会话的历史消息
+            // 会永久丢失且无法恢复。放进事务后，任何一步失败都整体回滚，不会留下半删状态。
+            database.withTransaction {
                 // 创建聊天实体
                 val chatEntity = ChatEntity.fromChatHistory(history)
 
@@ -659,8 +663,6 @@ class ChatHistoryManager private constructor(private val context: Context) {
                 if (variantEntities.isNotEmpty()) {
                     messageVariantDao.insertVariants(variantEntities)
                 }
-            } catch (e: Exception) {
-                throw e
             }
         }
     }

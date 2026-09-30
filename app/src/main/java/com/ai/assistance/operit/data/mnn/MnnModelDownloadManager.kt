@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -131,6 +133,17 @@ class MnnModelDownloadManager private constructor(private val context: Context) 
     private val downloadJobs = ConcurrentHashMap<String, Job>()
     private var persistentStates = ConcurrentHashMap<String, PersistentDownloadState>()
 
+    /**
+     * 串行化持久化状态文件的写入。
+     *
+     * 为什么需要它：savePersistentStates() 每次都 launch 一个新协程去写同一个文件，
+     * 而 persistentStates 是多模型共享的可变 map。并发下载多个模型时，多个协程会同时
+     * 读 map、各自序列化、再交叉写入同一文件，导致 JSON 撕裂——下次启动解析失败，
+     * 所有下载进度丢失，并可能把已完成的模型误判为未下载而重新下载。
+     * 用 Mutex 把「读 map → 序列化 → 写文件」整体串起来，保证任何时刻只有一个写入者。
+     */
+    private val persistStateMutex = Mutex()
+
 
     init {
         if (!MODEL_DIR.exists()) {
@@ -196,18 +209,20 @@ class MnnModelDownloadManager private constructor(private val context: Context) 
     private fun savePersistentStates() {
         applicationScope.launch {
             try {
-                val stateFile = File(context.filesDir, PERSISTENT_STATE_FILE_NAME)
-                val states = persistentStates.values.toList()
-                if (states.isEmpty()) {
-                    if (stateFile.exists()) stateFile.delete()
-                } else {
-                    val jsonString = json.encodeToString(
-                        ListSerializer(PersistentDownloadState.serializer()),
-                        states
-                    )
-                    stateFile.writeText(jsonString)
+                persistStateMutex.withLock {
+                    val stateFile = File(context.filesDir, PERSISTENT_STATE_FILE_NAME)
+                    val states = persistentStates.values.toList()
+                    if (states.isEmpty()) {
+                        if (stateFile.exists()) stateFile.delete()
+                    } else {
+                        val jsonString = json.encodeToString(
+                            ListSerializer(PersistentDownloadState.serializer()),
+                            states
+                        )
+                        stateFile.writeText(jsonString)
+                    }
+                    AppLogger.d(TAG, "成功保存 ${states.size} 个持久化下载状态")
                 }
-                AppLogger.d(TAG, "成功保存 ${states.size} 个持久化下载状态")
             } catch (e: Exception) {
                 AppLogger.e(TAG, "保存持久化状态失败", e)
             }

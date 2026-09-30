@@ -236,6 +236,15 @@ class LinuxFileSystemTools(context: Context) : StandardFileSystemTools(context) 
                 )
             }
 
+            ToolExecutionLimits.rejectBinaryReadReason(fs.getFileSize(path))?.let { reason ->
+                return ToolResult(
+                    toolName = tool.name,
+                    success = false,
+                    result = StringResultData(""),
+                    error = reason
+                )
+            }
+
             val bytes = fs.readFileBytes(path)
             if (bytes == null) {
                 return ToolResult(
