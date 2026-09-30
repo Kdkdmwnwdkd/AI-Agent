@@ -87,3 +87,34 @@ https://api.github.com/repos/Kdkdmwnwdkd/AI-Agent/check-runs/<job_id>/annotation
 
 `get_file_contents` 传 `ref: "main"` 拿到的始终是**最新内容**，
 不要用 `list_commits` 返回的 sha 去逐层翻找。
+
+---
+
+## 🔥 大文件（APK）加速下载通道（2026-09-30 实测）
+
+GitHub Actions 的 APK 产物（416MB）直连国内极慢。**可用 gh-proxy 直链加速**：
+
+```
+https://gh-proxy.com/https://api.github.com/repos/{owner}/{repo}/actions/artifacts/{artifact_id}/zip
+```
+
+**实测结论**：
+
+| 项 | 结果 |
+|---|---|
+| 沙箱下载 416MB | ✅ **21 秒**（约 20 MB/s） |
+| 是否需要 Authorization 头 | ❌ **不带**（带 `Authorization: Bearer` 反而 403） |
+| 手机浏览器直接访问 | ✅ HTTP 206，`application/zip` |
+| Range 断点续传 | ✅ 支持（`-r` 请求返回 206） |
+
+**关键坑**：
+1. **不要带 Authorization 头** —— gh-proxy 服务端自带凭据，客户端带 token 会 403。
+2. artifact_id 从 `actions/runs/{run_id}/artifacts` 接口拿（该接口可带 auth 正常读）。
+3. 下载的是 **zip 包**，APK 在 `apk/debug/app-debug.apk`，需解压。
+4. artifact 有 90 天有效期。
+
+**验证签名（纯 Python，keytool 只认 v1 不认 v2）**：
+APK 用 v2 签名（id=`0x7109871a`）。Signing Block 里 `pair` 用 **u64** 长度前缀，
+但 v2 block **内部**用 **u32** 长度前缀 —— 这是最容易踩的坑。
+最快方法：在 v2 block 里直接搜 X.509 DER 起始字节 `30 82`，按 DER 长度字段读出完整证书算 SHA1。
+固定钥匙证书 DER=792B，SHA1=`aaafdab58bcd76052c2acf4d7ef7850436d98545`。
