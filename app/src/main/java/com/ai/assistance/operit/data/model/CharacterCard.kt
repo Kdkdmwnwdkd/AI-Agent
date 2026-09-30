@@ -7,7 +7,16 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class CharacterCardToolAccessConfig(
     val enabled: Boolean = false,
+    /**
+     * 【兼容字段】旧版逐项白名单。
+     *
+     * 语义已变更：内置工具不再逐个勾选，而是由 [builtinToolsEnabled] 总开关统一控制。
+     * 该字段仅为兼容历史数据而保留（避免老角色卡反序列化后丢失 key），
+     * 运行时不再参与内置工具授权判定。
+     */
     val allowedBuiltinTools: List<String> = emptyList(),
+    /** 内置工具总开关：开启后全部内置工具（含内部工具）对模型可用。 */
+    val builtinToolsEnabled: Boolean = true,
     val allowedPackages: List<String> = emptyList(),
     val allowedSkills: List<String> = emptyList(),
     val allowedMcpServers: List<String> = emptyList()

@@ -211,7 +211,7 @@ fun CharacterCardDialog(
     val toolAccessSummary = if (!normalizedToolAccessConfig.enabled) {
         stringResource(R.string.character_card_tool_access_follow_global)
     } else if (
-        normalizedToolAccessConfig.allowedBuiltinTools.isEmpty() &&
+        !normalizedToolAccessConfig.builtinToolsEnabled &&
         normalizedToolAccessConfig.allowedPackages.isEmpty() &&
         normalizedToolAccessConfig.allowedSkills.isEmpty() &&
         normalizedToolAccessConfig.allowedMcpServers.isEmpty()
@@ -220,7 +220,11 @@ fun CharacterCardDialog(
     } else {
         stringResource(
             R.string.character_card_tool_access_summary_counts,
-            normalizedToolAccessConfig.allowedBuiltinTools.size,
+            if (normalizedToolAccessConfig.builtinToolsEnabled) {
+                stringResource(R.string.character_card_tool_access_summary_builtin_on)
+            } else {
+                stringResource(R.string.character_card_tool_access_summary_builtin_off)
+            },
             normalizedToolAccessConfig.allowedPackages.size,
             normalizedToolAccessConfig.allowedSkills.size,
             normalizedToolAccessConfig.allowedMcpServers.size
@@ -923,10 +927,12 @@ fun CharacterCardDialog(
                                 0
                             }
                             val finalToolAccessConfig = normalizedToolAccessConfig
+                            // use_package 是市场工具（包/Skill/MCP）的前置依赖。
+                            // 内置工具由 builtinToolsEnabled 总开关控制，与此无关，不应拦截保存。
                             if (
                                 finalToolAccessConfig.enabled &&
                                 finalToolAccessConfig.hasExternalSelections() &&
-                                !finalToolAccessConfig.allowedBuiltinTools.contains("use_package")
+                                !finalToolAccessConfig.builtinToolsEnabled
                             ) {
                                 Toast.makeText(
                                     context,
@@ -1087,6 +1093,9 @@ private fun CharacterCardToolAccessDialog(
         stringResource(R.string.character_card_tool_access_tab_skill),
         stringResource(R.string.character_card_tool_access_tab_mcp)
     )
+    // 「内建工具」Tab 改为总开关 + 分类只读展示：内置工具由 builtinToolsEnabled 统一放行，
+    // 不再逐个勾选（旧版逐项白名单就是漏掉 146 个内部工具的根因）。
+    val isBuiltinTab = selectedTabIndex == 0
     val currentOptions = when (selectedTabIndex) {
         0 -> builtinOptions
         1 -> packageOptions
@@ -1164,6 +1173,37 @@ private fun CharacterCardToolAccessDialog(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
+                if (isBuiltinTab) {
+                    // 内置工具总开关
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.character_card_tool_access_builtin_master_title),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = stringResource(R.string.character_card_tool_access_builtin_master_subtitle),
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = localConfig.builtinToolsEnabled,
+                            onCheckedChange = { checked ->
+                                localConfig = localConfig.copy(builtinToolsEnabled = checked)
+                            }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
                 if (currentOptions.isNotEmpty()) {
                     OutlinedTextField(
                         value = searchQuery,
@@ -1231,37 +1271,43 @@ private fun CharacterCardToolAccessDialog(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .toggleable(
-                                        value = isSelected,
-                                        onValueChange = {
-                                            localConfig = when (selectedTabIndex) {
-                                                0 -> localConfig.copy(
-                                                    allowedBuiltinTools = toggleCharacterCardToolAccessSelection(
-                                                        localConfig.allowedBuiltinTools,
-                                                        option.key
-                                                    )
-                                                )
-                                                1 -> localConfig.copy(
-                                                    allowedPackages = toggleCharacterCardToolAccessSelection(
-                                                        localConfig.allowedPackages,
-                                                        option.key
-                                                    )
-                                                )
-                                                2 -> localConfig.copy(
-                                                    allowedSkills = toggleCharacterCardToolAccessSelection(
-                                                        localConfig.allowedSkills,
-                                                        option.key
-                                                    )
-                                                )
-                                                else -> localConfig.copy(
-                                                    allowedMcpServers = toggleCharacterCardToolAccessSelection(
-                                                        localConfig.allowedMcpServers,
-                                                        option.key
-                                                    )
-                                                )
-                                            }.normalized()
-                                        },
-                                        role = Role.Checkbox
+                                    .then(
+                                        if (isBuiltinTab) {
+                                            Modifier
+                                        } else {
+                                            Modifier.toggleable(
+                                                value = isSelected,
+                                                onValueChange = {
+                                                    localConfig = when (selectedTabIndex) {
+                                                        0 -> localConfig.copy(
+                                                            allowedBuiltinTools = toggleCharacterCardToolAccessSelection(
+                                                                localConfig.allowedBuiltinTools,
+                                                                option.key
+                                                            )
+                                                        )
+                                                        1 -> localConfig.copy(
+                                                            allowedPackages = toggleCharacterCardToolAccessSelection(
+                                                                localConfig.allowedPackages,
+                                                                option.key
+                                                            )
+                                                        )
+                                                        2 -> localConfig.copy(
+                                                            allowedSkills = toggleCharacterCardToolAccessSelection(
+                                                                localConfig.allowedSkills,
+                                                                option.key
+                                                            )
+                                                        )
+                                                        else -> localConfig.copy(
+                                                            allowedMcpServers = toggleCharacterCardToolAccessSelection(
+                                                                localConfig.allowedMcpServers,
+                                                                option.key
+                                                            )
+                                                        )
+                                                    }.normalized()
+                                                },
+                                                role = Role.Checkbox
+                                            )
+                                        }
                                     )
                                     .padding(vertical = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically
@@ -1281,10 +1327,27 @@ private fun CharacterCardToolAccessDialog(
                                     }
                                 }
 
-                                Checkbox(
-                                    checked = isSelected,
-                                    onCheckedChange = null
-                                )
+                                if (isBuiltinTab) {
+                                    // 只读状态：随总开关联动，避免「看起来能勾但不生效」的误导
+                                    Icon(
+                                        imageVector = if (localConfig.builtinToolsEnabled) {
+                                            Icons.Default.Check
+                                        } else {
+                                            Icons.Default.Close
+                                        },
+                                        contentDescription = null,
+                                        tint = if (localConfig.builtinToolsEnabled) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.outline
+                                        }
+                                    )
+                                } else {
+                                    Checkbox(
+                                        checked = isSelected,
+                                        onCheckedChange = null
+                                    )
+                                }
                             }
 
                             if (index < filteredOptions.lastIndex) {

@@ -4520,18 +4520,22 @@
     <string name="character_card_tool_access_follow_global">当前跟随全局配置</string>
     <string name="character_card_tool_access_configure">配置允许项</string>
     <string name="character_card_tool_access_summary_empty">当前未允许任何内建工具或外部来源</string>
-    <string name="character_card_tool_access_summary_counts">内建工具 %1$d · 包 %2$d · Skill %3$d · MCP %4$d</string>
+    <string name="character_card_tool_access_summary_counts">内置工具 %1$s · 包 %2$d · Skill %3$d · MCP %4$d</string>
+    <string name="character_card_tool_access_summary_builtin_on">全部启用</string>
+    <string name="character_card_tool_access_summary_builtin_off">已关闭</string>
+    <string name="character_card_tool_access_builtin_master_title">启用全部内置工具</string>
+    <string name="character_card_tool_access_builtin_master_subtitle">开启后全部内置工具（含音乐、系统、UI 操作等）对 AI 可用，无需逐项勾选；下方列表仅供查看</string>
     <string name="character_card_tool_access_tab_builtin">内建工具</string>
     <string name="character_card_tool_access_tab_package">包</string>
     <string name="character_card_tool_access_tab_skill">Skill</string>
     <string name="character_card_tool_access_tab_mcp">MCP</string>
-    <string name="character_card_tool_access_empty_builtin">当前没有可配置的内建工具</string>
+    <string name="character_card_tool_access_empty_builtin">当前没有可用的内置工具</string>
     <string name="character_card_tool_access_empty_packages">当前没有全局可用的包</string>
     <string name="character_card_tool_access_empty_skills">当前没有对 AI 可见的 Skill</string>
     <string name="character_card_tool_access_empty_mcp">当前没有已启用的 MCP 服务器</string>
     <string name="character_card_tool_access_search_placeholder">搜索名称、描述或标识</string>
     <string name="character_card_tool_access_empty_search">未找到匹配的工具</string>
-    <string name="character_card_tool_access_requires_use_package">当前已允许包 / Skill / MCP，但未允许 use_package，请先在内建工具中开启 use_package</string>
+    <string name="character_card_tool_access_requires_use_package">当前已允许包 / Skill / MCP，但内置工具总开关处于关闭状态，请先开启「启用全部内置工具」</string>
     <string name="character_card_tool_access_denied_runtime">该角色卡不允许使用此工具/来源</string>
     <string name="character_card_custom_prompt">自定义提示词</string>
     <string name="character_card_custom_prompt_placeholder">高级自定义提示词...</string>
@@ -8558,7 +8562,7 @@
     <!-- Character card tools -->
     <string name="toolreg_list_character_cards_settings_desc">【列出全部】列出所有角色卡，并指出当前激活的是哪一张。无参数。返回每张卡的 id、名称与设定摘要，以及 active_character_card_id。本工具是只读的，不会改动任何角色卡。要读取某一张的完整内容请用 get_character_card，它需要 character_card_id。</string>
     <string name="toolreg_get_character_card_desc">【读一张】按 id 读取角色卡 %1$s 的完整内容。character_card_id 为必填，缺失报 "Missing required parameter: character_card_id"；id 不存在报 "Character card not found: 该 id"。只想拿 id 列表用 list_character_cards_settings，它不需要参数。要改这张卡请用 update_character_card。</string>
-    <string name="toolreg_create_character_card_desc">【新建】新建一张角色卡，name 为必填，缺失或为空白报 "Missing required parameter: name" / "Character card name cannot be blank"。可选内容字段：description、character_setting、opening_statement、other_content_chat、other_content_voice、advanced_custom_prompt、marks。可选绑定字段：attached_tag_ids（JSON 字符串数组）、chat_model_binding_mode（FOLLOW_GLOBAL 或 FIXED_CONFIG，其它值报 "Invalid chat_model_binding_mode: 传入值"）、chat_model_config_id、chat_model_index（非整数报 "Invalid integer parameter: chat_model_index"，负数报 "chat_model_index must be greater than or equal to 0"）、memory_profile_binding_mode（FOLLOW_GLOBAL 或 FIXED_PROFILE）、memory_profile_id。可选工具权限：tool_access_enabled（非 true/false 报 "Invalid boolean parameter: tool_access_enabled"）、allowed_builtin_tools、allowed_packages、allowed_skills、allowed_mcp_servers（后四者均为 JSON 字符串数组，格式错报 "Invalid JSON array parameter: 参数名"，元素非字符串报 "Invalid JSON array parameter: 参数名[索引] must be a string"）。新建不会自动激活新卡；要启用请再调 set_active_character_card。</string>
+    <string name="toolreg_create_character_card_desc">【新建】新建一张角色卡，name 为必填，缺失或为空白报 "Missing required parameter: name" / "Character card name cannot be blank"。可选内容字段：description、character_setting、opening_statement、other_content_chat、other_content_voice、advanced_custom_prompt、marks。可选绑定字段：attached_tag_ids（JSON 字符串数组）、chat_model_binding_mode（FOLLOW_GLOBAL 或 FIXED_CONFIG，其它值报 "Invalid chat_model_binding_mode: 传入值"）、chat_model_config_id、chat_model_index（非整数报 "Invalid integer parameter: chat_model_index"，负数报 "chat_model_index must be greater than or equal to 0"）、memory_profile_binding_mode（FOLLOW_GLOBAL 或 FIXED_PROFILE）、memory_profile_id。可选工具权限：tool_access_enabled（非 true/false 报 "Invalid boolean parameter: tool_access_enabled"）、builtin_tools_enabled（内置工具总开关，true 即全部内置工具可用，非 true/false 报 "Invalid boolean parameter: builtin_tools_enabled"）、allowed_packages、allowed_skills、allowed_mcp_servers（后三者均为 JSON 字符串数组，格式错报 "Invalid JSON array parameter: 参数名"，元素非字符串报 "Invalid JSON array parameter: 参数名[索引] must be a string"）；allowed_builtin_tools 为旧版兼容字段，已不再参与授权判定，传入仅做保留。新建不会自动激活新卡；要启用请再调 set_active_character_card。</string>
     <string name="toolreg_update_character_card_desc">【改一张】修改角色卡 %1$s，只更新传入的字段，未传的保持原值。character_card_id 为必填，缺失报 "Missing required parameter: character_card_id"，id 不存在报 "Character card not found: 该 id"。至少要传一个可更新字段，否则报 "At least one character card update field is required"。可更新字段与 create_character_card 相同（name 为空报 "Character card name cannot be blank"），但 name 不是必填 —— 这里的 name 若不传就保留原名。改完不会改变激活状态；要换激活的卡用 set_active_character_card。</string>
     <string name="toolreg_delete_character_card_desc">【删除】永久删除角色卡 %1$s。character_card_id 为必填，缺失报 "Missing required parameter: character_card_id"，id 不存在报 "Character card not found: 该 id"。默认角色卡不可删除，尝试删除会报 "The default character card cannot be deleted"。删除不可撤销。只想取消激活而不删卡，请用 clear_active_character_card。</string>
     <string name="toolreg_set_active_character_card_desc">【激活】把角色卡 %1$s 设为当前生效的角色卡。character_card_id 为必填，缺失报 "Missing required parameter: character_card_id"，id 不存在报 "Character card not found: 该 id"。本工具只切换激活项，不修改卡片内容。要取消激活、回到无角色状态，用 clear_active_character_card。当前激活的是哪张，可用 list_character_cards_settings 查看。</string>

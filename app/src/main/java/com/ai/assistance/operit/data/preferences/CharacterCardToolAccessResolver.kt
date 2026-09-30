@@ -88,12 +88,23 @@ class CharacterCardToolAccessResolver private constructor(private val context: C
             )
         }
 
-        val allowedBuiltinTools = LinkedHashSet(roleCardConfig.allowedBuiltinTools)
+        // 注意：这里必须是「全部内置工具」而非旧版的 17 项可管理子集。
+        // isBuiltinToolAllowed 的判定是 effectiveBuiltinToolVisibility[name] == true，
+        // 若某个内置工具（如 music_play）不在本 Map 中，会得到 null == true → false，
+        // 导致它在 EnhancedAIService 的 retainAll 中被静默剔除。
         val manageableBuiltinNames = SystemToolPrompts
             .getManageableToolPrompts(useEnglish = false)
             .mapTo(LinkedHashSet()) { it.name }
+        val builtinToolsEnabled = roleCardConfig.builtinToolsEnabled
         val effectiveBuiltinToolVisibility = manageableBuiltinNames.associateWith { toolName ->
-            (effectiveGlobalToolVisibility[toolName] ?: true) && allowedBuiltinTools.contains(toolName)
+            // 全局单工具可见性优先级最高：用户在设置页关掉的工具不应被角色卡强行打开。
+            val globalAllowed = effectiveGlobalToolVisibility[toolName] ?: true
+            when {
+                // 内置工具：总开关开启即全部放行。
+                toolName != "package_proxy" -> globalAllowed && builtinToolsEnabled
+                // package_proxy 是市场工具的入口，由外部源配置决定。
+                else -> globalAllowed
+            }
         }
 
         val canUsePackageSystem = effectiveBuiltinToolVisibility["use_package"] == true

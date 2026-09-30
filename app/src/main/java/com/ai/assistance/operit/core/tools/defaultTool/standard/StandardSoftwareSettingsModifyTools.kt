@@ -2016,6 +2016,12 @@ class StandardSoftwareSettingsModifyTools(private val context: Context) {
             )
             changedFields.add("allowed_builtin_tools")
         }
+        getParameterValue(tool, "builtin_tools_enabled")?.let { raw ->
+            val enabled = parseBooleanParameter(raw)
+                ?: throw IllegalArgumentException("Invalid boolean parameter: builtin_tools_enabled")
+            toolAccessConfig = toolAccessConfig.copy(builtinToolsEnabled = enabled)
+            changedFields.add("builtin_tools_enabled")
+        }
         getParameterValue(tool, "allowed_packages")?.let { raw ->
             toolAccessConfig = toolAccessConfig.copy(
                 allowedPackages = parseStringArrayParameter(raw, "allowed_packages")

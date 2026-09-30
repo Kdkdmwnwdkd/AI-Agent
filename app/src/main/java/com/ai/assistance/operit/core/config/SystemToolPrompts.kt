@@ -752,10 +752,13 @@ object SystemToolPrompts {
         useEnglish: Boolean,
         toolOrder: List<String> = emptyList()
     ): List<ManageableToolPrompt> {
+        // 必须包含内部工具分类：这些工具（music_play、tap、install_app 等）同样是可被模型
+        // 直接调用的内置工具。若此处遗漏，它们既不会出现在白名单页，也会在
+        // CharacterCardToolAccessResolver 中被判定为「未授权」而静默剔除。
         val baseCategories = if (useEnglish) {
-            listOf(basicTools, fileSystemTools, httpTools, memoryTools)
+            listOf(basicTools, fileSystemTools, httpTools, memoryTools) + internalToolCategoriesEn
         } else {
-            listOf(basicToolsCn, fileSystemToolsCn, httpToolsCn, memoryToolsCn)
+            listOf(basicToolsCn, fileSystemToolsCn, httpToolsCn, memoryToolsCn) + internalToolCategoriesCn
         }
 
         val result = baseCategories
