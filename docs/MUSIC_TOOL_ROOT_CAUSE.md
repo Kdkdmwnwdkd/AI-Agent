@@ -1,27 +1,106 @@
 # 音乐工具调用失败 · 根因确认（最终版）
 
-> **日期**：2026-09-29
-> **状态**：✅ **根因已确证**，定位到具体代码行
-> **性质**：**真 bug**（工具通道选择错误 + 可能被误判为 CLI 模式）
+> **日期**：2026-09-29 初版 / **2026-09-30 修订**
+> **状态**：✅ **根因已确证并已修复**（commit `8ed5e03b`）
+> **性质**：**真 bug**（角色卡白名单漏掉全部内部工具）
 > **与本次改动关系**：**无关**，属 Operit 上游既有缺陷
 
 ---
 
-## 一、报错演进（三次，逐次逼近真相）
+## ⚠️ 阅读提示：本文档已修订
+
+初版把根因定在「`package_proxy` 通道选错」。**那个判断是错的**——
+通道误导只是**表象**，真正的原因是**白名单根本不给模型这个工具**。
+
+**真根因**见下方「零、最终结论」，完整分析见 `TOOL_WHITELIST_REDESIGN.md`。
+
+---
+
+## 零、最终结论（2026-09-30 确证）
+
+### 现象
+
+角色卡开启「自定义允许使用的工具」后，AI **完全无法调用 `music_play`**，
+并明确回复「music_play 不在我的内置工具列表中」。白名单页也看不到任何音乐工具。
+
+### 根因：双层 bug
+
+**第一层 · UI 不渲染**
+
+`core/config/SystemToolPrompts.kt:751` `getManageableToolPrompts()` 写死只取 4 类：
+
+```kotlin
+val baseCategories = if (useEnglish) {
+    listOf(basicTools, fileSystemTools, httpTools, memoryTools)   // 共 17 个工具
+} else {
+    listOf(basicToolsCn, fileSystemToolsCn, httpToolsCn, memoryToolsCn)
+}
+```
+
+而 146 个内部工具（含整个 `music_*` 家族）定义在 `SystemToolPromptsInternal.kt`
+的 12 个分类里，**从未被纳入** → 白名单页结构性缺失。
+
+**第二层 · 逻辑静默剔除（更致命）**
+
+`data/preferences/CharacterCardToolAccessResolver.kt:92` 用同一份 17 项子集
+构造可见性 Map 的 key 域：
+
+```kotlin
+val manageableBuiltinNames = SystemToolPrompts
+    .getManageableToolPrompts(useEnglish = false)   // 只有 17 个
+    .mapTo(LinkedHashSet()) { it.name }
+val effectiveBuiltinToolVisibility = manageableBuiltinNames.associateWith { ... }
+```
+
+判定函数（同文件 `:19-27`）：
+
+```kotlin
+fun isBuiltinToolAllowed(toolName: String): Boolean {
+    if (!customEnabled) return effectiveBuiltinToolVisibility[toolName] ?: true
+    return when (toolName) {
+        "package_proxy" -> hasAnyAllowedExternalSource
+        else -> effectiveBuiltinToolVisibility[toolName] == true   // 查不到 → null == true → false
+    }
+}
+```
+
+→ 只要角色卡开了自定义工具（`customEnabled = true`），**146 个内部工具全部被
+`EnhancedAIService.kt:3011` 的 `retainAll` 静默剔除**。用户手工填写配置也无效。
+
+**所以模型说「music_play 不在我的内置工具列表中」——它说的是实话。**
+
+### 修复
+
+| 文件 | 改动 |
+|---|---|
+| `SystemToolPrompts.kt` | `getManageableToolPrompts()` 追加 `internalToolCategoriesEn/Cn`，17 → 163 |
+| `CharacterCardToolAccessResolver.kt` | 可见性基准改为全量内置工具，不再误杀 |
+| `CharacterCard.kt` | 新增 `builtinToolsEnabled` 总开关；`allowedBuiltinTools` 降级为兼容字段 |
+| `CharacterCardDialog.kt` | 内建工具 Tab 改「总开关 + 只读列表」；修保存校验 |
+| `StandardSoftwareSettingsModifyTools.kt` | 新增 `builtin_tools_enabled` 参数 |
+
+设计语义：**内置工具**由总开关统一放行（163 项全开），**市场工具**（包/Skill/MCP）
+仍需逐项勾选。
+
+---
+
+## 一、旧版分析（通道误导，保留存档）
+
+以下是初版判断。**方向错了**——它不是根因，但如果将来真的出现
+「模型主动把内置工具塞进 `package_proxy`」的情况，下面的引导语改动仍然有效
+（已随 `2b5f39cc` 落地）。
+
+### 1.1 报错演进
 
 | 阶段 | 模型行为 | 报错 | 含义 |
 |---|---|---|---|
 | 1 | 调 `package_proxy`，**没传 `tool_name`** | `Exactly one tool_name parameter is required` | 参数缺失 |
-| 2 | 角色卡配好后，调 `package_proxy(tool_name="music_play")` | `tool_name must use packageName:toolName format` | **通道错了** |
+| 2 | 角色卡配好后，调 `package_proxy(tool_name="music_play")` | `tool_name must use packageName:toolName format` | 通道错了 |
 | — | **期望行为** | — | 应直接调 `music_play`，或经 `proxy` 转调 |
 
----
+### 1.2 报错来源
 
-## 二、根因（已定位到具体行）
-
-### 2.1 报错来源
-
-`app/src/main/java/com/ai/assistance/operit/core/tools/ToolRegistration.kt:159`
+`core/tools/ToolRegistration.kt:159`
 
 ```kotlin
 if (requireQualifiedTarget && !targetToolName.contains(':')) {
@@ -32,60 +111,33 @@ if (requireQualifiedTarget && !targetToolName.contains(':')) {
 }
 ```
 
-### 2.2 两个代理工具的唯一差别
+### 1.3 两个代理工具的唯一差别
 
 | 工具 | 注册位置 | `requireQualifiedTarget` | 目标类型 |
 |---|---|---|---|
 | `proxy` | `ToolRegistration.kt:1155` | **`false`** | 内置 / 隐藏工具 |
 | `package_proxy` | `ToolRegistration.kt:1211` | **`true`** | **包**工具（必须 `包名:工具名`） |
 
-**模型调的是 `package_proxy`，传的是 `music_play`（内置工具，无冒号）→ 必然报错。**
+### 1.4 已落地的缓和措施
 
-**正确通道是 `proxy`。**
+`2b5f39cc` 在报错串后追加引导语，并在 `package_proxy` 描述里写明边界：
 
-### 2.3 关键补充：`music_play` 是内置工具
+> 如果 `xxx` 是内置工具，请直接调用它，不要经过 `package_proxy`。
 
-```
-SystemToolPromptsInternal.kt:175   (EN)  → categoryName = "Internal Tools"
-SystemToolPromptsInternal.kt:3167  (CN)
-```
-
-→ 属 `HiddenToolSourceKind.INTERNAL`，**不是 `PACKAGE`**，**不该走 `package_proxy`**。
+真机复测显示模型**读懂了引导语**，但随即承认「music_play 不在我的内置工具列表中」
+——这条反馈正是发现真根因（白名单缺失）的线索。
 
 ---
 
-## 三、第二个疑点：为什么进了 CLI 模式？
+## 二、CLI 模式疑点（已排除）
 
-### 3.1 代码预期
-
-`CliToolModeSupport.kt:24`
-
-```kotlin
-fun resolve(providerType: ApiProviderType): ToolExposureMode {
-    return when (providerType) {
-        LMSTUDIO, OLLAMA, OPENAI_LOCAL, MNN, LLAMA_CPP -> CLI
-        else -> FULL
-    }
-}
-```
-
-`ApiProviderType.DEEPSEEK` **存在**（`ModelConfigData.kt:26`）且**不在 CLI 名单** → 应走 `FULL`。
-
-→ **`FULL` 模式下模型直接看到 `music_play`，根本不会出现 `proxy` 这种转调。**
-
-### 3.2 但用户实测它在用代理工具
-
-→ 说明**实际走了 CLI**。可能原因：
-
-1. 用户选的模型配置里 `apiProviderType` **不是 `DEEPSEEK`**（例如选了「自定义端点 / OpenAI 兼容」，被归到会走 CLI 的类型）
-2. `EnhancedAIService` 三处调用点（L2162 / L2742 / L2965）传入的 `config` 不是当前对话模型的配置
-3. 其他未查到的 CLI 入口
-
-**这一条尚未确证，需要看用户的模型配置页。**
+初版怀疑「为何进了 CLI 模式」。后续确认：用户使用的是 `DEEPSEEK` →
+`ToolExposureMode.resolve()` 返回 `FULL` → 183 个工具全部直接暴露，
+`proxy` / `package_proxy` 转调与内置工具无关。**此疑点作废。**
 
 ---
 
-## 四、这**不是**本次改动引入的
+## 三、这**不是**本次改动引入的
 
 | 本次改动 | 是否影响 |
 |---|---|
@@ -99,49 +151,20 @@ fun resolve(providerType: ApiProviderType): ToolExposureMode {
 
 ---
 
-## 五、好消息（本次改动已验证的部分）
+## 四、好消息（已验证的部分）
 
 用户 mp4 证实**主题背景视频正常播放**：
 
 → `app:keep_content_on_player_reset` **被 Media3 正确支持** ✅
 → **Media3 迁移核心风险已排除**
-→ **播放能力本身完好**，坏的只是"模型走错通道"
+→ **播放能力本身完好**，坏的只是"角色卡不给 AI 这个工具"
 
 ---
 
-## 六、修复方向（两个问题，分开治）
+## 五、诚实边界
 
-### 🔴 问题 A：`package_proxy` 的错误信息不友好（低风险可修）
-
-模型既已传了 `music_play`，说明它**意图正确、只是通道选错**。
-当前报错 `tool_name must use packageName:toolName format` **没告诉它该走 `proxy`**。
-
-**建议改法**（`ToolRegistration.kt:159`）：
-
-```kotlin
-if (requireQualifiedTarget && !targetToolName.contains(':')) {
-    return null to buildToolErrorResult(
-        tool,
-        "tool_name must use packageName:toolName format. " +
-        "If '$targetToolName' is a built-in/internal tool, " +
-        "call 'proxy' instead of 'package_proxy'."
-    )
-}
-```
-
-**加一句引导 = 模型下一步自己就走对了。** 零逻辑改动，零风险。
-
-### 🟠 问题 B：CLI 模式判定的真实原因（待查）
-
-需要用户提供**模型配置页截图**（看 `apiProviderType` 是什么）。
-
-若确为 `DEEPSEEK` 却走了 CLI → 是**判定 bug**，需进一步查三处调用点。
-
----
-
-## 七、诚实边界
-
-1. **根因（通道选错）已确证**，有代码行为与报错串双向印证
-2. **"为何进 CLI 模式"未确证**，仅推断，需用户配置页佐证
-3. 我**没有 Operit 的运行日志**，无法单方面断言运行时 `toolExposureMode` 的取值
+1. **真根因（白名单缺失）已确证**，有代码路径双向印证，且已修复推 CI
+2. 初版「通道选错」判断**已作废**，保留仅为存档
+3. 我**没有 Operit 的运行日志**，无法单方面断言运行时行为
 4. 本文件与仓库 `docs/MUSIC_TOOL_ROOT_CAUSE.md`、资料库同步
+
