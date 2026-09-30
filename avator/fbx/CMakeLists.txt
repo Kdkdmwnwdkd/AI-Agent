@@ -9,7 +9,7 @@ operit_prepare_git_source(
     OPERIT_UFBX_BINARY_DIR
     ufbx
     "https://github.com/ufbx/ufbx.git"
-    "main"
+    "26a482ae66871d7de36eb722aa060bce95bce274"
 )
 
 add_library(

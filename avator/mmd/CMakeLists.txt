@@ -9,7 +9,7 @@ operit_prepare_git_source(
     OPERIT_SABA_BINARY_DIR
     saba
     "https://github.com/benikabocha/saba.git"
-    "master"
+    "29b8efa8b31c8e746f9a88020fb0ad9dcdcf3332"
 )
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
@@ -27,7 +27,7 @@ operit_prepare_git_source(
     OPERIT_BULLET3_BINARY_DIR
     bullet3
     "https://github.com/bulletphysics/bullet3.git"
-    "master"
+    "63c4d67e337017f9d8b298c900e9aabdb69296e7"
 )
 
 add_subdirectory("${OPERIT_BULLET3_SOURCE_DIR}" "${OPERIT_BULLET3_BINARY_DIR}" EXCLUDE_FROM_ALL)
