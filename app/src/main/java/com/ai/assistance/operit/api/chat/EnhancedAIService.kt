@@ -3012,6 +3012,11 @@ class EnhancedAIService private constructor(private val context: Context) {
                     retainAll { tool ->
                         roleCardToolAccess.isBuiltinToolAllowed(tool.name)
                     }
+                    // 必须按名字去重：不同分类可能存在同名工具（如 http_request 同时出现在
+                    // 「HTTP工具」与「拓展 HTTP 工具」中）。若带着重名发给服务端，
+                    // 会收到 400 "Tool names must be unique" 直接拒绝整个请求。
+                    val seen = HashSet<String>()
+                    removeAll { !seen.add(it.name) }
                 }
             }
 
