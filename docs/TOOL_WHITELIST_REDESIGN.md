@@ -131,7 +131,7 @@ categories.flatMap { it.tools }.toMutableList().apply {
 
 ---
 
-## 四、改动清单
+## 四、改动清单（已于 commit `8ed5e03b` 落地）
 
 ### 4.1 `SystemToolPrompts.kt` — 补齐可管理工具全集
 
@@ -152,45 +152,57 @@ val baseCategories = if (useEnglish) {
 自定义工具开启时，内置工具**不再依赖逐项白名单**：
 
 ```kotlin
-val allBuiltinNames = SystemToolPrompts
+val manageableBuiltinNames = SystemToolPrompts
     .getManageableToolPrompts(useEnglish = false)
-    .mapTo(LinkedHashSet()) { it.name }
+    .mapTo(LinkedHashSet()) { it.name }          // 现在是全部 163 项
 
-val effectiveBuiltinToolVisibility = allBuiltinNames.associateWith { toolName ->
+val builtinToolsEnabled = roleCardConfig.builtinToolsEnabled
+val effectiveBuiltinToolVisibility = manageableBuiltinNames.associateWith { toolName ->
     val globalAllowed = effectiveGlobalToolVisibility[toolName] ?: true
-    if (toolName == "package_proxy") {
-        globalAllowed
-    } else {
-        // 内置工具：总开关开启即全部放行，但仍尊重全局单工具可见性设置
-        globalAllowed
+    when {
+        toolName != "package_proxy" -> globalAllowed && builtinToolsEnabled
+        else -> globalAllowed
     }
 }
 ```
 
 要点：
 - 内置工具**全量**进 Map，杜绝 `null == true → false` 的静默剔除。
+- 内置工具由 `builtinToolsEnabled` 总开关统一放行。
 - 仍尊重**全局**单工具可见性（设置页里关掉的工具不应被角色卡强行打开）。
-- `use_package` 保持为市场工具的前置依赖（见 4.4）。
+- `package_proxy` 是市场工具入口，保持由外部源配置决定。
+- `use_package` 自然随总开关一起放行，市场工具仍受 `canUsePackageSystem` 约束。
 
 ### 4.3 `CharacterCard.kt` — 配置模型语义调整
 
 `allowedBuiltinTools` 语义从「白名单」变为「**旧版兼容字段**」：
 
 - 保留字段以兼容已存角色卡数据，避免老数据解析异常。
-- 新增 `internalToolsEnabled: Boolean = true`（默认开）表示内置工具总开关。
-- `normalized()` 与 `hasExternalSelections()` 逻辑同步调整。
+- 新增 `builtinToolsEnabled: Boolean = true`（默认开）表示内置工具总开关。
+- 该字段在 `normalized()` 中仍做 trim/dedupe，但不参与授权判定。
 
 ### 4.4 `CharacterCardDialog.kt` — UI 与校验
 
-- **内建工具 Tab**：不再逐项勾选。改为「内置工具：已启用 163 项」+ 总数说明，或按分类分组只读展示（默认全部开启）。
-- **市场 Tab（包/Skill/MCP）**：保持现有勾选交互不变。
-- **保存校验**（:926-937）：`use_package` 前置检查仅对**市场工具**生效，不再因内置工具未勾 `use_package` 而拦截保存。
+- **内建工具 Tab**：改为「总开关 + 分类只读列表」。总开关标题「启用全部内置工具」，
+  列表项保留名称 + `分类 · 描述` 副标题，右侧图标（✓/✗）随开关联动，不再提供勾选框。
+- **市场 Tab（包/Skill/MCP）**：保持原有逐项勾选交互不变。
+- **保存校验**：原 `use_package` 检查改为「开启市场工具但内置总开关关闭」时提示，
+  不再因内置工具而拦截保存。
+- **计数条**：`内置工具 %1$s · 包 %2$d · Skill %3$d · MCP %4$d`，内置项显示
+  「全部启用 / 已关闭」。
 
 ### 4.5 `strings.xml` / `values-en/strings.xml`
 
-- `character_card_tool_access_summary_counts` 文案调整（内置工具不再展示勾选数）。
-- 新增内置工具总开关说明文案（中英各 1 条）。
-- 保留 4 个 Tab 名称不变。
+- `character_card_tool_access_summary_counts` 首参由 `%1$d` 改为 `%1$s`（改为文案）。
+- 新增 `character_card_tool_access_summary_builtin_on/off`、
+  `character_card_tool_access_builtin_master_title/subtitle`。
+- 更新 `character_card_tool_access_requires_use_package`、`..._empty_builtin` 措辞。
+
+### 4.6 `StandardSoftwareSettingsModifyTools.kt` — 工具调用面同步
+
+`create_character_card` / `update_character_card` 新增 `builtin_tools_enabled` 参数
+（布尔），让 AI 通过工具调用也能配置总开关；`strings.xml` 中工具描述同步说明
+`allowed_builtin_tools` 已降级为兼容字段。
 
 ---
 
@@ -199,20 +211,26 @@ val effectiveBuiltinToolVisibility = allBuiltinNames.associateWith { toolName ->
 | 风险 | 说明 | 处理 |
 | --- | --- | --- |
 | 工具数从 17 → 163 | 开启同一开关后，模型可见工具数显著增加，提示词变长 | FULL 模式本就暴露 183 个；此次改动是「修 bug」而非「扩权」，符合既有设计 |
-| 老角色卡数据 | 已保存的 `allowedBuiltinTools` 列表可能只含少量项 | 字段保留 + 迁移时按新语义忽略该列表 |
-| `use_package` 依赖 | 市场工具仍需此工具可用 | 4.4 中已把校验限定在市场侧 |
+| 老角色卡数据 | 已保存的 `allowedBuiltinTools` 列表可能只含少量项 | 字段保留（不删 key），运行时按新语义忽略该列表；序列化兼容 |
+| `use_package` 依赖 | 市场工具仍需此工具可用 | 由 `builtinToolsEnabled` 总开关统一放行，`canUsePackageSystem` 逻辑不变 |
+| 全局工具可见性 | 用户可能在设置页关掉了某些内置工具 | 4.2 中保留 `effectiveGlobalToolVisibility` 叠加，全局优先 |
+| 白名单列表变长 | 163 项在弹窗内滚动 | 保留搜索框（匹配 key/title/subtitle）；列表容器已有 `heightIn(max = 320.dp)` + `verticalScroll` |
 | CLI 模式 | `CliToolModeSupport` 走独立通道（仅 2 个代理工具） | 本次改动不涉及，需单独回归 |
-| 全局工具可见性 | 用户可能在设置页关掉了某些内置工具 | 4.2 中保留 `effectiveGlobalToolVisibility` 叠加 |
+| `allowedBuiltinTools` 语义变更 | 若外部脚本/用户依赖该项做授权 | 工具描述已明确标注为兼容字段；UI 不再呈现该项 |
 
 ---
 
 ## 六、验证计划
 
-1. `kotlinc` 静态编译检查（改动文件无语法/类型错误）
-2. 推 CI，等 Tests + Build 双绿
-3. 真机验证：
-   - 角色卡开启自定义工具 → 对话「放首歌」→ `music_play` 被调用
-   - 白名单页内建工具 Tab 显示全量 163 项（或分组视图）
-   - 市场 Tool Tab 勾选/取消行为与改前一致
-   - 关闭自定义工具 → 行为回到跟随全局
-   - 老角色卡（改动前保存的）打开不崩溃
+1. **静态检查**：改动文件括号/结构平衡校验（已做）；`strings.xml` XML 合法性校验（已做）。
+2. **CI**：推送 `8ed5e03b` 后 `Android Tests` + `Android Build` 双绿。
+3. **真机验证清单**（新 APK）：
+   - [ ] 角色卡开启自定义工具 → 对话「放首歌」→ `music_play` 被调用并播放
+   - [ ] 白名单页内建工具 Tab 显示全量 163 项，总开关默认开启
+   - [ ] 关闭总开关 → 列表图标变 ✗，AI 不再持有内置工具
+   - [ ] 市场 Tab（包/Skill/MCP）勾选/取消行为与改前一致
+   - [ ] 计数条显示「内置工具 全部启用 · 包 N · Skill N · MCP N」
+   - [ ] 关闭角色卡自定义工具 → 行为回到跟随全局
+   - [ ] 改动前保存的老角色卡打开不崩溃、字段不丢
+   - [ ] 无网络/无图片识别服务时，`read_file` 的 `intent` 参数不出现
+
