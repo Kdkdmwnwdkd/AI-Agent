@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.ai.assistance.operit.api.chat.AIForegroundService
 import com.ai.assistance.operit.util.crypto.SecureStringCrypto
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
@@ -46,6 +47,8 @@ class ExternalHttpApiPreferences private constructor(private val context: Contex
         context.externalHttpApiDataStore.edit { preferences ->
             preferences[KEY_ENABLED] = enabled
         }
+        // 该值参与 AIForegroundService 的前台责任判定，写入后必须让判定缓存失效。
+        AIForegroundService.markPersistentForegroundResponsibilityDirty()
     }
 
     suspend fun setPort(port: Int) {
@@ -53,6 +56,8 @@ class ExternalHttpApiPreferences private constructor(private val context: Contex
         context.externalHttpApiDataStore.edit { preferences ->
             preferences[KEY_PORT] = port
         }
+        // 端口变化会改变 isValidPort 的判定结果，同样影响前台责任判定。
+        AIForegroundService.markPersistentForegroundResponsibilityDirty()
     }
 
     suspend fun ensureBearerToken(): String {

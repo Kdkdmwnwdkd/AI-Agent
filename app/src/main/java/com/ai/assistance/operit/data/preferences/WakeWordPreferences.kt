@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.ai.assistance.operit.R
+import com.ai.assistance.operit.api.chat.AIForegroundService
 import com.ai.assistance.operit.core.application.OperitApplication
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -249,6 +250,9 @@ class WakeWordPreferences(private val context: Context) {
         dataStore.edit { prefs ->
             prefs[KEY_ALWAYS_LISTENING_ENABLED] = enabled
         }
+        // 该值参与 AIForegroundService 的前台责任判定，写入后必须让判定缓存失效，
+        // 否则后台保活/常驻前台服务的启动条件会一直用旧值。
+        AIForegroundService.markPersistentForegroundResponsibilityDirty()
     }
 
     suspend fun saveWakePhrase(phrase: String) {

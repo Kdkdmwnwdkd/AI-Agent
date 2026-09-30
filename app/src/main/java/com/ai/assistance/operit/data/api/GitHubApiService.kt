@@ -161,18 +161,19 @@ class GitHubApiService(private val context: Context) {
                 .addHeader("Authorization", authHeader)
                 .build()
             
-            val response = client.newCall(request).execute()
-            
-            if (response.isSuccessful) {
-                val responseBody = response.body?.string()
-                if (responseBody != null) {
-                    val user = json.decodeFromString<GitHubUser>(responseBody)
-                    Result.success(user)
+            val response = client.newCall(request).execute().use { response ->
+
+                if (response.isSuccessful) {
+                    val responseBody = response.body?.string()
+                    if (responseBody != null) {
+                        val user = json.decodeFromString<GitHubUser>(responseBody)
+                        Result.success(user)
+                    } else {
+                        Result.failure(Exception("Empty response body"))
+                    }
                 } else {
-                    Result.failure(Exception("Empty response body"))
+                    Result.failure(Exception("HTTP ${response.code}: ${response.message}"))
                 }
-            } else {
-                Result.failure(Exception("HTTP ${response.code}: ${response.message}"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -192,18 +193,19 @@ class GitHubApiService(private val context: Context) {
                 requestBuilder.addHeader("Authorization", authHeader)
             }
 
-            val response = client.newCall(requestBuilder.build()).execute()
+            val response = client.newCall(requestBuilder.build()).execute().use { response ->
 
-            if (response.isSuccessful) {
-                val responseBody = response.body?.string()
-                if (responseBody != null) {
-                    val user = json.decodeFromString<GitHubUser>(responseBody)
-                    Result.success(user)
+                if (response.isSuccessful) {
+                    val responseBody = response.body?.string()
+                    if (responseBody != null) {
+                        val user = json.decodeFromString<GitHubUser>(responseBody)
+                        Result.success(user)
+                    } else {
+                        Result.failure(Exception("Empty response body"))
+                    }
                 } else {
-                    Result.failure(Exception("Empty response body"))
+                    Result.failure(Exception("HTTP ${response.code}: ${response.message}"))
                 }
-            } else {
-                Result.failure(Exception("HTTP ${response.code}: ${response.message}"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -241,22 +243,23 @@ class GitHubApiService(private val context: Context) {
                 requestBuilder.addHeader("Authorization", authHeader)
             }
 
-            val response = client.newCall(requestBuilder.build()).execute()
+            val response = client.newCall(requestBuilder.build()).execute().use { response ->
 
-            if (response.isSuccessful) {
-                val responseBody = response.body?.string()
-                if (responseBody != null) {
-                    val searchResult = json.parseToJsonElement(responseBody).jsonObject
-                    val itemsArray = searchResult["items"]?.jsonArray
-                    val repositories = itemsArray?.map { item ->
-                        json.decodeFromJsonElement(GitHubRepository.serializer(), item)
-                    } ?: emptyList()
-                    Result.success(repositories)
+                if (response.isSuccessful) {
+                    val responseBody = response.body?.string()
+                    if (responseBody != null) {
+                        val searchResult = json.parseToJsonElement(responseBody).jsonObject
+                        val itemsArray = searchResult["items"]?.jsonArray
+                        val repositories = itemsArray?.map { item ->
+                            json.decodeFromJsonElement(GitHubRepository.serializer(), item)
+                        } ?: emptyList()
+                        Result.success(repositories)
+                    } else {
+                        Result.failure(Exception("Empty response body"))
+                    }
                 } else {
-                    Result.failure(Exception("Empty response body"))
+                    Result.failure(Exception("HTTP ${response.code}: ${response.message}"))
                 }
-            } else {
-                Result.failure(Exception("HTTP ${response.code}: ${response.message}"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -308,18 +311,19 @@ class GitHubApiService(private val context: Context) {
                 requestBuilder.addHeader("Authorization", authHeader)
             }
             
-            val response = client.newCall(requestBuilder.build()).execute()
-            
-            if (response.isSuccessful) {
-                val responseBody = response.body?.string()
-                if (responseBody != null) {
-                    val repositories = json.decodeFromString<List<GitHubRepository>>(responseBody)
-                    Result.success(repositories)
+            val response = client.newCall(requestBuilder.build()).execute().use { response ->
+
+                if (response.isSuccessful) {
+                    val responseBody = response.body?.string()
+                    if (responseBody != null) {
+                        val repositories = json.decodeFromString<List<GitHubRepository>>(responseBody)
+                        Result.success(repositories)
+                    } else {
+                        Result.failure(Exception("Empty response body"))
+                    }
                 } else {
-                    Result.failure(Exception("Empty response body"))
+                    Result.failure(Exception("HTTP ${response.code}: ${response.message}"))
                 }
-            } else {
-                Result.failure(Exception("HTTP ${response.code}: ${response.message}"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -342,18 +346,19 @@ class GitHubApiService(private val context: Context) {
                 requestBuilder.addHeader("Authorization", authHeader)
             }
             
-            val response = client.newCall(requestBuilder.build()).execute()
-            
-            if (response.isSuccessful) {
-                val responseBody = response.body?.string()
-                if (responseBody != null) {
-                    val repository = json.decodeFromString<GitHubRepository>(responseBody)
-                    Result.success(repository)
+            val response = client.newCall(requestBuilder.build()).execute().use { response ->
+
+                if (response.isSuccessful) {
+                    val responseBody = response.body?.string()
+                    if (responseBody != null) {
+                        val repository = json.decodeFromString<GitHubRepository>(responseBody)
+                        Result.success(repository)
+                    } else {
+                        Result.failure(Exception("Empty response body"))
+                    }
                 } else {
-                    Result.failure(Exception("Empty response body"))
+                    Result.failure(Exception("HTTP ${response.code}: ${response.message}"))
                 }
-            } else {
-                Result.failure(Exception("HTTP ${response.code}: ${response.message}"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -389,18 +394,19 @@ class GitHubApiService(private val context: Context) {
                 requestBuilder.addHeader("Authorization", authHeader)
             }
             
-            val response = client.newCall(requestBuilder.build()).execute()
-            
-            if (response.isSuccessful) {
-                val responseBody = response.body?.string()
-                if (responseBody != null) {
-                    val releases = json.decodeFromString<List<GitHubRelease>>(responseBody)
-                    Result.success(releases)
+            val response = client.newCall(requestBuilder.build()).execute().use { response ->
+
+                if (response.isSuccessful) {
+                    val responseBody = response.body?.string()
+                    if (responseBody != null) {
+                        val releases = json.decodeFromString<List<GitHubRelease>>(responseBody)
+                        Result.success(releases)
+                    } else {
+                        Result.failure(Exception("Empty response body"))
+                    }
                 } else {
-                    Result.failure(Exception("Empty response body"))
+                    Result.failure(Exception("HTTP ${response.code}: ${response.message}"))
                 }
-            } else {
-                Result.failure(Exception("HTTP ${response.code}: ${response.message}"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -440,13 +446,14 @@ class GitHubApiService(private val context: Context) {
                     .addHeader("Accept", "application/vnd.github+json")
                     .build()
 
-            val response = client.newCall(request).execute()
-            val responseBody = response.body?.string()
+            val response = client.newCall(request).execute().use { response ->
+                val responseBody = response.body?.string()
 
-            if (response.isSuccessful && responseBody != null) {
-                Result.success(json.decodeFromString(GitHubRepository.serializer(), responseBody))
-            } else {
-                Result.failure(buildHttpException(response.code, response.message, responseBody))
+                if (response.isSuccessful && responseBody != null) {
+                    Result.success(json.decodeFromString(GitHubRepository.serializer(), responseBody))
+                } else {
+                    Result.failure(buildHttpException(response.code, response.message, responseBody))
+                }
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -496,13 +503,14 @@ class GitHubApiService(private val context: Context) {
                     .addHeader("Accept", "application/vnd.github+json")
                     .build()
 
-            val response = client.newCall(request).execute()
-            val responseBody = response.body?.string()
+            val response = client.newCall(request).execute().use { response ->
+                val responseBody = response.body?.string()
 
-            if (response.isSuccessful) {
-                Result.success(Unit)
-            } else {
-                Result.failure(buildHttpException(response.code, response.message, responseBody))
+                if (response.isSuccessful) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(buildHttpException(response.code, response.message, responseBody))
+                }
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -524,20 +532,21 @@ class GitHubApiService(private val context: Context) {
                 requestBuilder.addHeader("Authorization", authHeader)
             }
 
-            val response = client.newCall(requestBuilder.build()).execute()
-            val responseBody = response.body?.string()
+            val response = client.newCall(requestBuilder.build()).execute().use { response ->
+                val responseBody = response.body?.string()
 
-            if (response.isSuccessful && responseBody != null) {
-                Result.success(
-                    json.decodeFromString(
-                        GitHubRepositoryContentFile.serializer(),
-                        responseBody
+                if (response.isSuccessful && responseBody != null) {
+                    Result.success(
+                        json.decodeFromString(
+                            GitHubRepositoryContentFile.serializer(),
+                            responseBody
+                        )
                     )
-                )
-            } else if (response.code == 404) {
-                Result.success(null)
-            } else {
-                Result.failure(buildHttpException(response.code, response.message, responseBody))
+                } else if (response.code == 404) {
+                    Result.success(null)
+                } else {
+                    Result.failure(buildHttpException(response.code, response.message, responseBody))
+                }
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -559,13 +568,14 @@ class GitHubApiService(private val context: Context) {
                 requestBuilder.addHeader("Authorization", authHeader)
             }
 
-            val response = client.newCall(requestBuilder.build()).execute()
-            val responseBody = response.body?.string()
+            val response = client.newCall(requestBuilder.build()).execute().use { response ->
+                val responseBody = response.body?.string()
 
-            if (response.isSuccessful && responseBody != null) {
-                Result.success(json.decodeFromString(GitHubRelease.serializer(), responseBody))
-            } else {
-                Result.failure(buildHttpException(response.code, response.message, responseBody))
+                if (response.isSuccessful && responseBody != null) {
+                    Result.success(json.decodeFromString(GitHubRelease.serializer(), responseBody))
+                } else {
+                    Result.failure(buildHttpException(response.code, response.message, responseBody))
+                }
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -624,13 +634,14 @@ class GitHubApiService(private val context: Context) {
                     .addHeader("Accept", "application/vnd.github+json")
                     .build()
 
-            val response = client.newCall(request).execute()
-            val responseBody = response.body?.string()
+            val response = client.newCall(request).execute().use { response ->
+                val responseBody = response.body?.string()
 
-            if (response.isSuccessful && responseBody != null) {
-                Result.success(json.decodeFromString(GitHubRelease.serializer(), responseBody))
-            } else {
-                Result.failure(buildHttpException(response.code, response.message, responseBody))
+                if (response.isSuccessful && responseBody != null) {
+                    Result.success(json.decodeFromString(GitHubRelease.serializer(), responseBody))
+                } else {
+                    Result.failure(buildHttpException(response.code, response.message, responseBody))
+                }
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -673,13 +684,14 @@ class GitHubApiService(private val context: Context) {
                     .addHeader("Accept", "application/vnd.github+json")
                     .build()
 
-            val response = client.newCall(request).execute()
-            val responseBody = response.body?.string()
+            val response = client.newCall(request).execute().use { response ->
+                val responseBody = response.body?.string()
 
-            if (response.isSuccessful && responseBody != null) {
-                Result.success(json.decodeFromString(GitHubRelease.serializer(), responseBody))
-            } else {
-                Result.failure(buildHttpException(response.code, response.message, responseBody))
+                if (response.isSuccessful && responseBody != null) {
+                    Result.success(json.decodeFromString(GitHubRelease.serializer(), responseBody))
+                } else {
+                    Result.failure(buildHttpException(response.code, response.message, responseBody))
+                }
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -723,13 +735,14 @@ class GitHubApiService(private val context: Context) {
                     .addHeader("Accept", "application/vnd.github+json")
                     .build()
 
-            val response = client.newCall(request).execute()
-            val responseBody = response.body?.string()
+            val response = client.newCall(request).execute().use { response ->
+                val responseBody = response.body?.string()
 
-            if (response.isSuccessful) {
-                Result.success(Unit)
-            } else {
-                Result.failure(buildHttpException(response.code, response.message, responseBody))
+                if (response.isSuccessful) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(buildHttpException(response.code, response.message, responseBody))
+                }
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -753,13 +766,14 @@ class GitHubApiService(private val context: Context) {
                     .addHeader("Accept", "application/vnd.github+json")
                     .build()
 
-            val response = client.newCall(request).execute()
-            val responseBody = response.body?.string()
+            val response = client.newCall(request).execute().use { response ->
+                val responseBody = response.body?.string()
 
-            if (response.isSuccessful) {
-                Result.success(Unit)
-            } else {
-                Result.failure(buildHttpException(response.code, response.message, responseBody))
+                if (response.isSuccessful) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(buildHttpException(response.code, response.message, responseBody))
+                }
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -799,13 +813,14 @@ class GitHubApiService(private val context: Context) {
                     .addHeader("Accept", "application/vnd.github+json")
                     .build()
 
-            val response = client.newCall(request).execute()
-            val responseBody = response.body?.string()
+            val response = client.newCall(request).execute().use { response ->
+                val responseBody = response.body?.string()
 
-            if (response.isSuccessful && responseBody != null) {
-                Result.success(json.decodeFromString(GitHubReleaseAsset.serializer(), responseBody))
-            } else {
-                Result.failure(buildHttpException(response.code, response.message, responseBody))
+                if (response.isSuccessful && responseBody != null) {
+                    Result.success(json.decodeFromString(GitHubReleaseAsset.serializer(), responseBody))
+                } else {
+                    Result.failure(buildHttpException(response.code, response.message, responseBody))
+                }
             }
         } catch (e: Exception) {
             Result.failure(e)

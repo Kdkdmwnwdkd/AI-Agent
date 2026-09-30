@@ -255,16 +255,17 @@ class MnnModelDownloadManager private constructor(private val context: Context) 
     suspend fun fetchModelList(): Result<List<MnnModel>> = withContext(Dispatchers.IO) {
         try {
             val request = Request.Builder().url(MODEL_MARKET_URL).build()
-            val response = okHttpClient.newCall(request).execute()
-            
-            if (!response.isSuccessful) {
-                return@withContext loadFromCache()
+            // use 保证无论走哪条 return 分支都会关闭 Response，避免连接池泄漏。
+            return@withContext okHttpClient.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    return@use loadFromCache()
+                }
+
+                val jsonString = response.body?.string() ?: ""
+                val marketData = json.decodeFromString<ModelMarketData>(jsonString)
+                saveToCache(jsonString)
+                Result.success(marketData.models)
             }
-            
-            val jsonString = response.body?.string() ?: ""
-            val marketData = json.decodeFromString<ModelMarketData>(jsonString)
-            saveToCache(jsonString)
-            return@withContext Result.success(marketData.models)
         } catch (e: Exception) {
             AppLogger.e(TAG, "获取模型列表失败", e)
             val cachedResult = loadFromCache()
@@ -325,12 +326,14 @@ class MnnModelDownloadManager private constructor(private val context: Context) 
                 if (body.isNotEmpty()) {
                     AppLogger.e(TAG, "响应体: $body")
                 }
+                response.close()
                 return@withContext Result.failure(Exception(error))
             }
             
             val jsonString = response.body?.string() ?: ""
             if (jsonString.isEmpty()) {
                 AppLogger.e(TAG, "响应体为空")
+                response.close()
                 return@withContext Result.failure(Exception(context.getString(R.string.mnn_response_empty)))
             }
             
@@ -340,10 +343,12 @@ class MnnModelDownloadManager private constructor(private val context: Context) 
             val repoInfo = json.decodeFromString<MsRepoInfo>(jsonString)
             
             if (!repoInfo.Success) {
+                response.close()
                 return@withContext Result.failure(Exception(repoInfo.Message ?: "Unknown error"))
             }
             
             val files = repoInfo.Data?.Files?.filter { it.Type != "tree" } ?: emptyList()
+            response.close()
             Result.success(files)
         } catch (e: Exception) {
             AppLogger.e(TAG, "获取文件列表异常: ${e.javaClass.simpleName}: ${e.message}", e)
@@ -480,7 +485,9 @@ class MnnModelDownloadManager private constructor(private val context: Context) 
                 }
                 
                 AppLogger.d(TAG, "发送下载请求...")
-                val response = okHttpClient.newCall(requestBuilder.build()).execute()
+                // use 保证所有 return@launch 出口（失败、暂停）都会关闭 Response。
+                // 原实现只在正常结束路径关流，失败和暂停路径会泄漏连接。
+                okHttpClient.newCall(requestBuilder.build()).execute().use { response ->
                 AppLogger.d(TAG, "响应码: ${response.code}")
                 
                 if (!response.isSuccessful && response.code != 206) {
@@ -558,6 +565,7 @@ class MnnModelDownloadManager private constructor(private val context: Context) 
                 } else {
                     AppLogger.e(TAG, "❌ 重命名失败！")
                     updateDownloadState(modelName, DownloadState.Failed(context.getString(R.string.mnn_rename_failed)))
+                }
                 }
             } catch (e: Exception) {
                 AppLogger.e(TAG, "========== 下载异常 ==========")
@@ -734,10 +742,10 @@ class MnnModelDownloadManager private constructor(private val context: Context) 
                     }
                     .build()
                 
-                val response = okHttpClient.newCall(request).execute()
-                
+                // use 保证第 771 行那个从 while 循环内直接 return@withContext 的暂停分支
+                // 也会关闭 Response（原实现会跳过下方的 response.close()，泄漏连接）。
+                okHttpClient.newCall(request).execute().use { response ->
                 if (!response.isSuccessful && response.code != 206) {
-                    response.close()
                     val error = context.getString(R.string.mnn_download_file_failed, fileName, response.code)
                     updateDownloadState(modelName, DownloadState.Failed(error))
                     return@withContext Result.failure(Exception(error))
@@ -754,7 +762,6 @@ class MnnModelDownloadManager private constructor(private val context: Context) 
                         while (input.read(buffer).also { bytesRead = it } != -1) {
                             // 检查是否暂停
                             if (pauseFlags[modelName] == true) {
-                                response.close()
                                 val progress = downloadedBytes.toFloat() / totalBytes
                                 updateDownloadState(
                                     modelName,
@@ -793,14 +800,13 @@ class MnnModelDownloadManager private constructor(private val context: Context) 
                     }
                 }
                 
-                response.close()
-                
                 // 将临时文件重命名为目标文件
                 if (tempFile.exists()) {
                     tempFile.renameTo(targetFile)
                 }
                 
                 AppLogger.d(TAG, "文件下载完成: $fileName")
+                }
             }
             
             AppLogger.d(TAG, "所有文件下载完成！模型文件夹: ${modelFolder.absolutePath}")

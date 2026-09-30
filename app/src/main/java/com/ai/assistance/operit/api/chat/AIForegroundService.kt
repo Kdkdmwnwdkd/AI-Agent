@@ -139,6 +139,31 @@ class AIForegroundService : Service() {
         @Volatile
         private var lastRequestedImeVisible: Boolean = false
 
+        /**
+         * hasPersistentForegroundResponsibilityConfigured() 的结果缓存。
+         *
+         * 为什么需要它：ensureMicrophoneForeground() 在主线程调用，而该判定要连续读取
+         * WakeWordPreferences / DisplayPreferencesManager / ExternalHttpApiPreferences
+         * 三份 DataStore（阻塞 I/O）。主线程连续三次阻塞读在慢设备上会造成掉帧甚至 ANR。
+         * 缓存后，仅在首次调用或相关配置变更时读取一次。
+         *
+         * 失效方式：由 markPersistentForegroundResponsibilityDirty() 主动置空，
+         * 调用点在各配置的写入处（见三处 setAlwaysListeningEnabled / updateDisplaySettings /
+         * setEnabled / setPort）。这里不使用超时失效——配置变更点是确定的，
+         * 用超时只会把问题藏起来。
+         */
+        @Volatile
+        private var persistentForegroundResponsibilityCache: Boolean? = null
+
+        /**
+         * 使最近一次前台责任判定失效，下一次判定会重新读取配置。
+         *
+         * 必须在任何影响判定的配置写入后调用，否则判定结果会一直停留在写入前的值。
+         */
+        fun markPersistentForegroundResponsibilityDirty() {
+            persistentForegroundResponsibilityCache = null
+        }
+
         // 静态标志，用于从外部检查服务是否正在运行
         val isRunning = java.util.concurrent.atomic.AtomicBoolean(false)
         private val activeReplyNotificationTags = ConcurrentHashMap.newKeySet<String>()
@@ -497,6 +522,7 @@ class AIForegroundService : Service() {
         }
 
         private fun hasPersistentForegroundResponsibilityConfigured(context: Context): Boolean {
+            persistentForegroundResponsibilityCache?.let { return it }
             val appContext = context.applicationContext
             val alwaysListeningEnabled = runCatching {
                 runBlocking {
@@ -513,7 +539,9 @@ class AIForegroundService : Service() {
                     config.enabled && ExternalHttpApiPreferences.isValidPort(config.port)
                 }
             }.getOrDefault(false)
-            return alwaysListeningEnabled || backgroundKeepAliveEnabled || externalHttpEnabled
+            val result = alwaysListeningEnabled || backgroundKeepAliveEnabled || externalHttpEnabled
+            persistentForegroundResponsibilityCache = result
+            return result
         }
     }
 

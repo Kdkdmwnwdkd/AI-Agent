@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.ai.assistance.operit.api.chat.AIForegroundService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -265,6 +266,11 @@ class DisplayPreferencesManager private constructor(private val context: Context
             virtualDisplayBitrateKbps?.let { preferences[KEY_VIRTUAL_DISPLAY_BITRATE_KBPS] = it }
             toolCollapseMode?.let { preferences[KEY_TOOL_COLLAPSE_MODE] = it.value }
         }
+        // enableBackgroundKeepAlive 参与 AIForegroundService 的前台责任判定，
+        // 写入后必须让判定缓存失效，否则后台保活的启动条件会一直用旧值。
+        if (enableBackgroundKeepAlive != null) {
+            AIForegroundService.markPersistentForegroundResponsibilityDirty()
+        }
     }
 
     fun isExperimentalVirtualDisplayEnabled(): Boolean {
@@ -334,5 +340,7 @@ class DisplayPreferencesManager private constructor(private val context: Context
             preferences.remove(KEY_VIRTUAL_DISPLAY_BITRATE_KBPS)
             preferences.remove(KEY_TOOL_COLLAPSE_MODE)
         }
+        // 重置会把 enableBackgroundKeepAlive 改回 false，同样影响前台责任判定。
+        AIForegroundService.markPersistentForegroundResponsibilityDirty()
     }
 }
