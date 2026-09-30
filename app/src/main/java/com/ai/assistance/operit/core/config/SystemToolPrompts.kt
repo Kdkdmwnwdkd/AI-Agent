@@ -608,12 +608,15 @@ object SystemToolPrompts {
             }
         )
 
+        // 内部工具（music_play、tap、install_app 等 146 个）同样是模型可直接调用的内置工具。
+        // 此前这里只返回 4 个基础分类，导致内部工具永远不会进入模型的工具列表，
+        // 模型只能误走 package_proxy 去猜，然后撞上 packageName:toolName 校验报错。
         return listOf(
             basicTools,
             adjustedFileSystemTools,
             httpTools,
             memoryTools
-        )
+        ) + internalToolCategoriesEn
     }
 
     fun getAllCategoriesEn(
@@ -625,6 +628,7 @@ object SystemToolPrompts {
         chatModelHasDirectVideo: Boolean = false,
         safBookmarkNames: List<String> = emptyList()
     ): List<SystemToolPromptCategory> {
+        // getAIAllCategoriesEn 现已包含 internalToolCategoriesEn，此处不可重复追加。
         return getAIAllCategoriesEn(
             hasBackendImageRecognition = hasBackendImageRecognition,
             chatModelHasDirectImage = chatModelHasDirectImage,
@@ -633,7 +637,7 @@ object SystemToolPrompts {
             chatModelHasDirectAudio = chatModelHasDirectAudio,
             chatModelHasDirectVideo = chatModelHasDirectVideo,
             safBookmarkNames = safBookmarkNames
-        ) + internalToolCategoriesEn
+        )
     }
     
     /**
@@ -683,12 +687,15 @@ object SystemToolPrompts {
             }
         )
 
+        // 内部工具（music_play、tap、install_app 等 146 个）同样是模型可直接调用的内置工具。
+        // 此前这里只返回 4 个基础分类，导致内部工具永远不会进入模型的工具列表，
+        // 模型只能误走 package_proxy 去猜，然后撞上 packageName:toolName 校验报错。
         return listOf(
             basicToolsCn,
             adjustedFileSystemTools,
             httpToolsCn,
             memoryToolsCn
-        )
+        ) + internalToolCategoriesCn
     }
 
     fun getAllCategoriesCn(
@@ -700,6 +707,7 @@ object SystemToolPrompts {
         chatModelHasDirectVideo: Boolean = false,
         safBookmarkNames: List<String> = emptyList()
     ): List<SystemToolPromptCategory> {
+        // getAIAllCategoriesCn 现已包含 internalToolCategoriesCn，此处不可重复追加。
         return getAIAllCategoriesCn(
             hasBackendImageRecognition = hasBackendImageRecognition,
             chatModelHasDirectImage = chatModelHasDirectImage,
@@ -708,7 +716,7 @@ object SystemToolPrompts {
             chatModelHasDirectAudio = chatModelHasDirectAudio,
             chatModelHasDirectVideo = chatModelHasDirectVideo,
             safBookmarkNames = safBookmarkNames
-        ) + internalToolCategoriesCn
+        )
     }
 
     data class ManageableToolPrompt(
@@ -716,6 +724,27 @@ object SystemToolPrompts {
         val name: String,
         val description: String
     )
+
+    /**
+     * 仅返回 4 个「基础」内置工具分类（basic / fileSystem / http / memory），不含内部工具。
+     *
+     * 用途：需要区分「基础内置工具」与「内部工具」时使用。
+     * 例如 CliToolModeSupport 需要据此判定某个工具应标记为 BUILTIN 还是 INTERNAL。
+     */
+    fun getBaseBuiltinCategories(useEnglish: Boolean): List<SystemToolPromptCategory> {
+        return if (useEnglish) {
+            listOf(basicTools, fileSystemTools, httpTools, memoryTools)
+        } else {
+            listOf(basicToolsCn, fileSystemToolsCn, httpToolsCn, memoryToolsCn)
+        }
+    }
+
+    /** 仅返回基础内置工具的名字集合（不含内部工具）。 */
+    fun getBaseBuiltinToolNameSet(useEnglish: Boolean): Set<String> {
+        return getBaseBuiltinCategories(useEnglish)
+            .flatMap { it.tools }
+            .mapTo(linkedSetOf()) { it.name }
+    }
 
     private fun applyToolOrder(
         categories: List<SystemToolPromptCategory>,

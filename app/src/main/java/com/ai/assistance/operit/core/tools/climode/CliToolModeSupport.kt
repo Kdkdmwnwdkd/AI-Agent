@@ -478,13 +478,9 @@ object CliToolModeSupport {
     }
 
     private fun buildBuiltinToolNameSet(useEnglish: Boolean): Set<String> {
-        val builtinCategories =
-            if (useEnglish) {
-                SystemToolPrompts.getAIAllCategoriesEn()
-            } else {
-                SystemToolPrompts.getAIAllCategoriesCn()
-            }
-        return builtinCategories.flatMap { it.tools }.mapTo(linkedSetOf()) { it.name }
+        // 只取基础内置工具（不含内部工具），用于把工具归类为 BUILTIN 还是 INTERNAL。
+        // 不可用 getAIAllCategories——它现在已包含内部工具，会导致全部被判成 BUILTIN。
+        return SystemToolPrompts.getBaseBuiltinToolNameSet(useEnglish)
     }
 
     private fun buildParameterHints(tool: ToolPrompt): List<String> {
