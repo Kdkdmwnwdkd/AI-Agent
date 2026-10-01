@@ -318,27 +318,30 @@ class StandardHttpTools(private val context: Context) {
     suspend fun httpRequest(tool: AITool): ToolResult {
         return try {
             val spec = prepareHttpRequest(tool)
-            val response = spec.client.newCall(spec.request).execute()
-            val responseBody = response.body ?: return errorResult(tool.name, "Response body is empty")
-            val bodyBytes = responseBody.bytes()
-            val contentType = response.header("Content-Type") ?: ""
-            val responseBodyString =
-                    try {
-                        val charset = response.body?.contentType()?.charset(Charsets.UTF_8) ?: Charsets.UTF_8
-                        String(bodyBytes, charset)
-                    } catch (e: Exception) {
-                        AppLogger.w(TAG, "Failed to decode response body as text for content-type $contentType", e)
-                        "[Binary Content, decoding failed]"
-                    }
-            val httpResponseData =
-                    buildHttpResponseData(
-                            url = spec.url,
-                            response = response,
-                            content = responseBodyString,
-                            contentBase64 = android.util.Base64.encodeToString(bodyBytes, android.util.Base64.NO_WRAP),
-                            size = bodyBytes.size
-                    )
-            ToolResult(toolName = tool.name, success = true, result = httpResponseData, error = "")
+            // Response 必须用 use 关闭：OkHttp 的连接/连接池槽位依赖 ResponseBody.close() 归还，
+            // 中途抛异常（如 body 解码失败）会让连接一直占用，多次请求后连接池耗尽、后续请求排队超时。
+            return spec.client.newCall(spec.request).execute().use { response ->
+                val responseBody = response.body ?: return@use errorResult(tool.name, "Response body is empty")
+                val bodyBytes = responseBody.bytes()
+                val contentType = response.header("Content-Type") ?: ""
+                val responseBodyString =
+                        try {
+                            val charset = response.body?.contentType()?.charset(Charsets.UTF_8) ?: Charsets.UTF_8
+                            String(bodyBytes, charset)
+                        } catch (e: Exception) {
+                            AppLogger.w(TAG, "Failed to decode response body as text for content-type $contentType", e)
+                            "[Binary Content, decoding failed]"
+                        }
+                val httpResponseData =
+                        buildHttpResponseData(
+                                url = spec.url,
+                                response = response,
+                                content = responseBodyString,
+                                contentBase64 = android.util.Base64.encodeToString(bodyBytes, android.util.Base64.NO_WRAP),
+                                size = bodyBytes.size
+                        )
+                ToolResult(toolName = tool.name, success = true, result = httpResponseData, error = "")
+            }
         } catch (e: Exception) {
             errorResult(tool.name, "Error executing HTTP request: ${e.message}")
         }
@@ -347,12 +350,16 @@ class StandardHttpTools(private val context: Context) {
     suspend fun httpRequestStream(tool: AITool): Flow<ToolResult> = flow {
         try {
             val spec = prepareHttpRequest(tool)
-            val response = spec.client.newCall(spec.request).execute()
+            // Response 用 use 关闭。此处原先只在正常路径末尾调用 reader.close()：
+            // 一旦流中途出错（连接被服务端切断、下游 emit 抛异常），reader 和 response
+            // 都不会关闭，连接永久滞留在池里、socket 不释放。
+            // 流式请求的响应体常常是长连接（SSE），泄漏代价比普通请求更大。
+            spec.client.newCall(spec.request).execute().use { response ->
             val responseBody = response.body
-                    ?: run {
-                        emit(errorResult(tool.name, "Response body is empty"))
-                        return@flow
-                    }
+            if (responseBody == null) {
+                emit(errorResult(tool.name, "Response body is empty"))
+                return@use
+            }
 
             val responseHeadersMap =
                     response.headers.names().associateWith { name ->
@@ -419,6 +426,7 @@ class StandardHttpTools(private val context: Context) {
                             size = finalBytes.size
                     )
             emit(ToolResult(toolName = tool.name, success = true, result = finalResponseData, error = ""))
+            }
         } catch (e: Exception) {
             emit(errorResult(tool.name, "Error executing streaming HTTP request: ${e.message}"))
         }
@@ -773,7 +781,9 @@ class StandardHttpTools(private val context: Context) {
 
             // 执行请求
             val request = requestBuilder.build()
-            val response = client.newCall(request).execute()
+            // Response 必须关闭：multipart 常用于上传大文件，响应体若未 close，
+            // 连接不会归还连接池，反复上传会耗尽池槽位导致后续请求超时。
+            return client.newCall(request).execute().use { response ->
 
             // 检查响应类型
             val contentType = response.header("Content-Type") ?: ""
@@ -792,7 +802,7 @@ class StandardHttpTools(private val context: Context) {
 
             val responseBody =
                     response.body
-                            ?: return ToolResult(
+                            ?: return@use ToolResult(
                                     toolName = tool.name,
                                     success = false,
                                     result = StringResultData(""),
@@ -827,6 +837,7 @@ class StandardHttpTools(private val context: Context) {
                     )
 
             ToolResult(toolName = tool.name, success = true, result = httpResponseData, error = "")
+            }
         } catch (e: Exception) {
             AppLogger.e(TAG, "执行多部分表单请求时出错", e)
             ToolResult(
