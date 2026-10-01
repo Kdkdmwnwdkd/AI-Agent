@@ -114,13 +114,22 @@ class SpeechServicesPreferences(private val context: Context) {
             return runCatching { SpeechServiceFactory.SpeechServiceType.valueOf(raw) }
                 .getOrElse { DEFAULT_STT_SERVICE_TYPE }
         }
+
+        // 与 parseSttServiceType 同样的道理：raw 来自用户持久化配置（外部输入），
+        // 一旦历史枚举名被改名/删除（如旧版本存过 XUNFEI_TTS，新版已移除），
+        // valueOf 会抛 IllegalArgumentException。此 Flow 在启动时即被读取，
+        // 抛异常会让用户闪退且进不去设置页修改，只能清数据。
+        // 因此这里必须容错回默认值，而不是让异常冒到上层。
+        private fun parseTtsServiceType(raw: String?): VoiceServiceFactory.VoiceServiceType {
+            if (raw == null) return DEFAULT_TTS_SERVICE_TYPE
+            return runCatching { VoiceServiceFactory.VoiceServiceType.valueOf(raw) }
+                .getOrElse { DEFAULT_TTS_SERVICE_TYPE }
+        }
     }
 
     // --- TTS Flows ---
     val ttsServiceTypeFlow: Flow<VoiceServiceFactory.VoiceServiceType> = dataStore.data.map { prefs ->
-        VoiceServiceFactory.VoiceServiceType.valueOf(
-            prefs[TTS_SERVICE_TYPE] ?: DEFAULT_TTS_SERVICE_TYPE.name
-        )
+        parseTtsServiceType(prefs[TTS_SERVICE_TYPE])
     }
 
     val ttsHttpConfigFlow: Flow<TtsHttpConfig> = dataStore.data.map { prefs ->
