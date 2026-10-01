@@ -95,7 +95,14 @@ fun ChatToastHost(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.ic_launcher_simple_foreground),
+                        // 必须直接引用 ic_app_logo 这个真实位图：
+                        // painterResource 只接受 PNG/JPG/WEBP 这类光栅资源，
+                        // 不接受 <bitmap> 别名或 VectorDrawable（会抛
+                        // IllegalArgumentException: Only VectorDrawables and
+                        // rasterized asset types are supported）。
+                        // 历史上这里引用了一个 drawable/ 下的 <bitmap> 别名，
+                        // 发图片触发提示条时必崩，故不再绕那一层。
+                        painter = painterResource(id = R.drawable.ic_app_logo),
                         contentDescription = null,
                         modifier = Modifier
                             .size(36.dp),
