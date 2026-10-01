@@ -867,7 +867,7 @@ fun AboutScreen(
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Image(
-                                painter = painterResource(id = R.drawable.ic_launcher_simple_foreground),
+                                painter = painterResource(id = R.drawable.ic_app_logo),
                                 contentDescription = stringResource(R.string.app_logo_description),
                                 modifier = Modifier.size(80.dp)
                             )
