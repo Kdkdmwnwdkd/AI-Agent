@@ -432,12 +432,23 @@ android {
         targetSdk = 34
 
         // ── 版本号 ────────────────────────────────────────────────────────
-        // 玄枵是 Operit 的二次开发版，需要与上游版本并存区分，同时保证
-        // 「同签名前提下可直接覆盖安装」（不覆盖安装就必须先卸载，用户数据会丢）。
+        // 玄枵是 Operit 的二次开发版，需要保证「同签名前提下可直接覆盖安装」
+        // （不覆盖安装就必须先卸载，用户数据会丢）。
         //
         // 规则：
         //   versionCode = 基准(51000) + 构建号
-        //   versionName = "<上游基线版本>-xx.<构建号>"
+        //   versionName = "<上游基线版本>+<构建号>"
+        //
+        // versionName 的格式是被上游代码强约束的，不能随意发挥：
+        //   插件市场 ArtifactMarketModels.parseAppVersionOrNull() 与
+        //   ToolPkg 的 OperitVersion.parse() 两处都用同一个正则解析
+        //   BuildConfig.VERSION_NAME：
+        //       ^(\d+)\.(\d+)\.(\d+)(?:\+(\d+))?$
+        //   即只接受 "x.y.z" 或 "x.y.z+n"。写成 "1.12.2-xx.244" 这类
+        //   带别的后缀的形式，会在这两处抛 IllegalArgumentException，
+        //   表现是插件市场列表整体崩溃（显示"暂无可用插件"）、ToolPkg 校验失败。
+        //   上游自身就是这么用的（ToolPkgApiVersion.API_VERSION_1_0_1_INTRODUCED_IN_OPERIT
+        //   = "1.12.1+4"），所以这里沿用 "+<构建号>"。
         //
         // 为什么用 51000 起步而不是 52：
         //   上游 Operit 当前 versionCode 为 51，且会持续增长。若本仓库用 52、53…
@@ -446,11 +457,11 @@ android {
         //
         // 构建号来源：
         //   - CI：GITHUB_RUN_NUMBER（每次 workflow 运行自增，全局唯一）
-        //   - 本地：GITHUB_RUN_NUMBER 不存在时退回 0，得到 …-xx.0（仅供本地调试）
+        //   - 本地：GITHUB_RUN_NUMBER 不存在时退回 0，得到 1.12.2+0（仅供本地调试）
         //   这样每次出包的 versionCode 都不同，用户可直接覆盖安装，无需手改。
         val ciRunNumber = (System.getenv("GITHUB_RUN_NUMBER") ?: "0").toIntOrNull() ?: 0
         versionCode = 51000 + ciRunNumber
-        versionName = "1.12.2-xx.$ciRunNumber"
+        versionName = "1.12.2+$ciRunNumber"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
