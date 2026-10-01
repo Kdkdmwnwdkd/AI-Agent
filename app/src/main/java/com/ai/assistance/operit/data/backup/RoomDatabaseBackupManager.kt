@@ -97,12 +97,13 @@ object RoomDatabaseBackupManager {
             "${DB_NAME}-shm" to shmFile
         ))
 
-        // 注意：不要先删 targetFile —— 那是上一份可用的备份。
-        // renameTo 在同卷上是原子的；失败时退化为直接覆盖复制（overwrite=true 本身就会截断重写）。
-        // 只有在新内容确实落盘后才删除临时文件，避免"旧备份已毁、新备份未成"。
-        if (!tmpFile.renameTo(targetFile)) {
-            tmpFile.copyTo(targetFile, overwrite = true)
-            tmpFile.delete()
+        // 不要先删 targetFile（可能是上一份可用备份）。tmpFile 与 targetFile 同在
+        // roomDbDir()，必然同卷，renameTo 会原子覆盖；失败说明环境真出了问题。
+        // 原先失败时退化为 copyTo(overwrite=true)：那会先把 targetFile 截断重写，
+        // 一旦复制过程再失败，上一份可用备份就被毁了，且不再有 tmpFile 可恢复。
+        // 这里直接抛出，与 RawSnapshotBackupManager 的处理保持一致。
+        check(tmpFile.renameTo(targetFile)) {
+            "Failed to finalize room db backup: cannot rename ${tmpFile.absolutePath} to ${targetFile.absolutePath}"
         }
         return targetFile
     }
@@ -139,12 +140,10 @@ object RoomDatabaseBackupManager {
             "${DB_NAME}-shm" to shmFile
         ))
 
-        // 注意：不要先删 targetFile —— 那是上一份可用的备份。
-        // renameTo 在同卷上是原子的；失败时退化为直接覆盖复制（overwrite=true 本身就会截断重写）。
-        // 只有在新内容确实落盘后才删除临时文件，避免"旧备份已毁、新备份未成"。
-        if (!tmpFile.renameTo(targetFile)) {
-            tmpFile.copyTo(targetFile, overwrite = true)
-            tmpFile.delete()
+        // 与 createAutoBackup 同一处理：同卷 renameTo 原子覆盖，失败即抛出，
+        // 不做 copyTo 兜底（兜底会在复制失败时毁掉上一份可用备份）。
+        check(tmpFile.renameTo(targetFile)) {
+            "Failed to finalize room db manual backup: cannot rename ${tmpFile.absolutePath} to ${targetFile.absolutePath}"
         }
 
         return targetFile
