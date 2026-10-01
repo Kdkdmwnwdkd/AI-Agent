@@ -125,6 +125,26 @@ ghmcp.call_tool('create_or_update_file', {'owner':'Kdkdmwnwdkd','repo':'AI-Agent
 ghmcp.rpc('tools/list', {}, 3)   # 注意不是 'list_tools'
 ```
 
+**⚠️⚠️ 踩坑记录（务必先读，会静默毁掉整个文件）**：`create_or_update_file` 的 `content`
+参数要传**纯文本**，**不要**先做 Base64 编码。虽然 GitHub 官方 REST API 的
+`PUT /contents/{path}` 确实要求 base64，但这个 MCP 工具**不要求**，它把 `content`
+**原样写入**。若按 REST 的习惯先 base64 再传，文件正文会变成一整串 Base64 文本
+（例如 `SafFileSystemTools.kt` 会变成以 `cGFja2FnZSBjb20u...` 开头），
+**提交照样成功、HTTP 照样返回 200**，不会有任何报错，直到有人打开文件才发现整个源文件已废。
+
+自查方法：推送后立刻确认远端文件首行是正常内容，而不是 `cGFja2FnZSBjb20u`：
+```bash
+head -c 60 app/src/main/java/com/.../Xxx.kt   # 应输出 "package com.ai.assistance..."
+```
+若已经推错，内容是可逆的——把远端文件内容当作 Base64 解码即可还原原文件：
+```python
+import base64
+open('/tmp/recovered.kt','wb').write(base64.b64decode(open('远端文件').read().strip(), validate=True))
+```
+然后回到正确基线重新应用改动、以纯文本重推。
+（真实案例见提交 `ae7ac0e6`，它修正了 `ad57c6db`/`18a21338` 的这次污染。）
+
+
 **验证 MCP 通道是否可用**：
 ```bash
 printf '%s' '<token>' > /tmp/.ghpat   # MCP 从该文件读 token
