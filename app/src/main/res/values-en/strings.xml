@@ -4280,7 +4280,7 @@
     <string name="llama_ubatch_size">Micro batch size</string>
     <string name="llama_ubatch_size_subtitle">Keep this at or below the batch size. On Android, 512 is usually the safer choice.</string>
     <string name="llama_gpu_layers">GPU layers</string>
-    <string name="llama_gpu_layers_subtitle">Only works when the current build has a GPU backend. Use 0 for CPU-only.</string>
+    <string name="llama_gpu_layers_subtitle">Defaults to 0 (CPU-only). On some devices (e.g. MEIZU 20 / Snapdragon 8 Gen 2) the Vulkan driver fails to create compute pipelines and crashes the app, so 0 is the safest choice. Raise it only after confirming your GPU is stable.</string>
     <string name="llama_use_mmap">Use mmap</string>
     <string name="llama_use_mmap_subtitle">On by default: maps the model into memory, lowering peak memory usage so large models are less likely to OOM. Only turn it off if loading the GGUF keeps failing.</string>
     <string name="llama_flash_attention">Enable Flash Attention</string>
@@ -7361,9 +7361,9 @@
     <string name="llama_error_model_path_is_directory">The model path points to a folder, not a model file: %1$s\nPlease select a specific .gguf file.</string>
     <string name="llama_error_model_not_gguf">Model file does not have the .gguf extension: %1$s</string>
     <string name="llama_error_model_not_readable">Model file is not readable (it may have been deleted, or storage permission is missing): %1$s</string>
-    <string name="llama_error_create_session_failed">Failed to create llama.cpp session (nativeCreateSession returned 0)</string>
+    <string name="llama_error_create_session_failed">Failed to create llama.cpp session. If GPU layers is above 0, set it back to 0 and retry.</string>
     <string name="llama_error_prefix">Error</string>
-    <string name="llama_error_session_create_failed">Error: Failed to create llama.cpp session (please check model file and JNI compilation output)</string>
+    <string name="llama_error_session_create_failed">Failed to create llama.cpp session: verify the model file path is valid. If GPU acceleration was enabled, set \"GPU layers\" back to 0 — incompatible Vulkan drivers on some devices cause an immediate crash.</string>
     <string name="llama_error_chat_template_failed">Error: Cannot apply model chat template (llama_model_chat_template/llama_chat_apply_template)</string>
     <string name="llama_error_inference_failed">llama.cpp inference process error</string>
     <string name="llama_error_inference_tag">[Inference error occurred]</string>
