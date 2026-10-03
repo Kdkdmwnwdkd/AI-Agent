@@ -5476,7 +5476,7 @@
     <string name="llama_ubatch_size">微批大小</string>
     <string name="llama_ubatch_size_subtitle">建议不超过批大小，Android 上通常 512 更稳</string>
     <string name="llama_gpu_layers">GPU 层数</string>
-    <string name="llama_gpu_layers_subtitle">当前构建存在 GPU backend 时才会生效，0 表示纯 CPU</string>
+    <string name="llama_gpu_layers_subtitle">默认 0（纯 CPU）。部分机型（如魅族20 / 骁龙8Gen2）的 Vulkan 驱动在创建计算管线时会失败并导致闪退，此时保持 0 最稳。确认设备 GPU 稳定后可尝试调高以加速。</string>
     <string name="llama_use_mmap">使用 mmap</string>
     <string name="llama_use_mmap_subtitle">默认开启：以内存映射方式加载模型，降低内存峰值，大模型不易 OOM。仅当加载 GGUF 反复失败时再尝试关闭。</string>
     <string name="llama_flash_attention">启用 Flash Attention</string>
@@ -7955,9 +7955,9 @@
     <string name="llama_error_model_path_is_directory">模型路径指向的是文件夹而不是模型文件: %1$s\n请选择具体的 .gguf 文件</string>
     <string name="llama_error_model_not_gguf">模型文件扩展名不是 .gguf: %1$s</string>
     <string name="llama_error_model_not_readable">模型文件无法读取（可能已删除或缺少存储权限）: %1$s</string>
-    <string name="llama_error_create_session_failed">创建 llama.cpp 会话失败（nativeCreateSession 返回 0）</string>
+    <string name="llama_error_create_session_failed">创建 llama.cpp 会话失败。若开启了 GPU 层数（>0），请先改回 0 再试。</string>
     <string name="llama_error_prefix">错误</string>
-    <string name="llama_error_session_create_failed">错误: 创建 llama.cpp 会话失败（请检查模型文件与 JNI 编译输出）</string>
+    <string name="llama_error_session_create_failed">创建 llama.cpp 会话失败：请确认模型文件的完整路径有效；若开启过 GPU 加速，请把「GPU 层数」改回 0（部分机型 Vulkan 驱动不兼容会直接闪退）。</string>
     <string name="llama_error_chat_template_failed">错误: 无法应用模型对话模板（llama_model_chat_template/llama_chat_apply_template）</string>
     <string name="llama_error_inference_failed">llama.cpp 推理过程出现错误</string>
     <string name="llama_error_inference_tag">[推理过程出现错误]</string>

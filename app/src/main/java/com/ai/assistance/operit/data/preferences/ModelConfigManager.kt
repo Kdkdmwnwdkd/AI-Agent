@@ -36,7 +36,7 @@ import org.json.JSONObject
 private val Context.modelConfigDataStore: DataStore<Preferences> by
         versionedPreferencesDataStore(
                 name = "model_configs",
-                currentVersion = 4,
+                currentVersion = 5,
         ) { appContext ->
             preferenceSchemaMigration { version, preferences ->
                 when (version) {
@@ -44,6 +44,7 @@ private val Context.modelConfigDataStore: DataStore<Preferences> by
                     1 -> ModelConfigManager.migratePreferencesFromVersionOne(preferences)
                     2 -> ModelConfigManager.migratePreferencesFromVersionTwo(preferences)
                     3 -> ModelConfigManager.migratePreferencesFromVersionThree(preferences)
+                    4 -> ModelConfigManager.migratePreferencesFromVersionFour(preferences)
                     else -> missingPreferencesSchemaMigration(version)
                 }
             }
@@ -315,9 +316,47 @@ class ModelConfigManager(
             }
         }
 
+        /**
+         * v4 -> v5：把 llama.cpp 的 GPU offload 默认关掉。
+         *
+         * 背景：历史上 llamaGpuLayers 默认 99（全部 offload）。但移动端 Vulkan 后端在部分驱动上
+         * 创建 compute pipeline 会失败并抛 vk::SystemError（魅族20 / Adreno 740 实测 SIGABRT 闪退）。
+         * native 侧已加异常屏障 + CPU 回退作为兜底，这里再把用户已存的 99 归零，
+         * 避免每次启动都先撞一次 GPU 崩溃再回退。
+         *
+         * 只动 llama.cpp provider 且只降不升：用户若手动设过 <99 的值，尊重其选择。
+         */
+        internal fun migratePreferencesFromVersionFour(preferences: MutablePreferences) {
+            val configIds = preferences[CONFIG_LIST_KEY]?.let { json.decodeFromString<List<String>>(it) }
+                    ?: return
+
+            configIds.forEach { configId ->
+                val configKey = stringPreferencesKey("config_${configId}")
+                val configJson = preferences[configKey] ?: return@forEach
+                val config = runCatching { json.decodeFromString<ModelConfigData>(configJson) }
+                        .getOrNull() ?: return@forEach
+
+                if (config.apiProviderType != ApiProviderType.LLAMA_CPP) {
+                    return@forEach
+                }
+                // 仅当用户处在"全量 offload"的危险默认值上时才回退，
+                // 用户自己调过的中间值（如 20 层）不动。
+                if (config.llamaGpuLayers < 99) {
+                    return@forEach
+                }
+
+                preferences[configKey] =
+                        json.encodeToString(
+                                config.copy(
+                                        llamaGpuLayers = 0,
+                                        llamaOffloadKqv = false
+                                )
+                        )
+            }
+        }
+
         private fun isDeepSeekProvider(providerTypeId: String): Boolean =
                 providerTypeId.equals(ApiProviderType.DEEPSEEK.name, ignoreCase = true)
-
         private fun isDeepSeekResponsesEndpoint(apiEndpoint: String): Boolean =
                 apiEndpoint.trim()
                         .substringBefore('?')

@@ -171,11 +171,11 @@ data class ModelConfigData(
         val llamaContextSize: Int = 4096, // n_ctx，3B模型4096够用且快
         val llamaBatchSize: Int = 512, // n_batch：与 UI 文案「建议不超过 512」对齐；1024 会在 4096 上下文下放大中间激活
         val llamaUBatchSize: Int = 512, // n_ubatch：与 UI 文案「Android 上通常 512 更稳」对齐
-        val llamaGpuLayers: Int = 99, // n_gpu_layers：llama-model.cpp 会做 min(n_gpu_layers, n_layer_all+1) 钳制，99 等价于「全部 offload」，安全
-        val llamaUseMmap: Boolean = true, // 使用 mmap 减少内存占用，避免大模型 OOM（Vulkan 下 KV/权重可保持映射，Android 上是正确默认）
+        val llamaGpuLayers: Int = 0, // n_gpu_layers：默认 0=纯 CPU 推理。原因：移动端 Vulkan 后端在部分驱动上会在创建 compute pipeline 时抛 vk::SystemError（魅族20/Adreno 740 实测崩溃），开启 GPU offload 会直接把进程打挂；CPU 跑 3B 模型完全可行。确认设备 GPU 稳定后可在设置里手动调高。
+        val llamaUseMmap: Boolean = true, // 使用 mmap 减少内存占用，避免大模型 OOM（Android 上是正确默认）
         val llamaFlashAttention: Boolean = false, // 默认关闭：Vulkan 对 flash-attn 有硬性 op 支持条件，不满足时会逐层回退到 CPU 造成 GPU↔CPU 反复搬运反而更慢
         val llamaKvUnified: Boolean = true, // 单并发聊天默认开启统一KV缓存
-        val llamaOffloadKqv: Boolean = true, // GPU offload 时把 K/Q/V 也放 GPU（n_gpu_layers=0 时原生层自动忽略）
+        val llamaOffloadKqv: Boolean = false, // GPU offload 时把 K/Q/V 也放 GPU；仅在 n_gpu_layers>0 时生效。默认关闭，与 GPU offload 默认关闭保持一致
 
         // 图片处理配置
         val enableDirectImageProcessing: Boolean = false, // 是否启用直接图片处理

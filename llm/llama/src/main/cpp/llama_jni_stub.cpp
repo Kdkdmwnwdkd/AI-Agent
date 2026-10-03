@@ -31,6 +31,7 @@ struct ToolCallGrammarConfigNative {
 #define TAG "LlamaNative"
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, TAG, __VA_ARGS__)
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
+#define LOGW(...) __android_log_print(ANDROID_LOG_WARN, TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
 
 static std::string jstringToString(JNIEnv * env, jstring jstr) {
@@ -39,6 +40,52 @@ static std::string jstringToString(JNIEnv * env, jstring jstr) {
     std::string out(cstr);
     env->ReleaseStringUTFChars(jstr, cstr);
     return out;
+}
+
+/**
+ * JNI 异常屏障。
+ *
+ * 背景（2026-10-03 闪退根因，魅族20 / Adreno 740）：
+ * llama.cpp 的 Vulkan 后端用 Vulkan-Hpp（vk:: 命名空间），该绑定默认启用 C++ 异常。
+ * 当设备驱动不支持某个 compute pipeline 时，ggml-vulkan 会抛出
+ *   vk::SystemError: vk::Device::createComputePipeline: ErrorUnknown
+ * 这个 C++ 异常会一路穿过 libggml-vulkan.so → libllama.so → libLlamaWrapper.so，
+ * 若在 JNI 边界逃逸出去，C++ 运行时直接调用 std::terminate() → SIGABRT 杀进程，
+ * 表现为"发消息没回复 + 突然闪退"，且 Java 层拿不到任何堆栈。
+ *
+ * 因此所有 JNI 入口都必须经过这道屏障：把 C++ 异常转成 Java 异常抛回上层，
+ * 让 Kotlin 侧的 Result/try-catch 能够正常处理，而不是整进程崩溃。
+ *
+ * @param env    JNI 环境，用于抛出 Java 异常（可为空，为空时仅记录日志）
+ * @param label  上下文标识，写入日志便于定位是哪个入口出的问题
+ * @param fallback 出错时的返回值
+ */
+template <typename Fn, typename Fallback>
+static auto jniExceptionBarrier(JNIEnv * env, const char * label, Fallback fallback, Fn && body) -> decltype(body()) {
+    try {
+        return body();
+    } catch (const std::exception & e) {
+        // Vulkan 后端失败（如 vk::SystemError）会走到这里，而不是让进程 abort。
+        LOGE("JNI %s threw C++ exception: %s", label, e.what());
+        if (env != nullptr && !env->ExceptionCheck()) {
+            jclass cls = env->FindClass("java/lang/IllegalStateException");
+            if (cls != nullptr) {
+                env->ThrowNew(cls, e.what());
+                env->DeleteLocalRef(cls);
+            }
+        }
+        return fallback;
+    } catch (...) {
+        LOGE("JNI %s threw unknown C++ exception", label);
+        if (env != nullptr && !env->ExceptionCheck()) {
+            jclass cls = env->FindClass("java/lang/IllegalStateException");
+            if (cls != nullptr) {
+                env->ThrowNew(cls, "Unknown native error in llama.cpp backend");
+                env->DeleteLocalRef(cls);
+            }
+        }
+        return fallback;
+    }
 }
 
 #if defined(OPERIT_HAS_LLAMA_CPP) && OPERIT_HAS_LLAMA_CPP
@@ -677,6 +724,9 @@ Java_com_ai_assistance_llama_LlamaNative_nativeCreateSession(
         jboolean kvUnified,
         jboolean offloadKqv
 ) {
+    // 崩溃防线之一：Vulkan 后端创建 pipeline 失败会抛 vk::SystemError，
+    // 必须在 JNI 边界拦住，否则逃逸出去会 SIGABRT 杀进程（详见 jniExceptionBarrier 注释）。
+    return jniExceptionBarrier(env, "nativeCreateSession", static_cast<jlong>(0), [&]() -> jlong {
     (void) clazz;
     ensureBackendInit();
 
@@ -725,11 +775,23 @@ Java_com_ai_assistance_llama_LlamaNative_nativeCreateSession(
         LOGI("GPU layers requested but this build has no GPU offload backend; continuing on CPU");
     }
 
+    // 崩溃防线之二：GPU 后端（尤其 Vulkan）在部分驱动上会在加载/建图阶段失败。
+    // 典型报错：vk::Device::createComputePipeline: ErrorUnknown（魅族20 / Adreno 740）。
+    // 一旦抛出，整个会话就没救了；这里捕获后自动退回纯 CPU 重建，保证本地模型仍可用，
+    // 而不是把异常抛给上层导致闪退。
     session->model = llama_model_load_from_file(modelPath.c_str(), mparams);
     if (!session->model) {
-        LOGE("Failed to load model from file");
-        delete session;
-        return 0;
+        if (effectiveGpuLayers > 0) {
+            LOGW("Model load failed with GPU offload (gpu_layers=%d); retrying on CPU only", effectiveGpuLayers);
+            mparams.n_gpu_layers = 0;
+            session->model = llama_model_load_from_file(modelPath.c_str(), mparams);
+        }
+        if (!session->model) {
+            LOGE("Failed to load model from file");
+            delete session;
+            return 0;
+        }
+        LOGI("Model loaded successfully in CPU-only fallback mode");
     }
 
     if (!initializeChatTemplatesForSession(session)) {
@@ -782,6 +844,7 @@ Java_com_ai_assistance_llama_LlamaNative_nativeCreateSession(
     session->cancel.store(false);
 
     return reinterpret_cast<jlong>(session);
+    }); // jniExceptionBarrier(nativeCreateSession)
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -1132,6 +1195,9 @@ Java_com_ai_assistance_llama_LlamaNative_nativeParseToolCallResponse(
 
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_ai_assistance_llama_LlamaNative_nativeGenerateStream(JNIEnv * env, jclass clazz, jlong sessionPtr, jstring prompt, jint maxTokens, jobject callback) {
+    // 与 nativeCreateSession 同理：推理阶段 GPU 后端仍可能抛异常，
+    // 不能让 C++ 异常逃出 JNI 边界导致进程 abort。
+    return jniExceptionBarrier(env, "nativeGenerateStream", static_cast<jboolean>(JNI_FALSE), [&]() -> jboolean {
     (void) clazz;
 
     if (sessionPtr == 0 || callback == nullptr) return JNI_FALSE;
@@ -1381,6 +1447,7 @@ Java_com_ai_assistance_llama_LlamaNative_nativeGenerateStream(JNIEnv * env, jcla
     }
 
     return JNI_TRUE;
+    }); // jniExceptionBarrier(nativeGenerateStream)
 }
 
 #endif
