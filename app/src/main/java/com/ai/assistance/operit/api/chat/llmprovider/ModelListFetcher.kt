@@ -641,23 +641,41 @@ object ModelListFetcher {
 
                 AppLogger.d(TAG, "读取llama.cpp模型目录: ${modelsDir.absolutePath}")
 
-                if (!modelsDir.exists()) {
-                    AppLogger.w(TAG, "llama.cpp模型目录不存在")
-                    return@withContext Result.success(emptyList())
+                // 历史实现只扫固定目录，导致两个问题：
+                // 1) 用户用文件选择器挑的模型在别处（如 Download/AI 模型/）→ 列表空 → 弹"没有找到可用模型"；
+                // 2) 用户手填绝对路径 → 列表同样看不到自己刚填的那个。
+                // 现在把"固定目录 + 已选路径所在目录 + 常见候选目录"合并扫描。
+                // 注意：只扫各目录的直接子项（maxDepth = 1），不做全盘递归，避免耗时与权限弹窗。
+                val scanDirs = LinkedHashSet<File>()
+                scanDirs += modelsDir
+                LocalModelFileStore.candidateScanDirs().forEach { scanDirs += it }
+
+                val collected = LinkedHashMap<String, ModelOption>()
+
+                scanDirs.forEach { dir ->
+                    if (!dir.isDirectory || !dir.canRead()) return@forEach
+                    val files = runCatching {
+                        dir.listFiles { file -> file.isFile && file.name.lowercase().endsWith(".gguf") }
+                    }.getOrNull() ?: return@forEach
+                    files.forEach { file ->
+                        // 用绝对路径做 key 去重（同一文件经不同目录不会重复出现）
+                        val key = runCatching { file.canonicalPath }.getOrDefault(file.absolutePath)
+                        collected.putIfAbsent(
+                            key,
+                            ModelOption(
+                                id = file.absolutePath,
+                                name = "${file.name} (${formatFileSize(file.length())})"
+                            )
+                        )
+                    }
                 }
 
-                // 扫描模型目录。用户在设置里通过文件选择器导入的模型会被放到这里，
-                // 因此列表天然可见；手填绝对路径的情况由 LlamaProvider.getModelFile 兜底。
-                val models = modelsDir.listFiles { file ->
-                    file.isFile && file.name.lowercase().endsWith(".gguf")
-                }?.map { file ->
-                    ModelOption(
-                        id = file.name,
-                        name = "${file.name} (${formatFileSize(file.length())})"
-                    )
-                }?.sortedBy { it.name } ?: emptyList()
+                val models = collected.values.sortedBy { it.name }
 
-                AppLogger.d(TAG, "找到 ${models.size} 个可用的llama.cpp模型")
+                AppLogger.d(
+                    TAG,
+                    "找到 ${models.size} 个可用的llama.cpp模型（扫描目录 ${scanDirs.size} 个）"
+                )
                 Result.success(models)
             } catch (e: Exception) {
                 AppLogger.e(TAG, "读取llama.cpp模型列表失败", e)

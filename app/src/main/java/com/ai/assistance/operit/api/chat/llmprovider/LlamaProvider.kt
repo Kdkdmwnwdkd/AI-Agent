@@ -28,10 +28,33 @@ class LlamaProvider(
     private val enableToolCall: Boolean = false
 ) : AIService {
 
+    /**
+     * 本地模型文件校验的失败分类。
+     *
+     * 抽成独立的枚举 + 纯函数（[classifyModelFileProblem] / [resolveModelFile]）是为了：
+     * 1. **可测**：纯 JVM 单元测试即可覆盖全部分支，不需要 Android Context / Robolectric；
+     * 2. **单一真源**：UI 提示与推理前校验共用同一套判定，不会再出现两侧不一致。
+     */
+    enum class ModelFileProblem {
+        /** 未填写模型名（本次闪退的直接原因） */
+        NOT_SELECTED,
+        /** 路径不存在 */
+        NOT_FOUND,
+        /** 路径指向目录而非文件（历史坑：空字符串会解析成工作目录且 exists() == true） */
+        IS_DIRECTORY,
+        /** 扩展名不是 .gguf */
+        NOT_GGUF,
+        /** 无读取权限 */
+        NOT_READABLE,
+    }
+
     companion object {
         private const val TAG = "LlamaProvider"
         /** 本地模型默认最大生成 token 数，避免无限制输出导致等待过久 */
         private const val DEFAULT_MAX_NEW_TOKENS = 1024
+
+        /** 本地模型文件扩展名（llama.cpp 只认 GGUF） */
+        const val MODEL_FILE_EXTENSION = ".gguf"
 
         fun getModelsDir(): File {
             return LocalModelFileStore.llamaModelsDir()
@@ -43,12 +66,86 @@ class LlamaProvider(
          * 兼容两种写法：
          * - **绝对路径**：用户在设置里通过文件选择器指定的任意位置（如 `/storage/emulated/0/Models/xxx.gguf`）
          * - **相对文件名**：默认模型目录下的文件（历史行为，保持不变）
+         *
+         * 注意：**不做存在性判断**。`modelName` 为空时返回目录占位，
+         * 仅用于展示路径；是否可用一律交给 [validateModelFile] 判断，
+         * 绝不能把该结果直接喂给 native。
          */
         fun getModelFile(_context: Context, modelName: String): File {
             val trimmed = modelName.trim()
             if (trimmed.isEmpty()) return File(getModelsDir(), trimmed)
             val candidate = File(trimmed)
             return if (candidate.isAbsolute) candidate else File(getModelsDir(), trimmed)
+        }
+
+        /**
+         * 纯逻辑：把一个已解析的候选 [File] 归类成失败原因；通过校验返回 null。
+         *
+         * 不依赖 Android，可直接单测。
+         */
+        fun classifyModelFileProblem(file: File, declaredPath: String): ModelFileProblem? {
+            if (declaredPath.isBlank()) return ModelFileProblem.NOT_SELECTED
+            if (!file.exists()) return ModelFileProblem.NOT_FOUND
+            // 顺序很关键：目录必须先于扩展名判断。
+            // 目录名通常不带 .gguf，但历史实现正是因为漏了这一步，把目录喂给了 native。
+            if (!file.isFile) return ModelFileProblem.IS_DIRECTORY
+            if (!file.name.lowercase().endsWith(MODEL_FILE_EXTENSION)) {
+                return ModelFileProblem.NOT_GGUF
+            }
+            if (!file.canRead()) return ModelFileProblem.NOT_READABLE
+            return null
+        }
+
+        /**
+         * 纯逻辑：解析 + 校验。校验通过返回 [File]，失败返回 null。
+         *
+         * @param modelsDir 相对文件名时的基准目录；传 null 表示只接受绝对路径（便于单测）。
+         */
+        fun resolveModelFile(modelName: String, modelsDir: File?): File? {
+            val trimmed = modelName.trim()
+            if (trimmed.isEmpty()) return null
+            val candidate = File(trimmed)
+            val file =
+                if (candidate.isAbsolute) candidate
+                else modelsDir?.let { File(it, trimmed) } ?: return null
+            return if (classifyModelFileProblem(file, trimmed) == null) file else null
+        }
+
+        /**
+         * 模型文件严格校验（**落地前最后一道闸**）。
+         *
+         * 背景：历史实现只判断 `File.exists()`。Android 上 `File("")` 的规范路径就是当前工作目录
+         * （即 `models/llama` 文件夹）且 `exists()` 为 true，于是"模型名称栏留空"会把**目录路径**
+         * 一路喂到 `llama_model_load_from_file()`，GGUF 解析直接失败并在 native 层崩溃/闪退。
+         *
+         * @return 校验通过返回 [File]；失败返回 null，调用方用 [describeModelFileProblem] 取文案。
+         */
+        fun validateModelFile(modelName: String): File? {
+            return resolveModelFile(modelName, getModelsDir()).also {
+                if (it == null) {
+                    AppLogger.w(TAG, "模型文件校验未通过：${modelName.trim()}")
+                }
+            }
+        }
+
+        /** 与 [classifyModelFileProblem] 的分支一一对应，返回用户可见的失败原因。 */
+        fun describeModelFileProblem(context: Context, modelName: String): String {
+            val trimmed = modelName.trim()
+            val file = getModelFile(context, trimmed)
+            val path = file.absolutePath
+            return when (classifyModelFileProblem(file, trimmed)) {
+                ModelFileProblem.NOT_SELECTED ->
+                    context.getString(R.string.llama_error_model_not_selected)
+                ModelFileProblem.NOT_FOUND ->
+                    context.getString(R.string.llama_error_model_file_not_exist, path)
+                ModelFileProblem.IS_DIRECTORY ->
+                    context.getString(R.string.llama_error_model_path_is_directory, path)
+                ModelFileProblem.NOT_GGUF ->
+                    context.getString(R.string.llama_error_model_not_gguf, path)
+                ModelFileProblem.NOT_READABLE ->
+                    context.getString(R.string.llama_error_model_not_readable, path)
+                null -> ""
+            }
         }
     }
 
@@ -128,10 +225,8 @@ class LlamaProvider(
             return@withContext Result.failure(Exception(LlamaSession.getUnavailableReason()))
         }
 
-        val modelFile = getModelFile(context, modelName)
-        if (!modelFile.exists()) {
-            return@withContext Result.failure(Exception(context.getString(R.string.llama_error_model_file_not_exist, modelFile.absolutePath)))
-        }
+        val modelFile = validateModelFile(modelName)
+            ?: return@withContext Result.failure(Exception(describeModelFileProblem(context, modelName)))
 
         val testSession = LlamaSession.create(
             pathModel = modelFile.absolutePath,
@@ -192,10 +287,8 @@ class LlamaProvider(
             throw IOException("${context.getString(R.string.llama_error_prefix)}: ${LlamaSession.getUnavailableReason()}")
         }
 
-        val modelFile = getModelFile(context, modelName)
-        if (!modelFile.exists()) {
-            throw IOException("${context.getString(R.string.llama_error_prefix)}: ${context.getString(R.string.llama_error_model_file_not_exist, modelFile.absolutePath)}")
-        }
+        val modelFile = validateModelFile(modelName)
+            ?: throw IOException("${context.getString(R.string.llama_error_prefix)}: ${describeModelFileProblem(context, modelName)}")
 
         val s = withContext(Dispatchers.IO) {
             ensureSessionLocked()
@@ -408,7 +501,13 @@ class LlamaProvider(
     private fun ensureSessionLocked(): LlamaSession? {
         synchronized(sessionLock) {
             session?.let { return it }
-            val modelFile = getModelFile(context, modelName)
+            // 二次校验：绝不把目录/不存在/非 gguf 的路径传给 native，
+            // 否则 llama_model_load_from_file 会在 native 层失败并导致闪退。
+            val modelFile = validateModelFile(modelName)
+            if (modelFile == null) {
+                AppLogger.w(TAG, "拒绝创建 llama 会话：${describeModelFileProblem(context, modelName)}")
+                return null
+            }
             val created = LlamaSession.create(
                 pathModel = modelFile.absolutePath,
                 config = sessionConfig

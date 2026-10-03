@@ -5460,10 +5460,10 @@
 
     <!-- llama.cpp 本地推理 -->
     <string name="llama_local_model_tip">本地运行模型理解能力较差，建议关闭记忆链接、开启禁用工具进行对话</string>
-    <string name="llama_local_model_download_tip">llama.cpp 模型需要自行下载（.gguf）。请将模型文件放入以下文件夹，然后在“模型名称”中填写文件名：</string>
+    <string name="llama_local_model_download_tip">llama.cpp 模型需自行下载（.gguf）。两种用法任选其一：①点右侧文件夹图标挑选任意位置的模型文件（推荐，最省事）；②把模型文件放进下面的默认目录，再在“模型名称”里填写文件名。</string>
     <string name="llama_local_model_dir">默认模型目录：%1$s</string>
     <string name="llama_auto_config_tip">批大小、mmap、Flash Attention、KV 等 Android 兼容参数已内置，普通使用只需要调整线程数、上下文大小和 GPU 层数。</string>
-    <string name="llama_select_downloaded_model">可直接填写模型文件路径，或点右侧文件夹图标自行挑选</string>
+    <string name="llama_select_downloaded_model">推荐点右侧文件夹图标挑选模型文件（可放在任意目录）；也可直接填写 .gguf 文件的完整路径或文件名</string>
     <string name="local_model_pick_file">选择模型文件</string>
     <string name="local_model_picked">已选择模型：%1$s</string>
     <string name="local_model_pick_failed">选择模型失败：%1$s</string>
@@ -5478,9 +5478,9 @@
     <string name="llama_gpu_layers">GPU 层数</string>
     <string name="llama_gpu_layers_subtitle">当前构建存在 GPU backend 时才会生效，0 表示纯 CPU</string>
     <string name="llama_use_mmap">使用 mmap</string>
-    <string name="llama_use_mmap_subtitle">Android 上默认建议关闭，很多机型关闭后更容易成功加载 GGUF</string>
+    <string name="llama_use_mmap_subtitle">默认开启：以内存映射方式加载模型，降低内存峰值，大模型不易 OOM。仅当加载 GGUF 反复失败时再尝试关闭。</string>
     <string name="llama_flash_attention">启用 Flash Attention</string>
-    <string name="llama_flash_attention_subtitle">移动端默认建议关闭，避免部分 Android backend 不稳定</string>
+    <string name="llama_flash_attention_subtitle">默认关闭：移动端 Vulkan 后端对 flash-attn 有硬性条件限制，不满足时会逐层回退到 CPU，反而更慢。仅当确认设备稳定支持时再开启。</string>
     <string name="llama_kv_unified">统一 KV 缓存</string>
     <string name="llama_kv_unified_subtitle">单会话聊天默认建议开启，可降低 Android 上的上下文管理开销</string>
     <string name="llama_offload_kqv">卸载 KQV 到 GPU</string>
@@ -7951,6 +7951,10 @@
 
     <!-- LlamaProvider -->
     <string name="llama_error_model_file_not_exist">模型文件不存在: %1$s</string>
+    <string name="llama_error_model_not_selected">尚未选择本地模型文件，请在设置中填写模型文件的绝对路径（.gguf）或从文件选择器挑选</string>
+    <string name="llama_error_model_path_is_directory">模型路径指向的是文件夹而不是模型文件: %1$s\n请选择具体的 .gguf 文件</string>
+    <string name="llama_error_model_not_gguf">模型文件扩展名不是 .gguf: %1$s</string>
+    <string name="llama_error_model_not_readable">模型文件无法读取（可能已删除或缺少存储权限）: %1$s</string>
     <string name="llama_error_create_session_failed">创建 llama.cpp 会话失败（nativeCreateSession 返回 0）</string>
     <string name="llama_error_prefix">错误</string>
     <string name="llama_error_session_create_failed">错误: 创建 llama.cpp 会话失败（请检查模型文件与 JNI 编译输出）</string>

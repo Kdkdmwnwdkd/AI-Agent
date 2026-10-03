@@ -142,4 +142,34 @@ object LocalModelFileStore {
         val file = if (File(trimmed).isAbsolute) File(trimmed) else defaultDir?.let { File(it, trimmed) }
         return file?.isFile == true
     }
+
+    /**
+     * 「可用模型列表」的候选扫描目录。
+     *
+     * 设计原则：**只扫一层，不全盘递归**。手机存储动辄上万文件，递归扫描既慢又可能触发
+     * 权限异常，得不偿失。这里仅覆盖模型最可能出现的几个位置。
+     *
+     * 覆盖顺序（越靠前越优先）：
+     * 1. `Download/玄枵/models/llama` —— 官方推荐位置（由调用方自行加入，不在此列表）
+     * 2. `/sdcard/Download` 与 `/sdcard/Download/AI 模型`、`/sdcard/Download/models`
+     *    —— 用户从浏览器 / 网盘下载 gguf 的默认落点
+     * 3. 内置存储根目录下少量常见目录（`Documents` / `Models` / `models`）
+     *
+     * 统一过滤掉不存在或不可读的目录，调用方无需再判空。
+     */
+    fun candidateScanDirs(): List<File> {
+        val external = android.os.Environment.getExternalStorageDirectory() ?: return emptyList()
+        val download = File(external, "Download")
+        val candidates =
+            listOf(
+                download,
+                File(download, "AI 模型"),
+                File(download, "models"),
+                File(download, "Models"),
+                File(external, "Documents"),
+                File(external, "Models"),
+                File(external, "models"),
+            )
+        return candidates.filter { it.isDirectory && it.canRead() }
+    }
 }

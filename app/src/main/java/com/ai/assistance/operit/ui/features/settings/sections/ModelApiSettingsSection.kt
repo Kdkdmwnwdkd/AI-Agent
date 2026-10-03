@@ -1297,12 +1297,22 @@ fun ModelApiSettingsSection(
                         
                         Button(
                                 onClick = {
-                                    // 将选中的模型用逗号连接
                                     val orderedSelection = modelsList.map { it.id }
                                         .filter { selectedModels.value.contains(it) }
-                                    modelNameInput = orderedSelection.joinToString(",")
+                                    // 本地模型（llama.cpp）一次只能加载一个 GGUF。
+                                    // 若沿用「逗号拼接多选」的通用逻辑，会写入 "a.gguf,b.gguf"，
+                                    // 而 LlamaProvider 只按单一路径解析，必然报「文件不存在」。
+                                    // 因此本地提供商强制取第一个选中项。
+                                    modelNameInput = if (isLlamaProvider) {
+                                        orderedSelection.firstOrNull() ?: ""
+                                    } else {
+                                        orderedSelection.joinToString(",")
+                                    }
                                     if (selectedApiProvider == ApiProviderType.MNN) {
                                         AppLogger.d(TAG, "选择MNN模型: $modelNameInput")
+                                    }
+                                    if (isLlamaProvider) {
+                                        AppLogger.d(TAG, "选择llama.cpp模型: $modelNameInput")
                                     }
                                     showModelsDialog = false
                                 },
@@ -1311,7 +1321,8 @@ fun ModelApiSettingsSection(
                         ) { 
                             Text(
                                 stringResource(R.string.confirm_action) + 
-                                    if (selectedModels.value.isNotEmpty()) " (${selectedModels.value.size})" else "",
+                                    // 本地模型单选，计数无意义甚至会误导，直接不显示数量
+                                    if (selectedModels.value.isNotEmpty() && !isLlamaProvider) " (${selectedModels.value.size})" else "",
                                 fontSize = 14.sp
                             ) 
                         }

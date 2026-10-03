@@ -4268,10 +4268,10 @@
 
     <!-- llama.cpp Local Inference -->
     <string name="llama_local_model_tip">Local models are usually weaker. Consider disabling memory links and disabling tools for chat.</string>
-    <string name="llama_local_model_download_tip">llama.cpp models must be downloaded manually (.gguf). Put the model file in the folder below, then enter the file name in “Model name”:</string>
+    <string name="llama_local_model_download_tip">llama.cpp models must be downloaded manually (.gguf). Either option works: (1) tap the folder icon on the right and pick a .gguf file from anywhere (recommended, easiest); (2) put the file in the default folder below and enter its file name in “Model name”.</string>
     <string name="llama_local_model_dir">Default model folder: %1$s</string>
     <string name="llama_auto_config_tip">Batch size, mmap, Flash Attention, KV, and other Android compatibility settings are built in. In normal use, you only need thread count, context size, and GPU layers.</string>
-    <string name="llama_select_downloaded_model">Select downloaded model</string>
+    <string name="llama_select_downloaded_model">Tap the folder icon on the right to pick a .gguf file from any folder (recommended); you may also type its full path or file name</string>
     <string name="llama_thread_count">Thread count</string>
     <string name="llama_context_size">Context size</string>
     <string name="llama_context_size_subtitle">On Android, start with 2048 first. Larger values are more likely to fail during initialization.</string>
@@ -4282,9 +4282,9 @@
     <string name="llama_gpu_layers">GPU layers</string>
     <string name="llama_gpu_layers_subtitle">Only works when the current build has a GPU backend. Use 0 for CPU-only.</string>
     <string name="llama_use_mmap">Use mmap</string>
-    <string name="llama_use_mmap_subtitle">Off is the safer default on Android. Disabling mmap helps many devices load GGUF successfully.</string>
+    <string name="llama_use_mmap_subtitle">On by default: maps the model into memory, lowering peak memory usage so large models are less likely to OOM. Only turn it off if loading the GGUF keeps failing.</string>
     <string name="llama_flash_attention">Enable Flash Attention</string>
-    <string name="llama_flash_attention_subtitle">Off is the safer default on mobile to avoid unstable Android backends.</string>
+    <string name="llama_flash_attention_subtitle">Off by default: the mobile Vulkan backend has hard requirements for flash-attn. When unmet, layers fall back to CPU and actually run slower. Enable only if you know your device supports it well.</string>
     <string name="llama_kv_unified">Unified KV cache</string>
     <string name="llama_kv_unified_subtitle">Recommended for single-session chat to reduce context management overhead on Android.</string>
     <string name="llama_offload_kqv">Offload KQV to GPU</string>
@@ -7357,6 +7357,10 @@
 
     <!-- LlamaProvider -->
     <string name="llama_error_model_file_not_exist">Model file does not exist: %1$s</string>
+    <string name="llama_error_model_not_selected">No local model file selected. Set the absolute path to a .gguf file in settings, or pick one with the file picker.</string>
+    <string name="llama_error_model_path_is_directory">The model path points to a folder, not a model file: %1$s\nPlease select a specific .gguf file.</string>
+    <string name="llama_error_model_not_gguf">Model file does not have the .gguf extension: %1$s</string>
+    <string name="llama_error_model_not_readable">Model file is not readable (it may have been deleted, or storage permission is missing): %1$s</string>
     <string name="llama_error_create_session_failed">Failed to create llama.cpp session (nativeCreateSession returned 0)</string>
     <string name="llama_error_prefix">Error</string>
     <string name="llama_error_session_create_failed">Error: Failed to create llama.cpp session (please check model file and JNI compilation output)</string>
