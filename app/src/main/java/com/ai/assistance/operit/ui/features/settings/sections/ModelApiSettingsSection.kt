@@ -530,7 +530,13 @@ fun ModelApiSettingsSection(
         return when {
             isCodexProvider -> CodexModelListFetcher.getModelsList()
             isMnnProvider -> ModelListFetcher.getMnnLocalModels(context)
-            isLlamaProvider -> ModelListFetcher.getLlamaLocalModels(context)
+            isLlamaProvider ->
+                ModelListFetcher.getLlamaLocalModels(
+                    context = context,
+                    // 把用户已配置（手填或曾挑选）的路径一并传入：
+                    // 模型放在候选目录之外时也能出现在列表里，不会"明明填了却看不到"。
+                    configuredPaths = modelNameInput.split(',', '\n'),
+                )
             isToolPkgProvider -> runCatching {
                 val service =
                     AIServiceFactory.createService(

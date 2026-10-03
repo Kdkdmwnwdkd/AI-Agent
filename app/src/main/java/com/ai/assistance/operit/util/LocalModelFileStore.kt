@@ -151,9 +151,11 @@ object LocalModelFileStore {
      *
      * 覆盖顺序（越靠前越优先）：
      * 1. `Download/玄枵/models/llama` —— 官方推荐位置（由调用方自行加入，不在此列表）
-     * 2. `/sdcard/Download` 与 `/sdcard/Download/AI 模型`、`/sdcard/Download/models`
-     *    —— 用户从浏览器 / 网盘下载 gguf 的默认落点
-     * 3. 内置存储根目录下少量常见目录（`Documents` / `Models` / `models`）
+     * 2. `/sdcard/Download` 及其子目录 —— 浏览器 / 网盘下载 gguf 的默认落点
+     * 3. **内置存储根目录**下的 `AI 模型` / `Models` / `models` / `Documents` 等
+     *
+     * 注意第 3 组：实测用户会把模型直接放 `/sdcard/AI 模型/`（根目录下，不在 Download 里），
+     * 早期版本只扫了 `Download/AI 模型` 因而列表为空。根目录这一层必须覆盖。
      *
      * 统一过滤掉不存在或不可读的目录，调用方无需再判空。
      */
@@ -162,13 +164,19 @@ object LocalModelFileStore {
         val download = File(external, "Download")
         val candidates =
             listOf(
+                // Download 及其子目录
                 download,
                 File(download, "AI 模型"),
+                File(download, "AI模型"),
                 File(download, "models"),
                 File(download, "Models"),
-                File(external, "Documents"),
+                // 内置存储根目录下的常见模型位置
+                File(external, "AI 模型"),
+                File(external, "AI模型"),
                 File(external, "Models"),
                 File(external, "models"),
+                File(external, "Documents"),
+                File(external, "llm"),
             )
         return candidates.filter { it.isDirectory && it.canRead() }
     }

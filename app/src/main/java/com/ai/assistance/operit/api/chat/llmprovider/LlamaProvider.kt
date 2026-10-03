@@ -217,7 +217,11 @@ class LlamaProvider(
     }
 
     override suspend fun getModelsList(context: Context): Result<List<ModelOption>> {
-        return ModelListFetcher.getLlamaLocalModels(context)
+        // 把本 provider 已配置的 modelName 一并传入，保证"当前用的模型"一定在列表里
+        return ModelListFetcher.getLlamaLocalModels(
+            context = context,
+            configuredPaths = modelName.split(',', '\n'),
+        )
     }
 
     override suspend fun testConnection(context: Context): Result<String> = withContext(Dispatchers.IO) {

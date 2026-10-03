@@ -634,40 +634,71 @@ object ModelListFetcher {
         }
     }
 
-    suspend fun getLlamaLocalModels(context: Context): Result<List<ModelOption>> {
+    /**
+     * 列出可用的 llama.cpp 本地模型。
+     *
+     * 数据来源有两路，合并后按文件名排序：
+     *
+     * 1. **扫描候选目录**：默认目录 + [LocalModelFileStore.candidateScanDirs]。
+     *    只扫各目录的直接子项（maxDepth = 1），不做全盘递归，避免耗时与权限弹窗。
+     * 2. **已配置路径**：调用方把用户当前填写的模型路径传进来（[configuredPaths]）。
+     *    这一路是关键兜底 —— 模型放在候选目录之外时（例如 `/sdcard/NAS挂载/xxx.gguf`），
+     *    只要用户填过一次就能在列表里看到它，不会出现"明明填了却显示没有可用模型"的自相矛盾。
+     *
+     * @param configuredPaths 已配置的模型路径/文件名，逗号或换行分隔；可为空。
+     */
+    suspend fun getLlamaLocalModels(
+        context: Context,
+        configuredPaths: List<String> = emptyList(),
+    ): Result<List<ModelOption>> {
         return withContext(Dispatchers.IO) {
             try {
                 val modelsDir = LocalModelFileStore.llamaModelsDir()
 
                 AppLogger.d(TAG, "读取llama.cpp模型目录: ${modelsDir.absolutePath}")
 
-                // 历史实现只扫固定目录，导致两个问题：
-                // 1) 用户用文件选择器挑的模型在别处（如 Download/AI 模型/）→ 列表空 → 弹"没有找到可用模型"；
-                // 2) 用户手填绝对路径 → 列表同样看不到自己刚填的那个。
-                // 现在把"默认目录 + 常见候选目录"合并扫描。
-                // 注意：只扫各目录的直接子项（maxDepth = 1），不做全盘递归，避免耗时与权限弹窗。
-                // 手填的绝对路径若不在这些目录下，列表仍看不到，但推理本身可用（不再报错）。
                 val scanDirs = LinkedHashSet<File>()
                 scanDirs += modelsDir
                 LocalModelFileStore.candidateScanDirs().forEach { scanDirs += it }
 
+                // 用规范化路径做 key 去重（同一文件经不同目录不会重复出现）
                 val collected = LinkedHashMap<String, ModelOption>()
+
+                fun putIfGguf(file: File) {
+                    if (!file.isFile || !file.name.lowercase().endsWith(LlamaProvider.MODEL_FILE_EXTENSION)) {
+                        return
+                    }
+                    val key = runCatching { file.canonicalPath }.getOrDefault(file.absolutePath)
+                    collected.putIfAbsent(
+                        key,
+                        ModelOption(
+                            id = file.absolutePath,
+                            name = "${file.name} (${formatFileSize(file.length())})"
+                        )
+                    )
+                }
 
                 scanDirs.forEach { dir ->
                     if (!dir.isDirectory || !dir.canRead()) return@forEach
                     val files = runCatching {
-                        dir.listFiles { file -> file.isFile && file.name.lowercase().endsWith(".gguf") }
+                        dir.listFiles { file ->
+                            file.isFile && file.name.lowercase().endsWith(LlamaProvider.MODEL_FILE_EXTENSION)
+                        }
                     }.getOrNull() ?: return@forEach
-                    files.forEach { file ->
-                        // 用绝对路径做 key 去重（同一文件经不同目录不会重复出现）
-                        val key = runCatching { file.canonicalPath }.getOrDefault(file.absolutePath)
-                        collected.putIfAbsent(
-                            key,
-                            ModelOption(
-                                id = file.absolutePath,
-                                name = "${file.name} (${formatFileSize(file.length())})"
-                            )
-                        )
+                    files.forEach { putIfGguf(it) }
+                }
+
+                // 再把"已配置路径"并入：绝对路径直接用，相对文件名按默认目录解析。
+                var configuredHit = 0
+                configuredPaths.forEach { raw ->
+                    val trimmed = raw.trim()
+                    if (trimmed.isEmpty()) return@forEach
+                    val candidate = File(trimmed)
+                    val resolved =
+                        if (candidate.isAbsolute) candidate else File(modelsDir, trimmed)
+                    if (resolved.isFile) {
+                        putIfGguf(resolved)
+                        configuredHit++
                     }
                 }
 
@@ -675,7 +706,8 @@ object ModelListFetcher {
 
                 AppLogger.d(
                     TAG,
-                    "找到 ${models.size} 个可用的llama.cpp模型（扫描目录 ${scanDirs.size} 个）"
+                    "找到 ${models.size} 个可用的llama.cpp模型" +
+                        "（扫描目录 ${scanDirs.size} 个，已配置路径命中 $configuredHit 个）"
                 )
                 Result.success(models)
             } catch (e: Exception) {
