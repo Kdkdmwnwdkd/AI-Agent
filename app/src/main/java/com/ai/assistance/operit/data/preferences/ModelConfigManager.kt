@@ -170,13 +170,11 @@ class ModelConfigManager(
                                 thinkingOptionId == config.thinkingOptionId) {
                     return@forEach
                 }
-                preferences[configKey] =
-                        json.encodeToString(
-                                config.copy(
-                                        thinkingConfigurations = thinkingConfigurations,
-                                        thinkingOptionId = thinkingOptionId
-                                )
-                        )
+                // 字段级 patch，避免 apiKey 被二次加密（详见 migratePreferencesFromVersionFour 的注释）。
+                patchConfigJson(configJson) {
+                    put("thinkingConfigurations", thinkingConfigurations)
+                    put("thinkingOptionId", thinkingOptionId)
+                }?.let { preferences[configKey] = it }
             }
         }
 
@@ -217,13 +215,11 @@ class ModelConfigManager(
                             migratedMapping.options.firstOrNull()?.id.orEmpty()
                         }
 
-                preferences[configKey] =
-                        json.encodeToString(
-                                config.copy(
-                                        thinkingConfigurations = migratedThinkingConfigurations,
-                                        thinkingOptionId = migratedThinkingOptionId
-                                )
-                        )
+                // 字段级 patch，避免 apiKey 被二次加密（详见 migratePreferencesFromVersionFour 的注释）。
+                patchConfigJson(configJson) {
+                    put("thinkingConfigurations", migratedThinkingConfigurations)
+                    put("thinkingOptionId", migratedThinkingOptionId)
+                }?.let { preferences[configKey] = it }
             }
         }
 
@@ -309,10 +305,10 @@ class ModelConfigManager(
                     return@forEach
                 }
 
-                preferences[configKey] =
-                        json.encodeToString(
-                                config.copy(thinkingConfigurations = thinkingConfigurations)
-                        )
+                // 字段级 patch，避免 apiKey 被二次加密（详见 migratePreferencesFromVersionFour 的注释）。
+                patchConfigJson(configJson) {
+                    put("thinkingConfigurations", thinkingConfigurations)
+                }?.let { preferences[configKey] = it }
             }
         }
 
@@ -325,6 +321,7 @@ class ModelConfigManager(
          * 避免每次启动都先撞一次 GPU 崩溃再回退。
          *
          * 只动 llama.cpp provider 且只降不升：用户若手动设过 <99 的值，尊重其选择。
+         * 写入走 [patchConfigJson]（字段级 patch），原因见其 KDoc。
          */
         internal fun migratePreferencesFromVersionFour(preferences: MutablePreferences) {
             val configIds = preferences[CONFIG_LIST_KEY]?.let { json.decodeFromString<List<String>>(it) }
@@ -333,27 +330,54 @@ class ModelConfigManager(
             configIds.forEach { configId ->
                 val configKey = stringPreferencesKey("config_${configId}")
                 val configJson = preferences[configKey] ?: return@forEach
-                val config = runCatching { json.decodeFromString<ModelConfigData>(configJson) }
-                        .getOrNull() ?: return@forEach
 
-                if (config.apiProviderType != ApiProviderType.LLAMA_CPP) {
+                // 只解出判断所需的字段，避免触发 apiKey 的加解密。
+                val probe =
+                        runCatching { json.decodeFromString<ModelConfigData>(configJson) }.getOrNull()
+                                ?: return@forEach
+
+                if (probe.apiProviderType != ApiProviderType.LLAMA_CPP) {
                     return@forEach
                 }
                 // 仅当用户处在"全量 offload"的危险默认值上时才回退，
                 // 用户自己调过的中间值（如 20 层）不动。
-                if (config.llamaGpuLayers < 99) {
+                if (probe.llamaGpuLayers < 99) {
                     return@forEach
                 }
 
-                preferences[configKey] =
-                        json.encodeToString(
-                                config.copy(
-                                        llamaGpuLayers = 0,
-                                        llamaOffloadKqv = false
-                                )
-                        )
+                // 字段级 patch：其余字段（含 apiKey 的原始密文）保持原样写回。
+                patchConfigJson(configJson) {
+                    put("llamaGpuLayers", 0)
+                    put("llamaOffloadKqv", false)
+                }?.let { preferences[configKey] = it }
             }
         }
+
+        /**
+         * 在**原始 JSON 字符串**上做字段级 patch，返回新 JSON；解析失败返回 null。
+         *
+         * ## 为什么迁移必须用它，而不是 `config.copy(...)` + `json.encodeToString(...)`
+         *
+         * [ModelConfigData.apiKey] 标注了
+         * `@Serializable(with = EncryptedStringSerializer::class)` —— 反序列化时解密、
+         * 序列化时加密。而 [SecureStringCrypto] 有两条关键行为：
+         *   1. `encrypt` 每次都用**新的随机 IV**（AES-GCM 标准做法）；
+         *   2. **`decrypt` 失败时会原样返回密文字符串本身**（仍带 "enc:v1:" 前缀）。
+         *
+         * 二者组合会产生数据污染：若 `decrypt` 失败（最典型的是**应用重装 / 换机恢复备份**
+         * 后 Keystore 中的密钥已不存在，这是 SecureStringCrypto 注释里明确的已知边界），
+         * 拿到的是 `"enc:v1:xxx"` 这个**字符串字面量**；此时若走 `copy()` + 全量重编码，
+         * 它会被 `encrypt` **再加密一层**，存成 `"enc:v1:<加密(enc:v1:xxx)>"`。
+         * 下次读取只剥一层，apiKey 就变成了乱码 —— 且由于迁移是**系统静默执行**的，
+         * 用户完全无从察觉，只会看到「所有云模型突然认证失败」。
+         *
+         * 因此凡是要改 ModelConfigData 的某个小字段，一律走本函数：
+         * 只动指定的键，apiKey 及其他所有字段**逐字节保留**，不参与任何加解密往返。
+         */
+        private fun patchConfigJson(
+                rawJson: String,
+                patch: JSONObject.() -> Unit
+        ): String? = runCatching { JSONObject(rawJson).apply(patch).toString() }.getOrNull()
 
         private fun isDeepSeekProvider(providerTypeId: String): Boolean =
                 providerTypeId.equals(ApiProviderType.DEEPSEEK.name, ignoreCase = true)

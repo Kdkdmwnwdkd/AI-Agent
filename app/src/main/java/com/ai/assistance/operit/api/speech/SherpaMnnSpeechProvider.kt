@@ -156,10 +156,20 @@ class SherpaMnnSpeechProvider(private val context: Context) : SpeechService {
             maxActivePaths = 4
         )
 
-        recognizer = OnlineRecognizer(
-            assetManager = null, // Force using newFromFile
-            config = recognizerConfig
-        )
+        recognizer = try {
+            OnlineRecognizer(
+                assetManager = null, // Force using newFromFile
+                config = recognizerConfig
+            )
+        } catch (e: Exception) {
+            // OnlineRecognizer 现在会在 native 返回空指针时抛异常（模型缺失/损坏）。
+            // 这里兜住并降级：语音识别标为不可用，而不是让异常冒泡把会话带崩。
+            AppLogger.e(TAG, "Failed to create OnlineRecognizer (model missing or corrupted).", e)
+            _recognitionState.value = SpeechService.RecognitionState.ERROR
+            _recognitionError.value =
+                    SpeechService.RecognitionError(-1, "Failed to load speech recognition model.")
+            null
+        }
     }
 
     private fun createVad() {
@@ -303,7 +313,16 @@ class SherpaMnnSpeechProvider(private val context: Context) : SpeechService {
             AppLogger.w(TAG, "Error releasing old stream", e)
         }
         stream = null
-        stream = recognizer?.createStream()
+        // createStream 现在会在 native 返回空指针句柄时抛异常；兜住并降级为「本次识别不可用」，
+        // 避免异常冒泡导致录音会话崩溃。
+        stream = try {
+            recognizer?.createStream()
+        } catch (e: Exception) {
+            AppLogger.e(TAG, "Failed to create recognition stream.", e)
+            _recognitionError.value =
+                    SpeechService.RecognitionError(-1, "Failed to start speech recognition.")
+            null
+        }
 
         val pendingPcm = SpeechPrerollStore.consumePending()
         if (pendingPcm != null && pendingPcm.isNotEmpty()) {

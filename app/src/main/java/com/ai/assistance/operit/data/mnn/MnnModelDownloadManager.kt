@@ -403,9 +403,26 @@ class MnnModelDownloadManager private constructor(private val context: Context) 
                     
                     val files = filesResult.getOrNull() ?: emptyList()
                     val totalSize = files.sumOf { it.Size }
-                    
-                    // 持久化状态
-                    val persistentTasks = files.map { PersistentFileTask(it.Path!!, it.Size) }
+
+                    // 持久化状态。
+                    // Path 来自服务端返回的仓库 JSON，字段可能缺失（声明为 String?）。
+                    // 历史上这里直接 `it.Path!!`，任一文件缺 Path 就会 NPE 中断整个下载。
+                    // 改为跳过无路径的无效条目 —— 它本来就无法被下载，不该拖垮其余文件。
+                    val persistentTasks =
+                            files.mapNotNull { file ->
+                                val path = file.Path
+                                if (path.isNullOrBlank()) {
+                                    AppLogger.w(TAG, "跳过无效文件条目（缺少 Path 字段）: name=${file.Name}")
+                                    null
+                                } else {
+                                    PersistentFileTask(path, file.Size)
+                                }
+                            }
+                    if (persistentTasks.isEmpty()) {
+                        AppLogger.e(TAG, "仓库文件列表为空或全部缺少 Path，无法下载")
+                        updateDownloadState(modelName, DownloadState.Failed("模型仓库返回的文件列表无效"))
+                        return@launch
+                    }
                     addPersistentState(PersistentDownloadState(modelName, url, modelFolderName, totalSize, persistentTasks))
 
                     AppLogger.d(TAG, "仓库文件列表 (${files.size} 个文件):")

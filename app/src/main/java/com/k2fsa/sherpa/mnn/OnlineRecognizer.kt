@@ -92,7 +92,19 @@ class OnlineRecognizer(
         } else {
             newFromFile(config)
         }
+        // native 边界防线：模型文件缺失/损坏时 newFromFile 会返回 0。
+        // 若放任 ptr=0 传到 createStream/decode/getResult，native 会把 0 当合法指针解引用
+        // → SIGSEGV，Kotlin 层的 try/catch 拦不住，进程直接闪退。
+        // 这里在构造期就拦住，抛一个上层可捕获的异常（与 llama.cpp 的模型校验同一思路）。
+        check(ptr != 0L) {
+            "OnlineRecognizer 初始化失败：native 返回空指针。" +
+                "通常是语音识别模型文件缺失或损坏，请检查模型是否已正确下载。"
+        }
     }
+
+    /** 当前 native 句柄是否有效。上层在调用前可据此跳过，避免把无效句柄传进 native。 */
+    val isUsable: Boolean
+        get() = ptr != 0L
 
     protected fun finalize() {
         if (ptr != 0L) {
@@ -104,21 +116,49 @@ class OnlineRecognizer(
     fun release() = finalize()
 
     fun createStream(hotwords: String = ""): OnlineStream {
+        check(ptr != 0L) { "OnlineRecognizer 已释放或初始化失败，无法创建流" }
         val p = createStream(ptr, hotwords)
+        // 同理：流创建失败时 native 也可能返回 0，必须拦住。
+        check(p != 0L) { "OnlineStream 创建失败：native 返回空指针" }
         return OnlineStream(p)
     }
 
-    fun reset(stream: OnlineStream) = reset(ptr, stream.ptr)
-    fun decode(stream: OnlineStream) = decode(ptr, stream.ptr)
-    fun isEndpoint(stream: OnlineStream) = isEndpoint(ptr, stream.ptr)
-    fun isReady(stream: OnlineStream) = isReady(ptr, stream.ptr)
+    fun reset(stream: OnlineStream) {
+        requireUsable(stream)
+        reset(ptr, stream.ptr)
+    }
+
+    fun decode(stream: OnlineStream) {
+        requireUsable(stream)
+        decode(ptr, stream.ptr)
+    }
+
+    fun isEndpoint(stream: OnlineStream): Boolean {
+        requireUsable(stream)
+        return isEndpoint(ptr, stream.ptr)
+    }
+
+    fun isReady(stream: OnlineStream): Boolean {
+        requireUsable(stream)
+        return isReady(ptr, stream.ptr)
+    }
+
+    /** recognizer 与 stream 两个句柄都必须有效，否则 native 会解引用空指针闪退。 */
+    private fun requireUsable(stream: OnlineStream) {
+        check(ptr != 0L) { "OnlineRecognizer 已释放或初始化失败" }
+        check(stream.ptr != 0L) { "OnlineStream 句柄无效（创建失败或已释放）" }
+    }
+
     @Suppress("UNCHECKED_CAST")
     fun getResult(stream: OnlineStream): OnlineRecognizerResult {
+        requireUsable(stream)
         val objArray = getResult(ptr, stream.ptr)
 
-        val text = objArray[0] as String
-        val tokens = objArray[1] as Array<String>
-        val timestamps = objArray[2] as FloatArray
+        // native 返回结构异常时（理论上不应发生，但空值会直接 NPE 崩溃），
+        // 用安全的取值替代下标硬取，避免越界/类型转换异常把进程带崩。
+        val text = objArray.getOrNull(0) as? String ?: ""
+        val tokens = objArray.getOrNull(1) as? Array<String> ?: emptyArray()
+        val timestamps = objArray.getOrNull(2) as? FloatArray ?: FloatArray(0)
 
         return OnlineRecognizerResult(text = text, tokens = tokens, timestamps = timestamps)
     }
