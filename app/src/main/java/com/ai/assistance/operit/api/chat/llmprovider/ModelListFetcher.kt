@@ -644,8 +644,9 @@ object ModelListFetcher {
                 // 历史实现只扫固定目录，导致两个问题：
                 // 1) 用户用文件选择器挑的模型在别处（如 Download/AI 模型/）→ 列表空 → 弹"没有找到可用模型"；
                 // 2) 用户手填绝对路径 → 列表同样看不到自己刚填的那个。
-                // 现在把"固定目录 + 已选路径所在目录 + 常见候选目录"合并扫描。
+                // 现在把"默认目录 + 常见候选目录"合并扫描。
                 // 注意：只扫各目录的直接子项（maxDepth = 1），不做全盘递归，避免耗时与权限弹窗。
+                // 手填的绝对路径若不在这些目录下，列表仍看不到，但推理本身可用（不再报错）。
                 val scanDirs = LinkedHashSet<File>()
                 scanDirs += modelsDir
                 LocalModelFileStore.candidateScanDirs().forEach { scanDirs += it }
