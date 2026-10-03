@@ -122,7 +122,9 @@ fun PluginLoadingScreen(
             exit =
                     fadeOut(
                             targetAlpha = 0f,
-                            animationSpec = androidx.compose.animation.core.tween(800)
+                            // 800ms 拖尾感明显，加载完成后用户要等半秒多才看到主界面；
+                            // 300ms 在观感上更跟手，也不会显得生硬。
+                            animationSpec = androidx.compose.animation.core.tween(300)
                     )
     ) {
         Box(

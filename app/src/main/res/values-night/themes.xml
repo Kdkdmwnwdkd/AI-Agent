@@ -11,6 +11,8 @@
         <item name="colorOnSecondary">@color/black</item>
         <!-- Declare support for drawing into the status bar / display cutout area. -->
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+        <!-- 启动窗口背景（深色模式），值见 values-night/colors.xml -->
+        <item name="android:windowBackground">@color/startup_window_background</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->

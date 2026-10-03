@@ -50,13 +50,23 @@ import com.ai.assistance.operit.ui.features.startup.screens.PluginLoadingState
 import com.ai.assistance.operit.ui.features.startup.screens.LocalPluginLoadingState
 import com.ai.assistance.operit.ui.features.startup.screens.PluginLoadingStateRegistry
 import com.ai.assistance.operit.ui.theme.OperitTheme
+import com.ai.assistance.operit.ui.theme.LocalInitialThemeSnapshot
+import com.ai.assistance.operit.data.preferences.ActivePromptManager
+import com.ai.assistance.operit.data.preferences.ThemePreferenceSnapshot
 import com.ai.assistance.operit.ui.common.displays.VirtualDisplayOverlay
 import com.ai.assistance.operit.util.AnrMonitor
 import com.ai.assistance.operit.util.LocaleUtils
 import java.util.*
+import android.view.Choreographer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import androidx.compose.runtime.CompositionLocalProvider
 import com.ai.assistance.operit.data.mcp.MCPRepository
 import android.content.Intent
 import android.net.Uri
@@ -85,6 +95,9 @@ class MainActivity : ComponentActivity() {
 
     // ======== MCP插件状态 ========
     private val pluginLoadingState = PluginLoadingState()
+
+    // 冷启动首帧主题快照（setContent 之前解析，null 表示使用默认值回退）
+    private var initialThemeSnapshot: ThemePreferenceSnapshot? = null
 
     // ======== 双击返回退出相关变量 ========
     private var backPressedTime: Long = 0
@@ -179,8 +192,12 @@ class MainActivity : ComponentActivity() {
         lastOrientation = resources.configuration.orientation
         AppLogger.d(TAG, "onCreate: Android SDK version: ${Build.VERSION.SDK_INT}")
 
-        // Set window background to solid color to prevent system theme leaking through
-        window.setBackgroundDrawableResource(android.R.color.black)
+        // 启动窗口背景：Compose 首帧渲染前由 XML 主题的 android:windowBackground 提供
+        // （见 res/values/themes.xml 与 res/values-night/themes.xml，按明暗模式取不同底色）。
+        // 原实现此处硬编码 android.R.color.black，冷启动会先出现一段纯黑再跳到真实主题，
+        // 观感突兀；改为交给主题后，首帧前的底色与界面基调一致。
+        // 注意：不要在这里调用 window.setBackgroundDrawableResource，
+        // 否则会覆盖 XML 配置，导致 values-night 的深色适配失效。
 
         // Handle the intent that started the activity
         handleIntent(intent)
@@ -193,6 +210,11 @@ class MainActivity : ComponentActivity() {
         initializeComponents()
         anrMonitor.start()
         configureDisplaySettings()
+
+        // 冷启动首帧主题：在 setContent 之前阻塞解析一次真实主题快照，
+        // 让首帧直接渲染用户配置，避免 defaultVisual()（系统动态色）先渲染再切换造成闪色。
+        // 读取失败（首次安装 DataStore 为空等）时保持 null，行为回退到旧逻辑。
+        initialThemeSnapshot = resolveInitialThemeSnapshot()
 
         // 设置上下文以便获取插件元数据
         pluginLoadingState.setAppContext(this)
@@ -387,12 +409,22 @@ class MainActivity : ComponentActivity() {
         pluginLoadingState.startTimeoutCheck(30000L, lifecycleScope)
 
         // 初始化MCP服务器并启动插件
-        // 轻微延迟让首帧 Compose 完成，避免启动阶段后台重任务立刻抢占导致掉帧
+        // 等首帧真正绘制完成后再启动后台重任务，避免抢占主线程导致掉帧。
+        // 此前固定 delay(500)，属于盲等：首帧通常 1~2 帧内就绪，
+        // 白白多等 0.5 秒；这里改为等 Choreographer 回调，通常只需 16~33ms。
         lifecycleScope.launch {
-            delay(500)
+            awaitNextFrame()
             pluginLoadingState.initializeMCPServer(this@MainActivity, lifecycleScope)
         }
     }
+
+    /** 挂起直到下一帧真正完成绘制（比盲等固定毫秒更精确）。 */
+    private suspend fun awaitNextFrame() =
+        suspendCancellableCoroutine<Unit> { cont ->
+            Choreographer.getInstance().postFrameCallback {
+                if (cont.isActive) cont.resume(Unit)
+            }
+        }
 
     // ======== 处理待处理的分享文件 ========
     private fun processPendingSharedFiles() {
@@ -509,6 +541,34 @@ class MainActivity : ComponentActivity() {
 
     }
 
+    // ======== 冷启动首帧主题解析 ========
+    /**
+     * 阻塞解析当前活动目标的真实主题快照，用于首帧渲染。
+     *
+     * 必须在主线程以 runBlocking 调用（Compose 首帧需要同步拿到值）。
+     * DataStore 首次读取通常只需几十毫秒；任何异常都返回 null，
+     * 让界面回退到原有的 defaultVisual() 行为，不影响启动。
+     */
+    private fun resolveInitialThemeSnapshot(): ThemePreferenceSnapshot? {
+        val startedAt = System.currentTimeMillis()
+        return try {
+            val snapshot = runBlocking {
+                withContext(Dispatchers.IO) {
+                    ActivePromptManager.getInstance(this@MainActivity)
+                        .resolveActiveThemePreferenceSnapshot()
+                }
+            }
+            AppLogger.d(
+                TAG,
+                "首帧主题快照解析完成，耗时 ${System.currentTimeMillis() - startedAt}ms"
+            )
+            snapshot
+        } catch (e: Exception) {
+            AppLogger.w(TAG, "首帧主题快照解析失败，回退默认主题", e)
+            null
+        }
+    }
+
     // ======== 检查通知权限 ========
     private fun checkNotificationPermission() {
         // Android 13 (API 33) 及以上需要请求通知权限
@@ -594,103 +654,105 @@ class MainActivity : ComponentActivity() {
     // ======== 设置应用内容 ========
     private fun setAppContent() {
         setContent {
-            OperitTheme {
-                Box {
-                    // 检查是否需要显示用户协议
-                        if (!agreementPreferences.isAgreementAccepted()) {
-                            AgreementScreen(
-                                    onAgreementAccepted = {
-                                        agreementPreferences.acceptCurrentAgreement()
-                                        // 协议接受后，检查权限级别设置
-                                        lifecycleScope.launch {
-                                            // 确保使用非阻塞方式更新UI
-                                            delay(300) // 短暂延迟确保UI状态更新
-                                            checkPermissionLevelSet()
-                                            if (!showPermissionGuide) {
-                                                startPluginLoading()
-                                            }
-                                            // 重新设置应用内容
-                                            setAppContent()
-                                        }
-                                    }
-                            )
-                        }
-                        // 检查是否需要显示权限引导界面
-                        else if (showPermissionGuide) {
-                            PermissionGuideScreen(
-                                    onComplete = {
-                                        showPermissionGuide = false
-                                        // 权限设置完成后，启动插件加载并更新内容
-                                        startPluginLoading()
-                                        setAppContent()
-                                    }
-                            )
-                        }
-                        // 显示主应用界面
-                        else {
-                            // 处理待处理的分享文件
-                            processPendingSharedFiles()
-                            processPendingSharedText()
-                            val shortcutNavItem = pendingShortcutNavItem
-                            val shortcutNavRequestId = pendingShortcutRequestId
-                            val routeNavRequest = pendingRouteId
-                            val routeNavArgs = pendingRouteArgs
-                            val routeNavRequestId = pendingRouteRequestId
-                            val initialNavItem = when {
-                                shortcutNavItem != null -> shortcutNavItem
-                                else -> currentMainNavItem
-                            }
-
-                            CompositionLocalProvider(LocalPluginLoadingState provides pluginLoadingState) {
-                                // 主应用界面 (始终存在于底层)
-                                OperitApp(
-                                        initialNavItem = initialNavItem,
-                                        toolHandler = toolHandler,
-                                        shortcutNavRequest = shortcutNavItem,
-                                        shortcutNavRequestId = shortcutNavRequestId,
-                                        routeNavRequest = routeNavRequest,
-                                        routeNavArgs = routeNavArgs,
-                                        routeNavRequestId = routeNavRequestId,
-                                        onShortcutNavHandled = { handledRequestId ->
-                                            if (pendingShortcutRequestId == handledRequestId) {
-                                                pendingShortcutNavItem = null
-                                                pendingShortcutRequestId = 0L
-                                            }
-                                        },
-                                        onCurrentNavItemChanged = { navItem ->
-                                            currentMainNavItem = navItem
-                                        },
-                                        onRouteNavHandled = { handledRequestId ->
-                                            if (pendingRouteRequestId == handledRequestId) {
-                                                pendingRouteId = null
-                                                pendingRouteArgs = emptyMap()
-                                                pendingRouteRequestId = 0L
+            CompositionLocalProvider(LocalInitialThemeSnapshot provides initialThemeSnapshot) {
+                OperitTheme {
+                    Box {
+                        // 检查是否需要显示用户协议
+                            if (!agreementPreferences.isAgreementAccepted()) {
+                                AgreementScreen(
+                                        onAgreementAccepted = {
+                                            agreementPreferences.acceptCurrentAgreement()
+                                            // 协议接受后，检查权限级别设置
+                                            lifecycleScope.launch {
+                                                // 确保使用非阻塞方式更新UI
+                                                delay(300) // 短暂延迟确保UI状态更新
+                                                checkPermissionLevelSet()
+                                                if (!showPermissionGuide) {
+                                                    startPluginLoading()
+                                                }
+                                                // 重新设置应用内容
+                                                setAppContent()
                                             }
                                         }
                                 )
                             }
-                        }
-                    }
-                    // 插件加载界面 (带有淡出效果) - 始终在最上层
-                    PluginLoadingScreenWithState(
-                            loadingState = pluginLoadingState,
-                            modifier = Modifier.zIndex(10f) // 确保加载界面在最上层
-                    )
-                }
+                            // 检查是否需要显示权限引导界面
+                            else if (showPermissionGuide) {
+                                PermissionGuideScreen(
+                                        onComplete = {
+                                            showPermissionGuide = false
+                                            // 权限设置完成后，启动插件加载并更新内容
+                                            startPluginLoading()
+                                            setAppContent()
+                                        }
+                                )
+                            }
+                            // 显示主应用界面
+                            else {
+                                // 处理待处理的分享文件
+                                processPendingSharedFiles()
+                                processPendingSharedText()
+                                val shortcutNavItem = pendingShortcutNavItem
+                                val shortcutNavRequestId = pendingShortcutRequestId
+                                val routeNavRequest = pendingRouteId
+                                val routeNavArgs = pendingRouteArgs
+                                val routeNavRequestId = pendingRouteRequestId
+                                val initialNavItem = when {
+                                    shortcutNavItem != null -> shortcutNavItem
+                                    else -> currentMainNavItem
+                                }
 
-                // 方向改变时显示对话框
-                if (showOrientationChangeDialog) {
-                    OrientationChangeDialog(
-                        onConfirm = {
-                            showOrientationChangeDialog = false
-                            // 重新创建Activity以重新加载页面
-                            recreate()
-                        },
-                        onDismiss = {
-                            showOrientationChangeDialog = false
+                                CompositionLocalProvider(LocalPluginLoadingState provides pluginLoadingState) {
+                                    // 主应用界面 (始终存在于底层)
+                                    OperitApp(
+                                            initialNavItem = initialNavItem,
+                                            toolHandler = toolHandler,
+                                            shortcutNavRequest = shortcutNavItem,
+                                            shortcutNavRequestId = shortcutNavRequestId,
+                                            routeNavRequest = routeNavRequest,
+                                            routeNavArgs = routeNavArgs,
+                                            routeNavRequestId = routeNavRequestId,
+                                            onShortcutNavHandled = { handledRequestId ->
+                                                if (pendingShortcutRequestId == handledRequestId) {
+                                                    pendingShortcutNavItem = null
+                                                    pendingShortcutRequestId = 0L
+                                                }
+                                            },
+                                            onCurrentNavItemChanged = { navItem ->
+                                                currentMainNavItem = navItem
+                                            },
+                                            onRouteNavHandled = { handledRequestId ->
+                                                if (pendingRouteRequestId == handledRequestId) {
+                                                    pendingRouteId = null
+                                                    pendingRouteArgs = emptyMap()
+                                                    pendingRouteRequestId = 0L
+                                                }
+                                            }
+                                    )
+                                }
+                            }
                         }
-                    )
-                }
+                        // 插件加载界面 (带有淡出效果) - 始终在最上层
+                        PluginLoadingScreenWithState(
+                                loadingState = pluginLoadingState,
+                                modifier = Modifier.zIndex(10f) // 确保加载界面在最上层
+                        )
+                    }
+
+                    // 方向改变时显示对话框
+                    if (showOrientationChangeDialog) {
+                        OrientationChangeDialog(
+                            onConfirm = {
+                                showOrientationChangeDialog = false
+                                // 重新创建Activity以重新加载页面
+                                recreate()
+                            },
+                            onDismiss = {
+                                showOrientationChangeDialog = false
+                            }
+                        )
+                    }
+            }
             }
         }
 

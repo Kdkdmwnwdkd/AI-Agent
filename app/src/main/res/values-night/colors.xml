@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 启动窗口背景（深色模式）：取接近 Material3 深色 surface 的值，
+         与 values/colors.xml 的浅色版本配对，避免冷启动时出现纯黑跳变。 -->
+    <color name="startup_window_background">#FF1C1B1F</color>
+</resources>

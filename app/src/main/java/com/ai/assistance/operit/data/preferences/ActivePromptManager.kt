@@ -48,6 +48,16 @@ class ActivePromptManager private constructor(context: Context) {
 
     suspend fun getActivePrompt(): ActivePrompt = activePromptFlow.first()
 
+    /**
+     * 同步解析当前活动目标的主题快照。
+     *
+     * 用于冷启动首帧：在 setContent 之前阻塞读取一次真实主题，
+     * 避免 Compose 首帧先渲染 defaultVisual()（系统动态色）再切换导致闪色。
+     * 语义与 activeThemePreferenceSnapshotFlow 的首次发射完全一致。
+     */
+    suspend fun resolveActiveThemePreferenceSnapshot(): ThemePreferenceSnapshot =
+        activeThemePreferenceSnapshotFlow.first()
+
     suspend fun setActivePrompt(prompt: ActivePrompt) {
         themeOperations.runTransition {
             when (prompt) {

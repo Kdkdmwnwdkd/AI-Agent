@@ -7,4 +7,9 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- 启动窗口背景：在 Compose 首帧渲染前显示。
+         浅色模式下取接近 Material3 surface 的浅灰白，避免出现纯黑或纯白跳变。
+         深色模式的值见 values-night/colors.xml。 -->
+    <color name="startup_window_background">#FFF8F7FA</color>
 </resources>

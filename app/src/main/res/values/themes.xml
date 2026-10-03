@@ -11,6 +11,9 @@
         <item name="colorOnSecondary">@color/black</item>
         <!-- Declare support for drawing into the status bar / display cutout area. -->
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+        <!-- 启动窗口背景：Compose 首帧绘制前显示。跟随浅色/深色模式，
+             避免冷启动时先出现纯黑（原代码硬编码 android.R.color.black）再跳变。 -->
+        <item name="android:windowBackground">@color/startup_window_background</item>
         <!-- Customize your theme here. -->
         
     </style>

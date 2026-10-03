@@ -98,7 +98,7 @@ fun OperitTheme(content: @Composable () -> Unit) {
     val activePrompt by activePromptManager.activePromptFlow.collectAsState(
         initial = ActivePrompt.CharacterCard(CharacterCardManager.DEFAULT_CHARACTER_CARD_ID),
     )
-    val themeSnapshot = rememberActiveThemePreferenceSnapshot()
+    val themeSnapshot = rememberActiveThemePreferenceSnapshot(LocalInitialThemeSnapshot.current)
 
     fun disableBackgroundForTarget(target: ActivePrompt) {
         coroutineScope.launch {
