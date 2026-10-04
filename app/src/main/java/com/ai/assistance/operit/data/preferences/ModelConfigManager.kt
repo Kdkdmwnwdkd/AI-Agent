@@ -3,6 +3,7 @@ package com.ai.assistance.operit.data.preferences
 import android.content.Context
 import com.ai.assistance.operit.api.chat.llmprovider.ThinkingQualityMappingRegistry
 import com.ai.assistance.operit.util.AppLogger
+import com.ai.assistance.operit.util.crypto.SecureStringCrypto
 import com.ai.assistance.operit.R
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
@@ -69,6 +70,15 @@ class ModelConfigManager(
         // 默认值
         const val DEFAULT_CONFIG_ID = "default"
         const val DEFAULT_CONFIG_NAME = "model_config_default_name"
+
+        /**
+         * 加密字段的 JSON 键名。
+         *
+         * 单独抽成常量是为了在 [mergeConfigJson] 里显式跳过 —— 这两个键的值带加密 Serializer，
+         * 必须走「值变了才重加密」的特殊路径，不能跟着通用 diff 一起写回。
+         */
+        private const val FIELD_API_KEY = "apiKey"
+        private const val FIELD_API_KEY_POOL = "apiKeyPool"
 
         // Default API provider type
         private val DEFAULT_API_PROVIDER_TYPE = ApiProviderType.DEEPSEEK
@@ -486,6 +496,8 @@ class ModelConfigManager(
     // Json解析器，支持宽松模式
     private val json = ModelConfigManager.json
 
+    private val TAG = "ModelConfigManager"
+
     // 获取所有配置ID列表
     val configListFlow: Flow<List<String>> =
             configDataStore.data.map { preferences ->
@@ -595,12 +607,12 @@ class ModelConfigManager(
         val configKey = stringPreferencesKey("config_${configId}")
         var updated: ModelConfigData? = null
         configDataStore.edit { preferences ->
+            val rawJson = preferences[configKey]
             val current =
                     run {
-                        val configJson = preferences[configKey]
-                        if (configJson != null) {
+                        if (rawJson != null) {
                             try {
-                                json.decodeFromString<ModelConfigData>(configJson)
+                                json.decodeFromString<ModelConfigData>(rawJson)
                             } catch (e: Exception) {
                                 if (configId == DEFAULT_CONFIG_ID) {
                                     createFreshDefaultConfig()
@@ -618,10 +630,146 @@ class ModelConfigManager(
                     }
 
             val newConfig = transform(current)
-            preferences[configKey] = json.encodeToString(newConfig)
+            // 走字段级 patch 而不是全量重编码：apiKey / apiKeyPool[].key 这两个加密字段
+            // 一旦参与 decode→encode 往返，在 Keystore 密钥失效（重装/换机）时会被二次加密，
+            // 直接毁掉用户的密钥。详见 patchConfigJson / mergeConfigJson 的 KDoc。
+            preferences[configKey] =
+                    if (rawJson != null) {
+                        mergeConfigJson(rawJson, current, newConfig)
+                    } else {
+                        json.encodeToString(newConfig)
+                    }
             updated = newConfig
         }
         return updated ?: ModelConfigData(id = configId, name = context.getString(R.string.model_config_config_id, configId))
+    }
+
+    /**
+     * 把 [after] 相对 [before] 的变化合并进**原始 JSON**，返回新 JSON。
+     *
+     * ## 为什么不能用 `json.encodeToString(after)`（这是本文件历史上最严重的一个缺陷）
+     *
+     * [ModelConfigData.apiKey] 与 [ApiKeyInfo.key] 都标注了
+     * `@Serializable(with = EncryptedStringSerializer::class)`，反序列化时解密、序列化时加密。
+     * 而 [SecureStringCrypto] 的行为是：**解密失败时原样返回密文字符串**（仍带 `enc:v1:` 前缀）。
+     * 二者组合产生如下污染链：
+     *
+     * 1. 重装 / 换机恢复备份 → Keystore 里的密钥没了（这是 SecureStringCrypto 注释里写明的已知边界）；
+     * 2. `decodeFromString` 解 apiKey 失败 → 得到 `"enc:v1:xxx"` 这个**字符串字面量**；
+     * 3. 用户只是改了个「思考模式」之类无关设置 → 走本函数 → `transform` 返回的新 config 里
+     *    apiKey 还是那个字面量 → `encodeToString` 把它**再加密一层**：
+     *    `"enc:v1:<加密(enc:v1:xxx)>"`；
+     * 4. 下次读取只剥一层 → apiKey 变成乱码 → **该用户所有云模型全部认证失败**。
+     *
+     * 而且第 3 步是**用户完全无感**的：他只是改了个设置，没有任何提示。
+     *
+     * ## 做法
+     *
+     * 只把 [after] 里**与 [before] 不同**的字段写进原始 JSON；没动过的字段（含 apiKey）逐字节保留。
+     * 需逐字段比较是因为无法从 [transform] 得知它改了哪些键 —— 它接收整个 config、返回整个 config。
+     *
+     * ### apiKey 与 apiKeyPool 的特殊处理
+     *
+     * 这两个加密字段**不通过上面的通用 diff 写回**，因为：
+     * - 它们 diff 出来的是**已解密的明文**（normal 场景）或**密文字面量**（密钥失效场景）；
+     * - 直接 put 明文会把密钥以明文落盘，put 字面量则等于没修。
+     *
+     * 改为：**仅当值真正变化时**，显式走 `SecureStringCrypto.encrypt` 写回。
+     * 值没变时原样保留原始 JSON 里的密文 —— 这正是断掉污染链的关键一步。
+     *
+     * @return 合并后的 JSON；任何一步失败则退回全量编码（保功能可用，代价是丢掉本次的防污染保护）。
+     */
+    private fun mergeConfigJson(
+            rawJson: String,
+            before: ModelConfigData,
+            after: ModelConfigData
+    ): String {
+        return runCatching {
+                    val root = JSONObject(rawJson)
+                    // 比对基准用「原始 JSON」而不是「重新编码的 before」：
+                    // 后者会因序列化默认值/字段顺序差异把没动过的键误判为"变化"，
+                    // 从而把原始值覆盖掉（还会白跑两次 encrypt）。
+                    val afterRoot = JSONObject(json.encodeToString(after))
+
+                    // 通用字段 diff：只写变化的键。
+                    // 显式跳过加密字段 —— encodeToString 已把它们重新加密过，写回去会覆盖原始密文。
+                    afterRoot.keys().forEach { key ->
+                        if (key == FIELD_API_KEY || key == FIELD_API_KEY_POOL) return@forEach
+                        val newValue = afterRoot.opt(key)
+                        val oldValue = root.opt(key)
+                        if (newValue != oldValue) {
+                            root.put(key, newValue)
+                        }
+                    }
+
+                    // apiKey：仅在用户真的改动时才替换原始密文。
+                    if (before.apiKey != after.apiKey) {
+                        root.put(FIELD_API_KEY, SecureStringCrypto.encrypt(after.apiKey))
+                    }
+
+                    // apiKeyPool[].key：需要逐个条目比对，只加密「文本真的变了」的那些 key。
+                    // 逐条目保留原密文，避免整池重加密 —— 整池重编码正是历史污染点。
+                    if (before.apiKeyPool != after.apiKeyPool) {
+                        root.put(FIELD_API_KEY_POOL, mergeApiKeyPool(root, before, after))
+                    }
+
+                    root.toString()
+                }
+                .getOrElse {
+                    AppLogger.e(
+                            TAG,
+                            "mergeConfigJson failed; falling back to full re-encode (apiKey may be re-encrypted)",
+                            it
+                    )
+                    json.encodeToString(after)
+                }
+    }
+
+    /**
+     * 合并 apiKey 池：条目按 [ApiKeyInfo.id] 对齐，**只加密 key 真正变化过的条目**，
+     * 其余条目连同原始密文原样保留。
+     *
+     * 背景同 [mergeConfigJson]：池里每个 `key` 都带加密 Serializer，
+     * 整体 `put` 一个重新序列化的数组会在密钥失效时把整个池变乱码。
+     * 这里以「id 为锚点、key 值是否变化」为唯一判据做最小写入。
+     *
+     * 注意必须以 **id** 而不是下标做配对：池支持增删排序，下标会错位，
+     * 错位的后果是把 A 的密文贴到 B 身上 —— 比不修还糟。
+     */
+    private fun mergeApiKeyPool(
+            root: JSONObject,
+            before: ModelConfigData,
+            after: ModelConfigData
+    ): JSONArray {
+        val rawPool = root.optJSONArray(FIELD_API_KEY_POOL)
+        val beforeById = before.apiKeyPool.associateBy { it.id }
+        val afterById = after.apiKeyPool.associateBy { it.id }
+        // after 的 JSON 形式：字段顺序/默认值以序列化结果为准，只借用它的结构。
+        val nextPool =
+                JSONObject(json.encodeToString(after)).optJSONArray(FIELD_API_KEY_POOL) ?: JSONArray()
+        val result = JSONArray()
+
+        for (i in 0 until nextPool.length()) {
+            val entry = nextPool.optJSONObject(i) ?: continue
+            val id = entry.optString("id")
+            val beforeEntry = beforeById[id]
+            val afterEntry = afterById[id]
+            // key 没变 → 用原始密文覆盖回去，杜绝「解密后再加密」的往返。
+            if (beforeEntry != null && afterEntry != null && beforeEntry.key == afterEntry.key) {
+                findPoolEntryById(rawPool, id)?.optString("key")?.let { entry.put("key", it) }
+            }
+            result.put(entry)
+        }
+        return result
+    }
+
+    private fun findPoolEntryById(pool: JSONArray?, id: String): JSONObject? {
+        if (pool == null) return null
+        for (i in 0 until pool.length()) {
+            val entry = pool.optJSONObject(i) ?: continue
+            if (entry.optString("id") == id) return entry
+        }
+        return null
     }
 
     // 获取指定ID的配置

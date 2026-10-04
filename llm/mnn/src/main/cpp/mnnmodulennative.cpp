@@ -16,6 +16,8 @@
 
 #define TAG "MNNModuleNative"
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, TAG, __VA_ARGS__)
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
+#define LOGW(...) __android_log_print(ANDROID_LOG_WARN, TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
 
 using namespace MNN;
@@ -32,9 +34,14 @@ std::vector<std::string> jstringArrayToVector(JNIEnv* env, jobjectArray jarray) 
     for (jsize i = 0; i < size; i++) {
         jstring jstr = (jstring)env->GetObjectArrayElement(jarray, i);
         if (jstr != nullptr) {
+            // GetStringUTFChars 在 OOM 时返回 nullptr，直接构造 std::string 会 SIGSEGV。
             const char* str = env->GetStringUTFChars(jstr, nullptr);
-            result.push_back(std::string(str));
-            env->ReleaseStringUTFChars(jstr, str);
+            if (str != nullptr) {
+                result.push_back(std::string(str));
+                env->ReleaseStringUTFChars(jstr, str);
+            } else {
+                LOGE("jstringArrayToVector: GetStringUTFChars returned null (OOM)");
+            }
             env->DeleteLocalRef(jstr);
         }
     }
@@ -54,8 +61,12 @@ Java_com_ai_assistance_mnn_MNNModuleNative_nativeCreateModuleFromFile(
     jint memoryMode) {
     
     try {
-        // 获取文件路径
+        // 获取文件路径。GetStringUTFChars 可能因 OOM 返回 nullptr。
         const char* filePath = env->GetStringUTFChars(jfilePath, nullptr);
+        if (filePath == nullptr) {
+            LOGE("nativeCreateModuleFromFile: GetStringUTFChars returned null");
+            return 0;
+        }
         std::string modelPath(filePath);
         env->ReleaseStringUTFChars(jfilePath, filePath);
         
@@ -151,14 +162,31 @@ Java_com_ai_assistance_mnn_MNNModuleNative_nativeForward(
     }
     
     try {
+        if (jinputVarPtrs == nullptr) {
+            LOGE("nativeForward: input var ptr array is null");
+            return nullptr;
+        }
+        
         Module* module = reinterpret_cast<Module*>(modulePtr);
         
         // 获取输入VARP指针数组
         jsize inputCount = env->GetArrayLength(jinputVarPtrs);
+        if (inputCount <= 0) {
+            LOGE("nativeForward: empty input var ptr array");
+            return nullptr;
+        }
         jlong* inputPtrs = env->GetLongArrayElements(jinputVarPtrs, nullptr);
+        // GetLongArrayElements 在 OOM / 无效数组时会返回 null 并挂起 pending 异常，
+        // 不判空会直接解引用 null → SIGSEGV。
+        if (inputPtrs == nullptr) {
+            LOGE("nativeForward: GetLongArrayElements returned null");
+            return nullptr;
+        }
         
-        // 构造输入VARP向量
+        // 构造输入VARP向量。用统一的清理 lambda + goto-free 写法保证异常路径也会释放数组，
+        // 否则每次异常都要泄漏一个 pinned 数组（可能阻止 GC 移动堆）。
         std::vector<VARP> inputs;
+        inputs.reserve(static_cast<size_t>(inputCount));
         for (jsize i = 0; i < inputCount; i++) {
             VARP* varPtr = reinterpret_cast<VARP*>(inputPtrs[i]);
             if (varPtr) {
@@ -166,25 +194,36 @@ Java_com_ai_assistance_mnn_MNNModuleNative_nativeForward(
             }
         }
         env->ReleaseLongArrayElements(jinputVarPtrs, inputPtrs, JNI_ABORT);
+        inputPtrs = nullptr;
         
         // 执行推理
         std::vector<VARP> outputs = module->onForward(inputs);
         
         // 返回输出VARP指针数组
-        jlongArray joutputPtrs = env->NewLongArray(outputs.size());
+        if (outputs.empty()) {
+            LOGW("nativeForward: module produced no output var");
+            return env->NewLongArray(0);
+        }
+        jlongArray joutputPtrs = env->NewLongArray(static_cast<jsize>(outputs.size()));
         if (joutputPtrs) {
             std::vector<jlong> outputPtrs;
+            outputPtrs.reserve(outputs.size());
             for (auto& var : outputs) {
                 VARP* varPtr = new VARP(var);
                 outputPtrs.push_back(reinterpret_cast<jlong>(varPtr));
             }
-            env->SetLongArrayRegion(joutputPtrs, 0, outputPtrs.size(), outputPtrs.data());
+            env->SetLongArrayRegion(joutputPtrs, 0, static_cast<jsize>(outputPtrs.size()), outputPtrs.data());
+        } else {
+            LOGE("nativeForward: NewLongArray failed (OOM)");
         }
         
         return joutputPtrs;
         
     } catch (const std::exception& e) {
         LOGE("Exception in nativeForward: %s", e.what());
+        return nullptr;
+    } catch (...) {
+        LOGE("Unknown exception in nativeForward");
         return nullptr;
     }
 }
@@ -198,9 +237,27 @@ Java_com_ai_assistance_mnn_MNNModuleNative_nativeCreateInputVar(
     jint dataType) {
     
     try {
+        if (jshape == nullptr) {
+            LOGE("nativeCreateInputVar: shape is null");
+            return 0;
+        }
         // 获取shape
         jsize shapeSize = env->GetArrayLength(jshape);
+        if (shapeSize <= 0) {
+            LOGE("nativeCreateInputVar: empty shape");
+            return 0;
+        }
+        // 维度过大等同于非法入参，直接拒绝（MNN 内部维度计算可能整数溢出）
+        if (shapeSize > 8) {
+            LOGE("nativeCreateInputVar: shape rank %d too large", shapeSize);
+            return 0;
+        }
         jint* shapeData = env->GetIntArrayElements(jshape, nullptr);
+        // GetIntArrayElements 可能返回 null（OOM）；std::vector(shapeData, shapeData + n) 会解引用 null。
+        if (shapeData == nullptr) {
+            LOGE("nativeCreateInputVar: GetIntArrayElements returned null");
+            return 0;
+        }
         
         std::vector<int> shape(shapeData, shapeData + shapeSize);
         env->ReleaseIntArrayElements(jshape, shapeData, JNI_ABORT);
@@ -220,6 +277,9 @@ Java_com_ai_assistance_mnn_MNNModuleNative_nativeCreateInputVar(
     } catch (const std::exception& e) {
         LOGE("Exception in nativeCreateInputVar: %s", e.what());
         return 0;
+    } catch (...) {
+        LOGE("Unknown exception in nativeCreateInputVar");
+        return 0;
     }
 }
 
@@ -237,13 +297,36 @@ Java_com_ai_assistance_mnn_MNNModuleNative_nativeSetVarFloatData(
     try {
         VARP* var = reinterpret_cast<VARP*>(varPtr);
         
+        if (jdata == nullptr) {
+            LOGE("nativeSetVarFloatData: data is null");
+            return JNI_FALSE;
+        }
         jsize dataSize = env->GetArrayLength(jdata);
         jfloat* data = env->GetFloatArrayElements(jdata, nullptr);
+        if (data == nullptr) {
+            LOGE("nativeSetVarFloatData: GetFloatArrayElements returned null");
+            return JNI_FALSE;
+        }
         
-        // 写入数据
+        // 写入数据。
+        // ⚠️ 必须按 tensor 实际容量截断：dataSize 来自 Java 数组长度，
+        // 而 writeMap 返回的缓冲区由 var 的 shape 决定，两者无关联。
+        // 不校验的情况下 memcpy 会堆越界写 → 损坏 MNN 内部堆 → scudo abort。
         auto ptr = (*var)->writeMap<float>();
         if (ptr) {
-            memcpy(ptr, data, dataSize * sizeof(float));
+            auto info = (*var)->getInfo();
+            const size_t capacity = (info != nullptr && info->size > 0) ? static_cast<size_t>(info->size) : 0;
+            const size_t want = static_cast<size_t>(dataSize);
+            if (capacity == 0) {
+                env->ReleaseFloatArrayElements(jdata, data, JNI_ABORT);
+                LOGE("nativeSetVarFloatData: cannot determine tensor capacity, refusing to write");
+                return JNI_FALSE;
+            }
+            const size_t copyCount = want < capacity ? want : capacity;
+            if (copyCount < want) {
+                LOGE("nativeSetVarFloatData: data truncated %zu -> %zu (tensor capacity)", want, copyCount);
+            }
+            memcpy(ptr, data, copyCount * sizeof(float));
         }
         
         env->ReleaseFloatArrayElements(jdata, data, JNI_ABORT);
@@ -251,6 +334,9 @@ Java_com_ai_assistance_mnn_MNNModuleNative_nativeSetVarFloatData(
         
     } catch (const std::exception& e) {
         LOGE("Exception in nativeSetVarFloatData: %s", e.what());
+        return JNI_FALSE;
+    } catch (...) {
+        LOGE("Exception in nativeSetVarFloatData: unknown error");
         return JNI_FALSE;
     }
 }
@@ -269,13 +355,33 @@ Java_com_ai_assistance_mnn_MNNModuleNative_nativeSetVarIntData(
     try {
         VARP* var = reinterpret_cast<VARP*>(varPtr);
         
+        if (jdata == nullptr) {
+            LOGE("nativeSetVarIntData: data is null");
+            return JNI_FALSE;
+        }
         jsize dataSize = env->GetArrayLength(jdata);
         jint* data = env->GetIntArrayElements(jdata, nullptr);
+        if (data == nullptr) {
+            LOGE("nativeSetVarIntData: GetIntArrayElements returned null");
+            return JNI_FALSE;
+        }
         
-        // 写入数据
+        // 写入数据。容量校验同 nativeSetVarFloatData，防止堆越界写。
         auto ptr = (*var)->writeMap<int>();
         if (ptr) {
-            memcpy(ptr, data, dataSize * sizeof(int));
+            auto info = (*var)->getInfo();
+            const size_t capacity = (info != nullptr && info->size > 0) ? static_cast<size_t>(info->size) : 0;
+            const size_t want = static_cast<size_t>(dataSize);
+            if (capacity == 0) {
+                env->ReleaseIntArrayElements(jdata, data, JNI_ABORT);
+                LOGE("nativeSetVarIntData: cannot determine tensor capacity, refusing to write");
+                return JNI_FALSE;
+            }
+            const size_t copyCount = want < capacity ? want : capacity;
+            if (copyCount < want) {
+                LOGE("nativeSetVarIntData: data truncated %zu -> %zu (tensor capacity)", want, copyCount);
+            }
+            memcpy(ptr, data, copyCount * sizeof(int));
         }
         
         env->ReleaseIntArrayElements(jdata, data, JNI_ABORT);
@@ -283,6 +389,9 @@ Java_com_ai_assistance_mnn_MNNModuleNative_nativeSetVarIntData(
         
     } catch (const std::exception& e) {
         LOGE("Exception in nativeSetVarIntData: %s", e.what());
+        return JNI_FALSE;
+    } catch (...) {
+        LOGE("Exception in nativeSetVarIntData: unknown error");
         return JNI_FALSE;
     }
 }
@@ -306,6 +415,10 @@ Java_com_ai_assistance_mnn_MNNModuleNative_nativeGetVarFloatData(
         }
         
         int size = info->size;
+        if (size <= 0) {
+            LOGE("nativeGetVarFloatData: non-positive var size %d", size);
+            return nullptr;
+        }
         auto ptr = (*var)->readMap<float>();
         
         if (!ptr) {
@@ -316,12 +429,17 @@ Java_com_ai_assistance_mnn_MNNModuleNative_nativeGetVarFloatData(
         jfloatArray jdata = env->NewFloatArray(size);
         if (jdata) {
             env->SetFloatArrayRegion(jdata, 0, size, ptr);
+        } else {
+            LOGE("nativeGetVarFloatData: NewFloatArray failed (OOM)");
         }
         
         return jdata;
         
     } catch (const std::exception& e) {
         LOGE("Exception in nativeGetVarFloatData: %s", e.what());
+        return nullptr;
+    } catch (...) {
+        LOGE("Unknown exception in nativeGetVarFloatData");
         return nullptr;
     }
 }
@@ -346,12 +464,17 @@ Java_com_ai_assistance_mnn_MNNModuleNative_nativeGetVarShape(
         jintArray jshape = env->NewIntArray(info->dim.size());
         if (jshape) {
             env->SetIntArrayRegion(jshape, 0, info->dim.size(), info->dim.data());
+        } else {
+            LOGE("nativeGetVarShape: NewIntArray failed (OOM)");
         }
         
         return jshape;
         
     } catch (const std::exception& e) {
         LOGE("Exception in nativeGetVarShape: %s", e.what());
+        return nullptr;
+    } catch (...) {
+        LOGE("Unknown exception in nativeGetVarShape");
         return nullptr;
     }
 }
@@ -370,6 +493,8 @@ Java_com_ai_assistance_mnn_MNNModuleNative_nativeReleaseVar(
         delete var;
     } catch (const std::exception& e) {
         LOGE("Exception in nativeReleaseVar: %s", e.what());
+    } catch (...) {
+        LOGE("Unknown exception in nativeReleaseVar");
     }
 }
 

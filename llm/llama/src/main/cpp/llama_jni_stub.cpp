@@ -3,9 +3,11 @@
 #include <android/log.h>
 
 #include <atomic>
+#include <climits>
 #include <cstdint>
 #include <mutex>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #if defined(OPERIT_HAS_LLAMA_CPP) && OPERIT_HAS_LLAMA_CPP
@@ -34,9 +36,20 @@ struct ToolCallGrammarConfigNative {
 #define LOGW(...) __android_log_print(ANDROID_LOG_WARN, TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
 
+/**
+ * jstring → std::string。
+ *
+ * GetStringUTFChars 在内存不足时会返回 NULL **并挂起一个 OutOfMemoryError**。
+ * 此时若直接 `std::string(cstr)`，libc++ 会在 strlen(nullptr) 上 SIGSEGV ——
+ * 这个崩溃发生在 native 层，Kotlin 侧拦不住。因此必须判空并安全降级为空串。
+ */
 static std::string jstringToString(JNIEnv * env, jstring jstr) {
     if (jstr == nullptr) return "";
     const char * cstr = env->GetStringUTFChars(jstr, nullptr);
+    if (cstr == nullptr) {
+        LOGE("GetStringUTFChars returned null (OOM); degrading to empty string");
+        return "";
+    }
     std::string out(cstr);
     env->ReleaseStringUTFChars(jstr, cstr);
     return out;
@@ -448,6 +461,54 @@ static void ensureBackendInit() {
     });
 }
 
+/**
+ * 存活会话集合 —— 句柄生命周期防线。
+ *
+ * ## 为什么需要它（真实可达的 UAF，不是理论风险）
+ *
+ * Kotlin 侧 [LlamaSession] 的 `release()` 自带 `released` 标志防重复释放，
+ * 但它的 `generateStream()` 是**在锁外**拿着 ptr 调用 native 的（见 LlamaSession.kt），
+ * 因为推理可能跑几十秒，不能一直持锁。于是存在这条时序：
+ *
+ *   T1(推理线程)  LlamaSession.generateStream → 进入 nativeGenerateStream（长任务）
+ *   T2(UI 线程)   用户点「停止」/切走页面 → LlamaProvider.release() → LlamaSession.release()
+ *                 → nativeReleaseSession → delete session
+ *   T1            native 仍在用 session->ctx / session->sampler → **UAF → SIGSEGV**
+ *
+ * 单纯的 `sessionPtr == 0` 判断拦不住：T1 手里那个 ptr 已经变成野指针，非 0。
+ *
+ * ## 做法
+ *
+ * 维护一张「当前存活指针」表。所有 JNI 入口先从表里取指针，
+ * 取不到就说明会话已释放，直接安全返回；`nativeReleaseSession` 先摘表再 delete。
+ * 用 `std::mutex` 保护，开销远小于一次推理。
+ *
+ * 注意：这只能防止「访问已释放内存」，不能保证正在执行的推理安全结束 ——
+ * 那需要 join 推理线程，属于更重的改造。当前策略是让 release 期间的并发访问
+ * 安全失败（返回错误），而不是崩溃。
+ */
+static std::mutex gLiveSessionsMutex;
+static std::unordered_set<LlamaSessionNative *> gLiveSessions;
+
+static LlamaSessionNative * acquireLiveSession(jlong sessionPtr) {
+    if (sessionPtr == 0) return nullptr;
+    auto * session = reinterpret_cast<LlamaSessionNative *>(sessionPtr);
+    std::lock_guard<std::mutex> lock(gLiveSessionsMutex);
+    return gLiveSessions.count(session) > 0 ? session : nullptr;
+}
+
+static void publishLiveSession(LlamaSessionNative * session) {
+    if (session == nullptr) return;
+    std::lock_guard<std::mutex> lock(gLiveSessionsMutex);
+    gLiveSessions.insert(session);
+}
+
+static bool retireLiveSession(LlamaSessionNative * session) {
+    if (session == nullptr) return false;
+    std::lock_guard<std::mutex> lock(gLiveSessionsMutex);
+    return gLiveSessions.erase(session) > 0;
+}
+
 static uint32_t positiveOrDefaultUInt(jint value, uint32_t defaultValue) {
     return value > 0 ? static_cast<uint32_t>(value) : defaultValue;
 }
@@ -500,14 +561,21 @@ static bool rebuildSamplerForSession(LlamaSessionNative * session) {
 
 static int32_t tokenizeText(const llama_vocab * vocab, const std::string & text, bool addSpecial) {
     if (vocab == nullptr) return 0;
-    int32_t capacity = static_cast<int32_t>(text.size()) + 8;
+    // text.size() 转 int32_t 会溢出（>2G 的畸形输入），溢出后 capacity 变负、
+    // llama_tokenize 收到负的文本长度，行为未定义。直接拒绝超长输入。
+    if (text.size() > static_cast<size_t>(INT32_MAX - 8)) {
+        LOGE("tokenizeText: input too long (%zu bytes)", text.size());
+        return 0;
+    }
+    const int32_t textLen = static_cast<int32_t>(text.size());
+    int32_t capacity = textLen + 8;
     std::vector<llama_token> tokens;
     tokens.resize(std::max(16, capacity));
 
     int32_t n = llama_tokenize(
         vocab,
         text.c_str(),
-        static_cast<int32_t>(text.size()),
+        textLen,
         tokens.data(),
         static_cast<int32_t>(tokens.size()),
         addSpecial,
@@ -535,14 +603,20 @@ static std::vector<llama_token> tokenizeTextToVector(const llama_vocab * vocab, 
     if (vocab == nullptr || text.empty()) {
         return tokens;
     }
+    // 同 tokenizeText：拒绝会令 int32_t 长度溢出的超长输入。
+    if (text.size() > static_cast<size_t>(INT32_MAX - 8)) {
+        LOGE("tokenizeTextToVector: input too long (%zu bytes)", text.size());
+        return tokens;
+    }
 
-    int32_t capacity = static_cast<int32_t>(text.size()) + 8;
+    const int32_t textLen = static_cast<int32_t>(text.size());
+    int32_t capacity = textLen + 8;
     tokens.resize(std::max(16, capacity));
 
     int32_t n = llama_tokenize(
         vocab,
         text.c_str(),
-        static_cast<int32_t>(text.size()),
+        textLen,
         tokens.data(),
         static_cast<int32_t>(tokens.size()),
         addSpecial,
@@ -554,7 +628,7 @@ static std::vector<llama_token> tokenizeTextToVector(const llama_vocab * vocab, 
         n = llama_tokenize(
             vocab,
             text.c_str(),
-            static_cast<int32_t>(text.size()),
+            textLen,
             tokens.data(),
             static_cast<int32_t>(tokens.size()),
             addSpecial,
@@ -843,6 +917,9 @@ Java_com_ai_assistance_llama_LlamaNative_nativeCreateSession(
 
     session->cancel.store(false);
 
+    // 登记到存活集合，之后所有入口都要能在这里查到才允许使用。
+    publishLiveSession(session);
+
     return reinterpret_cast<jlong>(session);
     }); // jniExceptionBarrier(nativeCreateSession)
 }
@@ -852,8 +929,14 @@ Java_com_ai_assistance_llama_LlamaNative_nativeReleaseSession(JNIEnv * env, jcla
     (void) env;
     (void) clazz;
 
-    if (sessionPtr == 0) return;
-    auto * session = reinterpret_cast<LlamaSessionNative *>(sessionPtr);
+    // 先摘表再释放：并发中的推理线程若拿到过 ptr，acquireLiveSession 会查不到而安全返回。
+    auto * session = acquireLiveSession(sessionPtr);
+    if (session == nullptr) {
+        // 已释放 / 从未登记的句柄，直接忽略（历史上这里是 double-free 的入口）。
+        if (sessionPtr != 0) LOGW("nativeReleaseSession: session already released, ignoring");
+        return;
+    }
+    retireLiveSession(session);
 
     if (session->sampler) {
         llama_sampler_free(session->sampler);
@@ -879,20 +962,28 @@ extern "C" JNIEXPORT void JNICALL
 Java_com_ai_assistance_llama_LlamaNative_nativeCancel(JNIEnv * env, jclass clazz, jlong sessionPtr) {
     (void) env;
     (void) clazz;
-    if (sessionPtr == 0) return;
-    auto * session = reinterpret_cast<LlamaSessionNative *>(sessionPtr);
+    // 会话可能已被释放（用户先点了停止又切走页面），查不到就静默忽略而不是写野指针。
+    auto * session = acquireLiveSession(sessionPtr);
+    if (session == nullptr) return;
     session->cancel.store(true);
 }
 
 extern "C" JNIEXPORT jint JNICALL
 Java_com_ai_assistance_llama_LlamaNative_nativeCountTokens(JNIEnv * env, jclass clazz, jlong sessionPtr, jstring text) {
     (void) clazz;
-    if (sessionPtr == 0) return 0;
-    auto * session = reinterpret_cast<LlamaSessionNative *>(sessionPtr);
+    return jniExceptionBarrier(env, "nativeCountTokens", static_cast<jint>(0), [&]() -> jint {
+    auto * session = acquireLiveSession(sessionPtr);
+    if (session == nullptr) return 0;
     if (!session->model) return 0;
     const llama_vocab * vocab = llama_model_get_vocab(session->model);
+    // 模型加载半成功时 vocab 可能为 null，llama_tokenize 对 null vocab 会直接解引用。
+    if (vocab == nullptr) {
+        LOGE("nativeCountTokens: model vocab is null");
+        return 0;
+    }
     const std::string input = jstringToString(env, text);
     return static_cast<jint>(tokenizeText(vocab, input, true));
+    }); // jniExceptionBarrier(nativeCountTokens)
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
@@ -908,11 +999,15 @@ Java_com_ai_assistance_llama_LlamaNative_nativeSetSamplingParams(
         jfloat presencePenalty,
         jint penaltyLastN
 ) {
-    (void) env;
     (void) clazz;
 
-    if (sessionPtr == 0) return JNI_FALSE;
-    auto * session = reinterpret_cast<LlamaSessionNative *>(sessionPtr);
+    // 崩溃防线：本函数会调 rebuildSamplerForSession → createSamplerChain，
+    // 而 sampler chain 初始化会走 ggml 后端代码路径。Vulkan 后端在此阶段抛
+    // vk::SystemError 时，若无屏障会逃出 JNI → std::terminate() → SIGABRT。
+    // 这与 nativeCreateSession 是同一条崩溃链，必须一并拦。
+    return jniExceptionBarrier(env, "nativeSetSamplingParams", static_cast<jboolean>(JNI_FALSE), [&]() -> jboolean {
+    auto * session = acquireLiveSession(sessionPtr);
+    if (session == nullptr) return JNI_FALSE;
     if (!session->ctx || !session->model) return JNI_FALSE;
 
     session->samplingParams.temperature = (float) temperature;
@@ -929,6 +1024,7 @@ Java_com_ai_assistance_llama_LlamaNative_nativeSetSamplingParams(
     }
 
     return JNI_TRUE;
+    }); // jniExceptionBarrier(nativeSetSamplingParams)
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
@@ -941,8 +1037,12 @@ Java_com_ai_assistance_llama_LlamaNative_nativeSetToolCallGrammar(
 ) {
     (void) clazz;
 
-    if (sessionPtr == 0 || grammar == nullptr) return JNI_FALSE;
-    auto * session = reinterpret_cast<LlamaSessionNative *>(sessionPtr);
+    // 崩溃防线：grammar sampler 初始化需要额外建 ggml 图/pipeline，
+    // 是 Vulkan 后端最容易在 createComputePipeline 上抛 vk::SystemError 的入口之一。
+    return jniExceptionBarrier(env, "nativeSetToolCallGrammar", static_cast<jboolean>(JNI_FALSE), [&]() -> jboolean {
+    if (grammar == nullptr) return JNI_FALSE;
+    auto * session = acquireLiveSession(sessionPtr);
+    if (session == nullptr) return JNI_FALSE;
     if (!session->ctx || !session->model) return JNI_FALSE;
 
     const std::string grammarStr = jstringToString(env, grammar);
@@ -989,15 +1089,17 @@ Java_com_ai_assistance_llama_LlamaNative_nativeSetToolCallGrammar(
 
     LOGI("Tool-call grammar enabled. trigger_patterns=%zu", session->toolCallGrammar.triggerPatterns.size());
     return JNI_TRUE;
+    }); // jniExceptionBarrier(nativeSetToolCallGrammar)
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_ai_assistance_llama_LlamaNative_nativeClearToolCallGrammar(JNIEnv * env, jclass clazz, jlong sessionPtr) {
-    (void) env;
     (void) clazz;
 
-    if (sessionPtr == 0) return JNI_FALSE;
-    auto * session = reinterpret_cast<LlamaSessionNative *>(sessionPtr);
+    // 崩溃防线：同 nativeSetToolCallGrammar，会重建 sampler chain。
+    return jniExceptionBarrier(env, "nativeClearToolCallGrammar", static_cast<jboolean>(JNI_FALSE), [&]() -> jboolean {
+    auto * session = acquireLiveSession(sessionPtr);
+    if (session == nullptr) return JNI_FALSE;
     if (!session->ctx || !session->model) return JNI_FALSE;
 
     const ToolCallGrammarConfigNative previousConfig = session->toolCallGrammar;
@@ -1016,6 +1118,7 @@ Java_com_ai_assistance_llama_LlamaNative_nativeClearToolCallGrammar(JNIEnv * env
     }
 
     return JNI_TRUE;
+    }); // jniExceptionBarrier(nativeClearToolCallGrammar)
 }
 
 extern "C" JNIEXPORT jstring JNICALL
@@ -1030,8 +1133,11 @@ Java_com_ai_assistance_llama_LlamaNative_nativeApplyChatTemplate(
 ) {
     (void) clazz;
 
-    if (sessionPtr == 0 || roles == nullptr || contents == nullptr) return nullptr;
-    auto * session = reinterpret_cast<LlamaSessionNative *>(sessionPtr);
+    // 崩溃防线：chat template 走 minja/jinja 解释器，内部有大量可抛分配与反射路径。
+    return jniExceptionBarrier(env, "nativeApplyChatTemplate", static_cast<jstring>(nullptr), [&]() -> jstring {
+    if (roles == nullptr || contents == nullptr) return nullptr;
+    auto * session = acquireLiveSession(sessionPtr);
+    if (session == nullptr) return nullptr;
     if (!session->model || !session->chatTemplates) return nullptr;
 
     const jsize nRoles = env->GetArrayLength(roles);
@@ -1076,6 +1182,7 @@ Java_com_ai_assistance_llama_LlamaNative_nativeApplyChatTemplate(
         LOGE("Failed to apply chat template: unknown error");
         return nullptr;
     }
+    }); // jniExceptionBarrier(nativeApplyChatTemplate)
 }
 
 extern "C" JNIEXPORT jstring JNICALL
@@ -1090,8 +1197,13 @@ Java_com_ai_assistance_llama_LlamaNative_nativeApplyStructuredChatTemplate(
 ) {
     (void) clazz;
 
-    if (sessionPtr == 0 || messagesJson == nullptr) return nullptr;
-    auto * session = reinterpret_cast<LlamaSessionNative *>(sessionPtr);
+    // 崩溃防线：内部会 rebuildSamplerForSession（依赖 params.parser 构建 grammar sampler），
+    // 而且函数体已有局部 try/catch 只覆盖 std::exception 的业务分支 —— 外层再包一层，
+    // 保证任何路径的 C++ 异常都不会逃出 JNI 边界。
+    return jniExceptionBarrier(env, "nativeApplyStructuredChatTemplate", static_cast<jstring>(nullptr), [&]() -> jstring {
+    if (messagesJson == nullptr) return nullptr;
+    auto * session = acquireLiveSession(sessionPtr);
+    if (session == nullptr) return nullptr;
     if (!session->model || !session->chatTemplates || !session->ctx) return nullptr;
 
     const std::string messagesStr = jstringToString(env, messagesJson);
@@ -1155,6 +1267,7 @@ Java_com_ai_assistance_llama_LlamaNative_nativeApplyStructuredChatTemplate(
         LOGE("Failed to apply structured chat template: unknown error");
         return nullptr;
     }
+    }); // jniExceptionBarrier(nativeApplyStructuredChatTemplate)
 }
 
 extern "C" JNIEXPORT jstring JNICALL
@@ -1166,8 +1279,11 @@ Java_com_ai_assistance_llama_LlamaNative_nativeParseToolCallResponse(
 ) {
     (void) clazz;
 
-    if (sessionPtr == 0 || content == nullptr) return nullptr;
-    auto * session = reinterpret_cast<LlamaSessionNative *>(sessionPtr);
+    // 崩溃防线：parser 走 minja 解析，异常同样不能逃出 JNI。
+    return jniExceptionBarrier(env, "nativeParseToolCallResponse", static_cast<jstring>(nullptr), [&]() -> jstring {
+    if (content == nullptr) return nullptr;
+    auto * session = acquireLiveSession(sessionPtr);
+    if (session == nullptr) return nullptr;
     if (!session->hasToolCallParser) return nullptr;
 
     const std::string contentStr = jstringToString(env, content);
@@ -1191,6 +1307,7 @@ Java_com_ai_assistance_llama_LlamaNative_nativeParseToolCallResponse(
         LOGE("Failed to parse tool-call response: unknown error");
         return nullptr;
     }
+    }); // jniExceptionBarrier(nativeParseToolCallResponse)
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
@@ -1200,8 +1317,14 @@ Java_com_ai_assistance_llama_LlamaNative_nativeGenerateStream(JNIEnv * env, jcla
     return jniExceptionBarrier(env, "nativeGenerateStream", static_cast<jboolean>(JNI_FALSE), [&]() -> jboolean {
     (void) clazz;
 
-    if (sessionPtr == 0 || callback == nullptr) return JNI_FALSE;
-    auto * session = reinterpret_cast<LlamaSessionNative *>(sessionPtr);
+    if (callback == nullptr) return JNI_FALSE;
+    // 用存活表取会话：release 与本函数并发时（用户点停止/切走页面），
+    // 这里的 ptr 可能已是野指针，必须查到才继续。
+    auto * session = acquireLiveSession(sessionPtr);
+    if (session == nullptr) {
+        LOGW("nativeGenerateStream: session not found (released?), aborting");
+        return JNI_FALSE;
+    }
     if (!session->model || !session->ctx || !session->sampler) return JNI_FALSE;
 
     session->cancel.store(false);
@@ -1219,6 +1342,11 @@ Java_com_ai_assistance_llama_LlamaNative_nativeGenerateStream(JNIEnv * env, jcla
 
     const std::string promptStr = jstringToString(env, prompt);
     const llama_vocab * vocab = llama_model_get_vocab(session->model);
+    // 模型半损坏时 vocab 可能为 null，后续 llama_tokenize 会直接解引用。
+    if (vocab == nullptr) {
+        LOGE("nativeGenerateStream: model vocab is null");
+        return JNI_FALSE;
+    }
 
     // Resolve callback method
     jclass cbCls = env->GetObjectClass(callback);
@@ -1267,7 +1395,16 @@ Java_com_ai_assistance_llama_LlamaNative_nativeGenerateStream(JNIEnv * env, jcla
     }
 
     const int32_t n_ctx = static_cast<int32_t>(llama_n_ctx(session->ctx));
+    // 上界钳制：maxTokens 来自 Java 侧，未做校验时可能传入 Int.MAX_VALUE。
+    // 那会让下面的循环长跑到内存耗尽，且 `generatedTokens.size() * 8` 会整型溢出成负数，
+    // 导致 detokBuf 分配过小 → llama_detokenize 越界写。
+    // 32768 远超任何实际回复长度（MNN 侧同样是 8192 上限）。
+    constexpr int kMaxNewTokensUpperBound = 32768;
     int maxNew = maxTokens <= 0 ? 256 : static_cast<int>(maxTokens);
+    if (maxNew > kMaxNewTokensUpperBound) {
+        LOGW("Requested maxTokens=%d exceeds upper bound; clamped to %d", maxNew, kMaxNewTokensUpperBound);
+        maxNew = kMaxNewTokensUpperBound;
+    }
     if (n_ctx > 0) {
         const int32_t reserveForGeneration = std::max<int32_t>(32, std::min<int32_t>(maxNew, n_ctx / 4));
         const int32_t maxPromptTokens = std::max<int32_t>(1, n_ctx - reserveForGeneration);
@@ -1364,7 +1501,11 @@ Java_com_ai_assistance_llama_LlamaNative_nativeGenerateStream(JNIEnv * env, jcla
         // Token pieces may split multi-byte sequences; emitting per-token pieces often results in mojibake.
         generatedTokens.push_back(newToken);
 
-        int32_t detokCap = std::max<int32_t>(64, static_cast<int32_t>(generatedTokens.size() * 8 + 32));
+        // 注意用 size_t 运算再钳制到 int32_t：generatedTokens.size() * 8 在 size_t 下不会
+        // 中途溢出，转 int32_t 前用 min 限幅，避免出现负的 detokCap 导致缓冲区过小。
+        constexpr size_t kDetokCapUpper = 1u << 20; // 1M 字符，任何回复都远超此长度
+        const size_t detokCapWide = std::min(kDetokCapUpper, generatedTokens.size() * 8 + 32);
+        int32_t detokCap = std::max<int32_t>(64, static_cast<int32_t>(detokCapWide));
         detokBuf.resize(static_cast<size_t>(detokCap));
 
         int32_t nDetok = llama_detokenize(
